@@ -25,21 +25,17 @@ class Form extends MY_Controller {
 
         $this->http = "http" . ($isHttps ? "s" : "");
         
-        $this->SmmtBase    = 'SMMT';    // SMMT: FE_ASP_HEADER, FE_ASP_CONTROL_MST, FE_ASP_TOPIC_MST, FE_ASP_CONFIRMATION_DTL
-        $this->webflowBase = 'DEFAULT'; // DEFAULT: FORM, FLOW, FE_FILE, AMECUSERALL
+        $this->SmmtBase    = 'SMMT';    
+        $this->webflowBase = 'DEFAULT'; 
     }
-    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
 
-    // === http://localhost:8080/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    // === http://localhost:8080/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
- 
     public function main() {
         $empno          = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
         $data['NRUNNO'] = $this->input->get('runNo') ?? '';
         $data['EMPNO']  = (string)$empno;
 
+        // 1. ดึงชื่อพนักงานตั้งต้น
         $initEmp = !empty($empno) ? $this->MainModel->getEmpName($empno) : ['empno' => '', 'name' => ''];
         $data['REQBY_EMPNO']   = $initEmp['empno'];
         $data['REQBY_NAME']    = $initEmp['name'];
@@ -62,7 +58,7 @@ class Form extends MY_Controller {
 
         $reqBy = !empty($data['REQBY_EMPNO']) ? $data['REQBY_EMPNO'] : $empno;
 
-        // 1. ดึงข้อมูล Org เริ่มต้นของผู้จัดทำ
+        // 2. ดึง Org ของ User เพื่อเป็นค่าเริ่มต้น
         $userOrg = $this->MainModel->getUserOrgSnapshot($reqBy);
         $data['REQBY_NAME']    = $userOrg['SNAME'] ?? $data['REQBY_NAME'];
         $data['SDIVCODE']      = $userOrg['SDIVCODE'] ?? '';
@@ -74,7 +70,7 @@ class Form extends MY_Controller {
         $data['savedDetails']     = [];
         $data['attachedFiles']    = [];
 
-        // Webflow Keys
+        // 3. จัดการ Webflow Keys
         if ($this->input->get('no') !== null) {
             $data['NFRMNO'] = $this->input->get('no');
             $data['VORGNO'] = $this->input->get('orgNo');
@@ -86,7 +82,11 @@ class Form extends MY_Controller {
             $data['CYEAR']  = $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR;
         }
 
-        // โหมด View / Edit: นำข้อมูล Snapshot จาก Header เดิมมาแทนที่
+        // 4. สิทธิ์การใช้งาน
+        $data['isAdmin']      = $this->MainModel->isFormAdmin('FE-ASP', $data['EMPNO']);
+        $data['isSuperAdmin'] = ($data['EMPNO'] === '13204');
+
+        // 5. โหมด View / Edit
         if (!empty($data['NRUNNO'])) {
             $header = $this->MainModel->getHeaderByKeys($data);
             if ($header) {
@@ -107,7 +107,12 @@ class Form extends MY_Controller {
 
                 $ctrl = $this->MainModel->getControlMasterInfo($header->CONTROL_NO);
                 $data['DIVISION_NAME']    = $ctrl['DIVISION_NAME'] ?? '';
-                $data['prevApprovedFile'] = $this->MainModel->getLatestApprovedFile($header->CONTROL_NO);
+                
+                $data['prevApprovedFile'] = $this->MainModel->getLatestApprovedFile(
+                    $header->CONTROL_NO, 
+                    $data['CYEAR2'], 
+                    $data['NRUNNO']
+                );
                 $data['savedDetails']     = $this->MainModel->getConfirmationDetailsByHeaderId($header->HEADER_ID);
             }
 
@@ -130,26 +135,38 @@ class Form extends MY_Controller {
             ])->get('FE_FILE')->result();
         }
 
-        // เตรียม Dropdown แผนกและส่วนงาน
-        $data['departments'] = !empty($data['SDIVCODE']) ? $this->MainModel->getDepartmentsByDiv($data['SDIVCODE']) : [];
-        $data['sections']    = !empty($data['SDEPCODE']) ? $this->MainModel->getSectionsByDept($data['SDEPCODE']) : [];
-
-        // กรองรายการ Control Number ตามสิทธิ์
-        $data['controls'] = $this->MainModel->getAllActiveControls($data['REQBY_EMPNO'], $data['SDIVCODE']);
+        // 6. ดึง Controls ตามสิทธิ์ (พนักงานทั่วไปจะกรองเฉพาะแผนกตัวเองเสมอ)[cite: 1]
+        $data['controls'] = $this->MainModel->getAllActiveControls($data['REQBY_EMPNO'], $data['SDIVCODE'], $data['SDEPCODE']);
         $data['topics']   = $this->MainModel->getActiveTopics();
 
-        // 🟢 เพิ่มตรงนี้: กรณีสร้างเอกสารใหม่ (ยังไม่มี NRUNNO) ให้ Default Control No. แรกและดึงไฟล์ Approved ล่าสุดทันที
+        // 7. โหมดสร้างเอกสารใหม่
         if (empty($data['NRUNNO']) && !empty($data['controls']) && is_array($data['controls'])) {
-            $defaultCtrl = $data['controls'][0];
-            $data['CONTROL_NO']       = $defaultCtrl['CONTROL_NO'];
-            $data['prevApprovedFile'] = $this->MainModel->getLatestApprovedFile($defaultCtrl['CONTROL_NO']);
+            $bestCtrl = $this->MainModel->pickDefaultControl($data['controls'], $data['SSECCODE']);
+            if ($bestCtrl) {
+                $data['CONTROL_NO'] = $bestCtrl['CONTROL_NO'];
+
+                // เฉพาะ Super Admin (13204) เท่านั้นที่ซิงค์สังกัดตาม Control
+                if ($data['isSuperAdmin']) {
+                    $data['SDIVCODE']      = $bestCtrl['SDIVCODE'] ?? $data['SDIVCODE'];
+                    $data['DIVISION_NAME'] = $bestCtrl['DIVISION_NAME'] ?? $data['DIVISION_NAME'];
+                    $data['SDEPCODE']      = $bestCtrl['SDEPCODE'] ?? $data['SDEPCODE'];
+                    $data['SSECCODE']      = $bestCtrl['SSECCODE'] ?? '00';
+                }
+
+                // ดึงไฟล์ Approved ล่าสุดตั้งแต่ Server Side ทันที
+                $data['prevApprovedFile'] = $this->MainModel->getLatestApprovedFile(
+                    $data['CONTROL_NO'], 
+                    '', 
+                    ''
+                );
+            }
         }
 
-        // สิทธิ์การใช้งาน
-        $data['isAdmin']      = $this->MainModel->isFormAdmin('FE-ASP', $data['EMPNO']);
-        $data['isSuperAdmin'] = ($data['EMPNO'] === '13204');
+        // 8. ดึง Dropdowns: พนักงานทั่วไปล็อกเฉพาะ Dept ตนเอง / 13204 เห็นทั้งฝ่าย
+        $data['departments'] = $this->MainModel->getDepartmentsByRole($data['SDIVCODE'], $data['SDEPCODE'], $data['REQBY_EMPNO']);
+        $data['sections']    = !empty($data['SDEPCODE']) ? $this->MainModel->getSectionsByDept($data['SDEPCODE']) : [];
 
-        // ตรวจสอบว่า Step แรก Approve แล้วหรือยัง
+        // 9. ตรวจสอบสถานะการอนุมัติ Step 1
         $data['isFirstStepApproved'] = false;
         if (!empty($data['NRUNNO'])) {
             $data['isFirstStepApproved'] = $this->MainModel->isFirstStepApproved(
@@ -161,24 +178,21 @@ class Form extends MY_Controller {
             );
         }
 
-        // สถานะล็อกฟอร์ม: Step 1 ผ่านแล้ว และไม่ใช่รหัส 13204
-        $data['isLocked'] = $data['isFirstStepApproved'] && !$data['isSuperAdmin'];
+        $data['isLocked'] = $data['isFirstStepApproved'];
 
         $this->views('feform/FE-ASP/form', $data);
     }
-    /**
-     * ดึงข้อมูล Full Context ครบวงจรเมื่อระบุรหัสพนักงาน (ยิงรอบเดียวจบ)
-     * คืนค่า: ข้อมูลพนักงาน, Org, Department List, Section List, Control List, Default Control และไฟล์ PDF Revision ล่าสุด
-     */
+
     public function ajaxGetEmpFullContext() {
         $this->output->set_content_type('application/json');
         try {
-            $empno = trim($this->input->get('empno') ?? '');
-            if (empty($empno)) {
-                throw new Exception('กรุณาระบุรหัสพนักงาน');
-            }
+            $empno     = trim($this->input->get('empno') ?? '');
+            $controlNo = trim($this->input->get('controlNo') ?? '');
+            $cyear2    = trim($this->input->get('y2') ?? '');
+            $runNo     = trim($this->input->get('runNo') ?? '');
 
-            // 1. ดึงข้อมูล User Org Snapshot
+            if (empty($empno)) throw new Exception('กรุณาระบุรหัสพนักงาน');
+
             $userOrg = $this->MainModel->getUserOrgSnapshot($empno);
             if (empty($userOrg)) {
                 return $this->output->set_output(json_encode([
@@ -190,22 +204,29 @@ class Form extends MY_Controller {
             $divCode = $userOrg['SDIVCODE'] ?? '';
             $depCode = $userOrg['SDEPCODE'] ?? '';
             $secCode = $userOrg['SSECCODE'] ?? '00';
+            $divName = $userOrg['SDIV'] ?? '';
 
-            // 2. ดึง Master Dropdown ของฝ่ายและแผนก
-            $departments = !empty($divCode) ? $this->MainModel->getDepartmentsByDiv($divCode) : [];
-            $sections    = !empty($depCode) ? $this->MainModel->getSectionsByDept($depCode) : [];
+            $isSuperAdmin = ($empno === '13204');
 
-            // 3. ดึงรายการ Controls ทั้งหมดตามสิทธิ์
-            $controls = $this->MainModel->getAllActiveControls($empno, $divCode);
+            // Controls กรองตามฝ่าย/แผนกพนักงาน
+            $controls = $this->MainModel->getAllActiveControls($empno, $divCode, $depCode);
+            $defaultControl = $this->MainModel->pickDefaultControl($controls, $secCode);
 
-            // 4. เลือก Control No. แรกเป็นค่าเริ่มต้น (ถ้ามี)
-            $defaultControl = null;
-            $prevFile = null;
-            if (!empty($controls) && is_array($controls)) {
-                $defaultControl = $controls[0]; // หยิบ Control แรกขึ้นมา
-                // 5. ดึงไฟล์ Revision ล่าสุดของ Control นั้นมาพร้อมกันทันที
-                $prevFile = $this->MainModel->getLatestApprovedFile($defaultControl['CONTROL_NO']);
+            if ($isSuperAdmin && $defaultControl) {
+                $divCode = $defaultControl['SDIVCODE'] ?? $divCode;
+                $divName = $defaultControl['DIVISION_NAME'] ?? $divName;
+                $depCode = $defaultControl['SDEPCODE'] ?? $depCode;
+                $secCode = $defaultControl['SSECCODE'] ?? '00';
             }
+
+            $targetControlNo = !empty($controlNo) ? $controlNo : ($defaultControl['CONTROL_NO'] ?? '');
+            $prevFile = null;
+            if (!empty($targetControlNo)) {
+                $prevFile = $this->MainModel->getLatestApprovedFile($targetControlNo, $cyear2, $runNo);
+            }
+
+            $departments = $this->MainModel->getDepartmentsByRole($divCode, $depCode, $empno);
+            $sections    = !empty($depCode) ? $this->MainModel->getSectionsByDept($depCode) : [];
 
             return $this->output->set_output(json_encode([
                 'status'         => true,
@@ -213,7 +234,7 @@ class Form extends MY_Controller {
                     'empno'   => $empno,
                     'name'    => $userOrg['SNAME'] ?? '',
                     'divCode' => $divCode,
-                    'divName' => $userOrg['SDIV'] ?? '',
+                    'divName' => $divName,
                     'depCode' => $depCode,
                     'secCode' => $secCode
                 ],
@@ -221,7 +242,7 @@ class Form extends MY_Controller {
                 'sections'       => $sections ?: [],
                 'controls'       => $controls ?: [],
                 'defaultControl' => $defaultControl,
-                'prevFile'       => $prevFile ?: null
+                'prevFile'       => $prevFile
             ]));
 
         } catch (\Throwable $e) {
@@ -231,119 +252,57 @@ class Form extends MY_Controller {
             ]));
         }
     }
-    /**
-     * ดึงสังกัดเริ่มต้นของพนักงาน (เมื่อมีการเปลี่ยน Request By ในหน้าจอ)
-     */
-    public function ajaxGetUserOrg() {
-        $empno = trim($this->input->get('empno') ?? '');
-        $org   = $this->MainModel->getUserOrgSnapshot($empno);
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status' => !empty($org),
-                'org'    => $org ?: null
-            ]));
-    }
 
-    public function ajaxGetEmpName() {
-        $empno = trim($this->input->get('empno') ?? '');
-        $res   = $this->MainModel->getEmpName($empno);
-
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status' => !empty($res['name']),
-                'name'   => $res['name'] ?? ''
-            ]));
-    }
-
-    
-    /**
-     * AJAX ดึงรายการ Control No. ตามรหัสพนักงาน Request By
-     */
-    public function ajaxGetControlsByEmp() {
-        $empno = trim($this->input->get('empno') ?? '');
-        $userOrg = $this->MainModel->getUserOrgSnapshot($empno);
-        $divCode = $userOrg['SDIVCODE'] ?? '';
-
-        $controls = $this->MainModel->getAllActiveControls($empno, $divCode);
-
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode([
-                'status'   => true,
-                'divCode'  => $divCode,
-                'divName'  => $userOrg['SDIV'] ?? '',
-                'controls' => $controls ?: []
-            ]));
-    }
-    /**
-     * ดึงข้อมูล Control และ Active Revision PDF
-     */
     public function GetControlInfo() {
-        $controlNo      = trim($this->input->get('controlNo') ?? '');
-        $currentDepCode = trim($this->input->get('depCode') ?? '');
-        $currentSecCode = trim($this->input->get('secCode') ?? '');
+        $controlNo = trim($this->input->get('controlNo') ?? '');
+        $empNo     = trim($this->input->get('empno') ?? '');
+        $cyear2    = trim($this->input->get('y2') ?? '');
+        $runNo     = trim($this->input->get('runNo') ?? '');
         
-        // 1. ดึง Master Info ของ Control
         $control = $this->MainModel->getControlMasterInfo($controlNo);
+        if (!$control) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false]));
+        }
+
+        $isSuperAdmin = ($empNo === '13204');
 
         $divCode = $control['SDIVCODE'] ?? '';
+        $ctrlDep = $control['SDEPCODE'] ?? '';
+        $ctrlSec = $control['SSECCODE'] ?? '00';
 
-        // 2. ดึง Department ตาม Division ของ Control
         $departments = [];
-        if (!empty($divCode)) {
-            $departments = $this->MainModel->getDepartmentsByDiv($divCode);
+        $sections    = [];
+        if ($isSuperAdmin) {
+            $departments = $this->MainModel->getDepartmentsByRole($divCode, $ctrlDep, $empNo);
+            $sections    = !empty($ctrlDep) ? $this->MainModel->getSectionsByDept($ctrlDep) : [];
         }
 
-        // 3. ดึง Sections: ให้ใช้ depCode ปัจจุบันของ Emp เพื่อไม่ให้ Section หลุดหาย
-        $sections = [];
-        $targetDepCode = !empty($currentDepCode) ? $currentDepCode : ($control['SDEPCODE'] ?? '');
-        if (!empty($targetDepCode)) {
-            $sections = $this->MainModel->getSectionsByDept($targetDepCode);
-        }
-
-        // 4. ดึงไฟล์ Revision ล่าสุดที่ผ่าน Approve
-        $prevFile = $this->MainModel->getLatestApprovedFile($controlNo);
+        $prevFile = $this->MainModel->getLatestApprovedFile($controlNo, $cyear2, $runNo);
 
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode([
-                'status'         => true,
-                'control'        => $control ?: null,
-                'departments'    => $departments ?: [],
-                'sections'       => $sections ?: [],
-                'keepDept'       => $currentDepCode, // ส่งกลับไปยืนยัน
-                'keepSec'        => $currentSecCode,
-                'prevFile'       => $prevFile ?: null
+                'status'       => true,
+                'control'      => $control,
+                'isSuperAdmin' => $isSuperAdmin,
+                'divCode'      => $divCode,
+                'divName'      => $control['DIVISION_NAME'] ?? '',
+                'targetDept'   => $ctrlDep,
+                'targetSec'    => $ctrlSec,
+                'departments'  => $departments,
+                'sections'     => $sections,
+                'prevFile'     => $prevFile
             ]));
     }
-    /**
-     * AJAX โหลด Department เมื่อ Division เปลี่ยน
-     */
-    public function ajaxGetDepartments() {
-        $divCode = $this->input->get('divCode');
-        $depts = $this->MainModel->getDepartmentsByDiv($divCode);
-        $this->output
-            ->set_content_type('application/json')
-            ->set_output(json_encode(['status' => true, 'data' => $depts ?: []]));
-    }
 
-    /**
-     * AJAX โหลด Section เมื่อ Department เปลี่ยน
-     */
     public function ajaxGetSections() {
         $depCode = $this->input->get('depCode');
-        $secs = $this->MainModel->getSectionsByDept($depCode);
+        $secs    = $this->MainModel->getSectionsByDept($depCode);
         $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode(['status' => true, 'data' => $secs ?: []]));
     }
 
-
-    /**
-     * บันทึกเอกสาร (Save Draft & Submit)
-     */
     public function SaveDocMaster() {
         $this->output->set_content_type('application/json');
         try {
@@ -361,28 +320,27 @@ class Form extends MY_Controller {
             $reqByPost     = trim((string)$this->input->post('REQBY'));
             $empNoPost     = trim((string)$this->input->post('EMPNO'));
             $isDraft       = $this->input->post('IS_DRAFT') === '1';
-            $isSuperAdmin = ($empNoPost === '13204');
+
+            $nfrmno = $this->input->post('NFRMNO');
+            $vorgno = $this->input->post('VORGNO');
+            $cyear  = $this->input->post('CYEAR');
+            $cyear2 = $this->input->post('CYEAR2');
+            $nrunno = $this->input->post('NRUNNO');
 
             $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
-
-
-
-            // --- ตรวจสอบสิทธิ์การแก้ไข (ห้ามแก้ถ้า Step 1 Approve แล้ว ยกเว้น 13204 หรือ Admin) ---
-            if (!empty($nrunno)) {
-                $isApproved = $this->MainModel->isFirstStepApproved($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
-                if ($isApproved) {
-                    throw new Exception("เอกสารนี้เข้าสู่กระบวนการอนุมัติแล้ว ไม่อนุญาตให้แก้ไขข้อมูล หากต้องการแก้ไขกรุณาให้ผู้อนุมัติกด Return เอกสาร");
-                }
-            }
-
-
-
 
             if (empty($controlNo)) throw new Exception("กรุณาเลือก Control No.");
             if (empty($sDepCode))  throw new Exception("กรุณาระบุ Department");
 
+            if (!empty($nrunno)) {
+                $isApproved = $this->MainModel->isFirstStepApproved($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+                if ($isApproved) {
+                    throw new Exception("เอกสารนี้เข้าสู่กระบวนการอนุมัติแล้ว ไม่อนุญาตให้แก้ไขข้อมูล");
+                }
+            }
+
             $this->db->trans_begin();
-            $isCreateNew = empty($headerId) && empty($this->input->post('NRUNNO'));
+            $isCreateNew = empty($headerId) && empty($nrunno);
 
             if ($isCreateNew) {
                 $formMst  = $this->getFormMasterByVaname('FE-ASP');
@@ -395,7 +353,7 @@ class Form extends MY_Controller {
                     'REQBY'   => $currentEmpNo,
                     'INPUTBY' => !empty($empNoPost) ? $empNoPost : $currentEmpNo,
                     'REMARK'  => $remark ?: $detailChange,
-                    'DRAFT'   => $isDraft ? '1' : '0'  // '0' = ส่งสร้างโฟลว์อนุมัติทันที, '1' = ดราฟต์ไว้ก่อน
+                    'DRAFT'   => $isDraft ? '1' : '0'
                 ];
 
                 $rsf = $this->createForm($flowData);
@@ -433,9 +391,7 @@ class Form extends MY_Controller {
 
                 $headerId = $this->MainModel->insertHeader($headerData);
             } else {
-                $cyear2 = $this->input->post('CYEAR2');
-                $nrunno = $this->input->post('NRUNNO');
-                $docNo  = $this->input->post('DOC_NO');
+                $docNo = $this->input->post('DOC_NO');
 
                 $updateData = [
                     'CONTROL_NO'       => $controlNo,
@@ -453,7 +409,6 @@ class Form extends MY_Controller {
                 $this->MainModel->updateHeader($headerId, $updateData);
             }
 
-            // คำตอบตารางเขียว
             if (!empty($topicsJson)) {
                 $topics = json_decode($topicsJson, true);
                 if (is_array($topics)) {
@@ -477,9 +432,9 @@ class Form extends MY_Controller {
                 'message' => $isDraft ? "บันทึกแบบร่างสำเร็จ" : "บันทึกและส่งเอกสารสำเร็จ ({$docNo})",
                 'docNo'   => $docNo,
                 'data'    => [
-                    'NFRMNO'        => $formData['NNO'] ?? $this->input->post('NFRMNO'),
-                    'VORGNO'        => $formData['VORGNO'] ?? $this->input->post('VORGNO'),
-                    'CYEAR'         => $formData['CYEAR'] ?? $this->input->post('CYEAR'),
+                    'NFRMNO'        => $formData['NNO'] ?? $nfrmno,
+                    'VORGNO'        => $formData['VORGNO'] ?? $vorgno,
+                    'CYEAR'         => $formData['CYEAR'] ?? $cyear,
                     'CYEAR2'        => $cyear2,
                     'NRUNNO'        => $nrunno,
                     'DOC_HEADER_ID' => $headerId
@@ -508,14 +463,12 @@ class Form extends MY_Controller {
 
             if (!$header) throw new Exception('ไม่พบเอกสารในระบบ');
 
-            // ป้องกันการ Reject ในกรณี Yearly Review (Auto Job)
             if ($action === 'REJECT' && $header->IS_AUTO_JOB === 'Y') {
                 throw new Exception('เอกสารทบทวนประจำปี (Yearly Review) ไม่อนุญาตให้ Reject ให้เลือก Return แทน');
             }
 
             $status = 'PROCESS';
             if ($action === 'APPROVE') {
-                // เช็คว่าถึงขั้นสุดท้ายของสายอนุมัติ FE-ASP หรือยัง (E/P DIM: EXT '05')
                 if ($extdata === '05' || $this->MainModel->checkFlowCompleted($nfrmno, $vorgno, $cyear2, $nrunno)) {
                     $status = 'APPROVE';
                 }

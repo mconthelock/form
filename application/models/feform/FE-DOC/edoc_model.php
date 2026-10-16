@@ -293,12 +293,12 @@ class edoc_model extends my_model
                     T.DOC_TYPE_NAME,
                     H.STATUS,
                     H.REMARK,
-                    H.USER_ACTION || ' : ' || U.SNAME AS USER_ACTION,
-                    TO_CHAR(H.DATE_ACTION, 'YYYY-MM-DD HH24:MI:SS') AS DATE_ACTION_STR,
-                    TO_CHAR(H.DATE_ACTION, 'DD/MM/YYYY') AS DOC_DATE_FORMAT
+                    H.CREATE_BY || ' : ' || U.SNAME AS CREATE_BY,
+                    TO_CHAR(H.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS DATE_ACTION_STR,
+                    TO_CHAR(H.CREATE_DATE, 'DD/MM/YYYY') AS DOC_DATE_FORMAT
                 FROM FE_DOC_HEADER H
                 LEFT JOIN FE_DOC_TYPE_MST T ON H.DOC_TYPE_CODE = T.DOC_TYPE_CODE
-                left join AMEC.AMECUSERALL U on trim(H.USER_ACTION) = trim(U.sempno)
+                left join AMEC.AMECUSERALL U on trim(H.CREATE_BY) = trim(U.sempno)
                 WHERE 1=1 ";
 
         $binds = [];
@@ -315,13 +315,13 @@ class edoc_model extends my_model
             $binds[] = strtoupper(trim($filter['status']));
         }
 
-        // กรองตามช่วงวันที่ออกเอกสาร (DATE_ACTION)
+        // กรองตามช่วงวันที่ออกเอกสาร (CREATE_DATE)
         if (!empty($filter['date_from'])) {
-            $sql .= " AND H.DATE_ACTION >= TO_DATE(?, 'YYYY-MM-DD') ";
+            $sql .= " AND H.CREATE_DATE >= TO_DATE(?, 'YYYY-MM-DD') ";
             $binds[] = trim($filter['date_from']);
         }
         if (!empty($filter['date_to'])) {
-            $sql .= " AND H.DATE_ACTION <= TO_DATE(? || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ";
+            $sql .= " AND H.CREATE_DATE <= TO_DATE(? || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ";
             $binds[] = trim($filter['date_to']);
         }
 
@@ -333,7 +333,7 @@ class edoc_model extends my_model
             $binds[] = $kw;
         }
 
-        $sql .= " ORDER BY H.DATE_ACTION DESC NULLS LAST, H.NRUNNO DESC ";
+        $sql .= " ORDER BY H.CREATE_DATE DESC NULLS LAST, H.NRUNNO DESC ";
 
         return $dbSmmt->query($sql, $binds)->result();
     }

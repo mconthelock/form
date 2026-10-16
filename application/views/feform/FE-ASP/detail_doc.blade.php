@@ -1,11 +1,12 @@
 <script>
     window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
-    window.INITIAL_SAVED_DETAILS  = @json($savedDetails ?? []);
-    window.INITIAL_PREV_FILE      = @json($prevApprovedFile ?? null);
     window.IS_ADMIN               = @json($isAdmin ?? false);
     window.IS_SUPER_ADMIN         = @json($isSuperAdmin ?? false);
-    window.IS_FIRST_STEP_APPROVED = @json($isFirstStepApproved ?? false);
     window.IS_LOCKED              = @json($isLocked ?? false);
+
+    window.INITIAL_SAVED_DETAILS = @json($savedDetails ?? []);
+    window.INITIAL_PREV_FILE = @json($prevApprovedFile ?? []);
+    window.IS_FIRST_STEP_APPROVED = @json($isFirstStepApproved ?? false);
 </script>
 
 <div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6 shadow-xs">
@@ -39,7 +40,7 @@
                                 data-divcode="{{ $item['SDIVCODE'] }}"
                                 data-divname="{{ $item['DIVISION_NAME'] }}"
                                 {{ (isset($CONTROL_NO) && $CONTROL_NO == $item['CONTROL_NO']) ? 'selected' : '' }}>
-                            {{ $item['CONTROL_NO'] }} : {{ $item['CONTROL_NAME'] }}
+                            {{ $item['CONTROL_NO'] }} 
                         </option>
                     @endforeach
                 @endif
@@ -124,17 +125,59 @@
         </div>
     </div>
 
-    <!-- โซน Active Revision PDF (Previous Approved File) -->
-    <div id="prev-revision-zone" class="mt-5 p-4 rounded-xl bg-blue-50/70 border border-blue-200 {{ empty($prevApprovedFile) ? 'hidden' : '' }}">
-        <span class="text-xs font-bold text-blue-900 block mb-2">📑 ACTIVE REVISION PDF (เอกสารเวอร์ชันล่าสุดที่ได้รับอนุมัติแล้ว - อ้างอิงทุกกรณี)</span>
-        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-blue-100 shadow-xs">
-            <div class="flex items-center gap-2 truncate">
-                <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
-                <span id="prev-file-name" class="text-xs font-semibold text-slate-700 truncate">{{ $prevApprovedFile['FILE_ONAME'] ?? '' }}</span>
-            </div>
-            <button type="button" id="btn-open-prev-file" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer">
-                📄 Open / Download File
-            </button>
+    <!-- โซน Active Revision PDF (Previous Approved Document & Files) -->
+    @php
+        // ตรวจสอบว่ามีเอกสารคำขอล่าสุดส่งมาจาก Controller หรือไม่
+        $hasPrevDoc = !empty($prevApprovedFile) && !empty($prevApprovedFile['header']);
+        $prevHeader = $hasPrevDoc ? $prevApprovedFile['header'] : null;
+        $prevFiles  = $hasPrevDoc ? ($prevApprovedFile['files'] ?? []) : [];
+
+        $docFormUrl = '';
+        if ($prevHeader) {
+            $curHost = prep_url($_SERVER['HTTP_HOST'] ?? 'amecweb');
+            $docFormUrl = rtrim($curHost, '/') . "/form/feform/FE-ASP/form/main?no={$prevHeader['NFRMNO']}&orgNo={$prevHeader['VORGNO']}&y={$prevHeader['CYEAR']}&y2={$prevHeader['CYEAR2']}&runNo={$prevHeader['NRUNNO']}&m=3&empno={$EMPNO}&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1";
+        }
+    @endphp
+
+    <!-- กล่อง Active Revision: จะแสดงผลตั้งแต่ตอนโหลดหน้าทันทีถ้า $hasPrevDoc เป็นจริง ไม่ต้องรอ JS -->
+    <div id="prev-revision-zone" class="mt-5 p-4 rounded-xl bg-blue-50/70 border border-blue-200 {{ $hasPrevDoc ? '' : 'hidden' }}">
+        <!-- ส่วนหัว: แสดงเลขที่เอกสาร และปุ่มเปิดเอกสารคำขอล่าสุด -->
+        <div class="flex items-center justify-between pb-2 mb-3 border-b border-blue-200/60">
+            <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                📑 ACTIVE REVISION (เอกสารเวอร์ชันล่าสุดที่ได้รับอนุมัติแล้ว: <span id="prev-doc-no" class="text-blue-700">{{ $prevHeader['DOC_NO'] ?? '' }}</span>)
+            </span>
+            <a id="btn-open-prev-doc" href="{{ $docFormUrl }}" target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center gap-1 px-3 py-1 bg-white hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs {{ empty($docFormUrl) ? 'hidden' : '' }}">
+                📂 เปิดเอกสารคำขอล่าสุด
+            </a>
+        </div>
+
+        <!-- รายการไฟล์แนบ -->
+        <div id="prev-file-list" class="space-y-2">
+            @if(!empty($prevFiles) && count($prevFiles) > 0)
+                @foreach ($prevFiles as $file)
+                    @php
+                        $baseDir = str_replace('\\', '/', $file['FILE_PATH'] ?? '');
+                    @endphp
+                    <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-blue-100 shadow-xs">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
+                            <span class="text-xs font-medium text-slate-700 truncate">{{ $file['FILE_ONAME'] ?? '' }}</span>
+                        </div>
+                        <button type="button" 
+                                class="btn-open-prev-file bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
+                                data-base-dir="{{ $baseDir }}" 
+                                data-stored-name="{{ $file['FILE_FNAME'] ?? '' }}" 
+                                data-original-name="{{ $file['FILE_ONAME'] ?? 'document.pdf' }}">
+                            📄 Open / Download
+                        </button>
+                    </div>
+                @endforeach
+            @else
+                <div class="text-center py-2 text-xs text-slate-500 bg-white/60 rounded-lg border border-dashed border-blue-200 no-file-msg">
+                    (ไม่มีไฟล์แนบในเอกสารฉบับนี้)
+                </div>
+            @endif
         </div>
     </div>
 

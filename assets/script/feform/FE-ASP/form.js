@@ -3,18 +3,15 @@ import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { host } from '../../utils';
 
-let currentPrevFile = window.INITIAL_PREV_FILE || null;
+let currentPrevFiles = Array.isArray(window.INITIAL_PREV_FILE)
+    ? window.INITIAL_PREV_FILE
+    : window.INITIAL_PREV_FILE
+      ? [window.INITIAL_PREV_FILE]
+      : [];
 
-export function getCurrentPrevFile() {
-    return currentPrevFile;
+export function getCurrentPrevFiles() {
+    return currentPrevFiles;
 }
-
-// In-Memory Cache ป้องกันการยิง AJAX ซ้ำ
-const empOrgCache = {};
-const deptCache = {};
-const secCache = {};
-const controlFileCache = {};
-const controlCache = {};
 
 export function toggleChangeBox() {
     const selectedVal = $('input[name="REVIEW_DETAILS"]:checked').val();
@@ -26,36 +23,156 @@ export function toggleChangeBox() {
     }
 }
 
+export function renderPrevFile(prevData) {
+    const $zone = $('#prev-revision-zone');
+    const $btnDoc = $('#btn-open-prev-doc');
+    const $docNoTxt = $('#prev-doc-no');
+    const $container = $('#prev-file-list').empty();
+
+    // เช็คว่ามีข้อมูล header หรือไม่
+    const header = prevData?.header;
+    const files = prevData?.files || [];
+
+    if (header) {
+        const empno = (
+            $('#EMPNOHid').val() ||
+            $('#REQUEST_BY_EMPNO').val() ||
+            ''
+        ).trim();
+        const fqdnSuffix = '.mitsubishielevatorasia.co.th';
+
+        let baseHost = (host || window.location.origin + '/form/').trim();
+        const isLocal = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?/i.test(
+            baseHost,
+        );
+
+        if (!isLocal && !baseHost.includes(fqdnSuffix)) {
+            const match = baseHost.match(/^(https?:\/\/[^\/:]+)(.*)$/i);
+            if (match) {
+                const domainPart = match[1];
+                const restPart = match[2];
+                baseHost = `${domainPart}${fqdnSuffix}${restPart}`;
+            }
+        }
+
+        baseHost = baseHost.replace(/\/+$/, '');
+        const backPath = encodeURIComponent('/formtest/workflow/mineList.asp');
+
+        // 1. อัปเดตลิงก์เปิดฟอร์มเอกสารล่าสุด
+        const docUrl = `${baseHost}/feform/FE-ASP/form/main?no=${header.NFRMNO}&orgNo=${header.VORGNO}&y=${header.CYEAR}&y2=${header.CYEAR2}&runNo=${header.NRUNNO}&m=3&empno=${empno}&bp=${backPath}&menu=1`;
+        $btnDoc.attr('href', docUrl).removeClass('hidden');
+        $docNoTxt.text(header.DOC_NO || '');
+
+        // 2. เรนเดอร์ไฟล์ หรือ แสดงข้อความถ้าไม่มีไฟล์
+        if (Array.isArray(files) && files.length > 0) {
+            files.forEach((file) => {
+                const formattedBaseDir = (file.FILE_PATH || '').replace(
+                    /\\/g,
+                    '/',
+                );
+                $container.append(`
+                    <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-blue-100 shadow-xs">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
+                            <span class="text-xs font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                        </div>
+                        <button type="button" 
+                                class="btn-open-prev-file bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
+                                data-base-dir="${formattedBaseDir}" 
+                                data-stored-name="${file.FILE_FNAME}" 
+                                data-original-name="${file.FILE_ONAME}">
+                            📄 Open / Download
+                        </button>
+                    </div>
+                `);
+            });
+        } else {
+            $container.append(`
+                <div class="text-center py-2 text-xs text-slate-500 bg-white/60 rounded-lg border border-dashed border-blue-200 no-file-msg">
+                    (ไม่มีไฟล์แนบในเอกสารฉบับนี้)
+                </div>
+            `);
+        }
+
+        // แสดงกล่อง Active Revision ออกมา
+        $zone.removeClass('hidden').show();
+    } else {
+        $btnDoc.attr('href', '#').addClass('hidden');
+        $zone.addClass('hidden').hide();
+    }
+}
 export function initFormControls() {
     $('#ControlNoDrp')
         .off('change')
         .on('change', async function () {
             const val = $(this).val();
             if (!val) {
-                $('#prev-revision-zone').addClass('hidden');
-                currentPrevFile = null;
+                $('#prev-revision-zone').addClass('hidden').hide();
                 return;
             }
 
-            // 1. จำค่า Department และ Section ปัจจุบันที่หน้าจอเลือกไว้ก่อน
-            const keepDept = ($('#DeptDrp').val() || '').trim();
-            const keepSec = ($('#SecDrp').val() || '00').trim();
-
-            // ถ้าเคยดึง Control No. นี้แล้ว ดึงจาก RAM ทันที
-            if (controlCache[val]) {
-                applyControlData(controlCache[val], keepDept, keepSec);
-                return;
-            }
+            const currentEmp = ($('#REQUEST_BY_EMPNO').val() || '').trim();
+            const y2 = ($('#CYEAR2Hid').val() || '').trim();
+            const runNo = ($('#NRUNNOHid').val() || '').trim();
 
             try {
                 await showLoader({ show: true });
                 const res = await $.getJSON(
-                    `${host}feform/FE-ASP/form/GetControlInfo?controlNo=${encodeURIComponent(val)}`,
+                    `${host}feform/FE-ASP/form/GetControlInfo?controlNo=${encodeURIComponent(val)}&empno=${encodeURIComponent(currentEmp)}&y2=${encodeURIComponent(y2)}&runNo=${encodeURIComponent(runNo)}`,
                 );
 
                 if (res && res.status) {
-                    controlCache[val] = res;
-                    applyControlData(res, keepDept, keepSec);
+                    // เฉพาะ Super Admin (13204) เท่านั้นที่อนุญาตให้เปลี่ยน Division/Department ตาม Control
+                    if (res.isSuperAdmin) {
+                        $('#DivisionTxt').val(res.divName || '');
+                        $('#SDIVCODEHid').val(res.divCode || '');
+
+                        if (res.departments && res.departments.length > 0) {
+                            const $dept = $('#DeptDrp')
+                                .empty()
+                                .append(
+                                    '<option value="">-- Choose Department --</option>',
+                                );
+                            res.departments.forEach((d) => {
+                                const isSel =
+                                    d.SDEPCODE === res.targetDept
+                                        ? 'selected'
+                                        : '';
+                                const deptName =
+                                    d.DEPT_NAME ||
+                                    d.SDEPT ||
+                                    d.SDEPARTMENT ||
+                                    '';
+                                $dept.append(
+                                    `<option value="${d.SDEPCODE}" ${isSel}>${d.SDEPCODE} : ${deptName}</option>`,
+                                );
+                            });
+                            if (res.targetDept) $dept.val(res.targetDept);
+                        }
+
+                        const $sec = $('#SecDrp').empty();
+                        if (res.sections && res.sections.length > 0) {
+                            res.sections.forEach((s) => {
+                                const isSel =
+                                    s.SSECCODE === res.targetSec
+                                        ? 'selected'
+                                        : '';
+                                const secName =
+                                    s.SEC_NAME || s.SSEC || s.SSECTION || '';
+                                $sec.append(
+                                    `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${secName}</option>`,
+                                );
+                            });
+                            $sec.val(res.targetSec);
+                        } else {
+                            $sec.append(
+                                '<option value="00">00 : No Section</option>',
+                            );
+                        }
+                    }
+
+                    // อัปเดตเฉพาะกล่อง Active Revision PDF
+                    renderPrevFile(res.prevFile);
                 }
             } catch (e) {
                 console.error('GetControlInfo error:', e);
@@ -64,65 +181,6 @@ export function initFormControls() {
             }
         });
 
-    function applyControlData(data, keepDept = '', keepSec = '00') {
-        const ctrl = data.control || {};
-
-        // 1. อัปเดต Division
-        if (ctrl.SDIVCODE) {
-            $('#DivisionTxt').val(ctrl.DIVISION_NAME || ctrl.SDIV || '');
-            $('#SDIVCODEHid').val(ctrl.SDIVCODE);
-        }
-
-        // กำหนด Department ที่ต้องการเลือก: ใช้ค่าเดิมของ Emp ก่อน ถ้าไม่มีค่อยดูจาก Master
-        const targetDept = keepDept || ctrl.SDEPCODE || '';
-
-        // 2. อัปเดต Department Dropdown (คงค่าเดิมของ Emp ไว้)
-        if (data.departments && data.departments.length > 0) {
-            const $dept = $('#DeptDrp')
-                .empty()
-                .append('<option value="">-- Choose Department --</option>');
-            data.departments.forEach((d) => {
-                const isSel = d.SDEPCODE === targetDept ? 'selected' : '';
-                const deptName = d.DEPT_NAME || d.SDEPT || d.SDEPARTMENT || '';
-                $dept.append(
-                    `<option value="${d.SDEPCODE}" ${isSel}>${d.SDEPCODE} : ${deptName}</option>`,
-                );
-            });
-            if (targetDept) {
-                $dept.val(targetDept);
-            }
-        }
-
-        // กำหนด Section ที่ต้องการเลือก: ใช้ค่าเดิมของ Emp ก่อน ถ้าไม่มีค่อยดูจาก Master หรือตั้งเป็น '00'
-        const targetSec = keepSec || ctrl.SSECCODE || '00';
-
-        // 3. อัปเดต Section Dropdown (คงค่าเดิมของ Emp ไว้)
-        if (data.sections && data.sections.length > 0) {
-            const $sec = $('#SecDrp').empty();
-            data.sections.forEach((s) => {
-                const isSel = s.SSECCODE === targetSec ? 'selected' : '';
-                const secName = s.SEC_NAME || s.SSEC || s.SSECTION || '';
-                $sec.append(
-                    `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${secName}</option>`,
-                );
-            });
-            $sec.val(targetSec);
-        } else {
-            // หาก data.sections ว่าง ให้คงค่าเดิมไว้โดยโหลดใหม่จาก targetDept
-            if (targetDept) {
-                loadSectionDropdown(targetDept, targetSec);
-            } else {
-                $('#SecDrp')
-                    .empty()
-                    .append('<option value="00">00 : No Section</option>');
-            }
-        }
-
-        // 4. แสดงไฟล์ Revision เก่า
-        renderPrevFile(data.prevFile);
-    }
-
-    // เมื่อเปลี่ยน Department แบบ Manual -> โหลดเฉพาะ Section
     $('#DeptDrp')
         .off('change')
         .on('change', async function () {
@@ -139,138 +197,36 @@ export function initFormControls() {
     toggleChangeBox();
 }
 
-function renderPrevFile(file) {
-    if (file) {
-        currentPrevFile = file;
-        $('#prev-file-name').text(file.FILE_ONAME);
-        $('#prev-revision-zone').removeClass('hidden');
-    } else {
-        currentPrevFile = null;
-        $('#prev-revision-zone').addClass('hidden');
-    }
-}
-
-/**
- * ดึง Department ทั้งหมดใน Division ของ Requester มาใส่ Dropdown (พร้อม Cache)
- */
-export async function loadDepartmentDropdown(divCode, selectedDep = '') {
-    if (!divCode) return;
-    try {
-        let depts = deptCache[divCode];
-        if (!depts) {
-            const res = await $.getJSON(
-                `${host}feform/FE-ASP/form/ajaxGetDepartments?divCode=${encodeURIComponent(divCode)}`,
-            );
-            if (res && res.status && res.data) {
-                depts = res.data;
-                deptCache[divCode] = depts;
-            }
-        }
-
-        const $dept = $('#DeptDrp');
-        $dept
-            .empty()
-            .append('<option value="">-- Choose Department --</option>');
-
-        if (depts && depts.length > 0) {
-            depts.forEach((d) => {
-                const isSel = d.SDEPCODE === selectedDep ? 'selected' : '';
-                $dept.append(
-                    `<option value="${d.SDEPCODE}" ${isSel}>${d.SDEPCODE} : ${d.SDEPT || d.SDEPARTMENT}</option>`,
-                );
-            });
-        }
-
-        if (selectedDep) {
-            $dept.val(selectedDep);
-        }
-    } catch (e) {
-        console.error('Load Departments Error:', e);
-    }
-}
-
-/**
- * ดึง Section ภายใต้ Department ที่เลือกมาใส่ Dropdown (พร้อม Cache)
- */
-export async function loadSectionDropdown(depCode, selectedSec = '00') {
-    try {
-        let secs = secCache[depCode];
-        if (!secs && depCode && depCode !== '00') {
-            const res = await $.getJSON(
-                `${host}feform/FE-ASP/form/ajaxGetSections?depCode=${encodeURIComponent(depCode)}`,
-            );
-            if (res && res.status && res.data) {
-                secs = res.data;
-                secCache[depCode] = secs;
-            }
-        }
-
-        const $sec = $('#SecDrp');
-        $sec.empty();
-
-        if (secs && secs.length > 0) {
-            secs.forEach((s) => {
-                const isSel = s.SSECCODE === selectedSec ? 'selected' : '';
-                $sec.append(
-                    `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${s.SSEC || s.SSECTION}</option>`,
-                );
-            });
-        } else {
-            $sec.append('<option value="00">00 : No Section</option>');
-        }
-
-        if (selectedSec) {
-            $sec.val(selectedSec);
-        }
-    } catch (e) {
-        console.error('Load Sections Error:', e);
-    }
-}
-
 let lastSearchedEmp = '';
 export function bindEmpSearchEvent() {
     const $empInput = $('#REQUEST_BY_EMPNO');
     if ($empInput.length === 0 || $empInput.prop('readonly')) return;
 
-    $empInput
-        .off('input change blur')
-        .on('input', function () {
-            const val = this.value.trim();
-            if (val.length === 5 && val !== lastSearchedEmp) {
-                lastSearchedEmp = val;
-                fetchEmpNameAndOrg(val);
-            } else if (val.length < 5) {
-                lastSearchedEmp = '';
-                $('#REQUEST_BY_NAME').val('');
-            }
-        })
-        .on('blur', function () {
-            const val = this.value.trim();
-            if (val.length === 5 && val !== lastSearchedEmp) {
+    $empInput.off('input change blur').on('input', function () {
+        const val = this.value.trim();
+        if (val.length === 5) {
+            if (val !== lastSearchedEmp) {
                 lastSearchedEmp = val;
                 fetchEmpNameAndOrg(val);
             }
-        });
+        } else if (val.length < 5) {
+            lastSearchedEmp = '';
+            $('#REQUEST_BY_NAME').val('');
+        }
+    });
 }
-
-/**
- * เมื่อระบุ Request By:
- * 1. ดึงสังกัด Requester
- * 2. โหลด Department Dropdown ของ Division นั้น พร้อม Default เป็น Dept ของ Requester
- * 3. โหลด Section Dropdown พร้อม Default เป็น Sect ของ Requester
- * 4. กรอง Control No. ตาม Division ของ Requester
- */
 
 export async function fetchEmpNameAndOrg(empNo) {
     empNo = (empNo || '').trim();
     if (empNo.length !== 5) return;
-
+    const y2 = ($('#CYEAR2Hid').val() || '').trim();
+    const runNo = ($('#NRUNNOHid').val() || '').trim();
+    const controlNo = ($('#ControlNoDrp').val() || '').trim();
     try {
         await showLoader({ show: true });
 
-        // ยิงเส้นเดียว ได้ข้อมูลครบทั้ง Org, Dropdowns, Control No. และไฟล์ Revision
         const res = await $.getJSON(
-            `${host}feform/FE-ASP/form/ajaxGetEmpFullContext?empno=${encodeURIComponent(empNo)}`,
+            `${host}feform/FE-ASP/form/ajaxGetEmpFullContext?empno=${encodeURIComponent(empNo)}&controlNo=${encodeURIComponent(controlNo)}&y2=${encodeURIComponent(y2)}&runNo=${encodeURIComponent(runNo)}`,
         );
 
         if (!res || !res.status) {
@@ -280,12 +236,11 @@ export async function fetchEmpNameAndOrg(empNo) {
 
         const emp = res.emp;
 
-        // 1. ใส่ชื่อพนักงาน และข้อมูล Division
         $('#REQUEST_BY_NAME').val(emp.name || '');
         $('#SDIVCODEHid').val(emp.divCode || '');
         $('#DivisionTxt').val(emp.divName || '');
 
-        // 2. เติม Department Dropdown พร้อมเลือกค่าของพนักงาน
+        // Department
         const $dept = $('#DeptDrp')
             .empty()
             .append('<option value="">-- Choose Department --</option>');
@@ -300,7 +255,7 @@ export async function fetchEmpNameAndOrg(empNo) {
             $dept.val(emp.depCode);
         }
 
-        // 3. เติม Section Dropdown พร้อมเลือกค่าของพนักงาน
+        // Section ทั้งหมดภายใต้แผนก
         const $sec = $('#SecDrp').empty();
         if (res.sections && res.sections.length > 0) {
             res.sections.forEach((s) => {
@@ -315,7 +270,7 @@ export async function fetchEmpNameAndOrg(empNo) {
             $sec.append('<option value="00">00 : No Section</option>');
         }
 
-        // 4. เติม Control Number Dropdown และ Auto-select ตัวแรก
+        // Control No. Dropdown
         const $ctrlDrp = $('#ControlNoDrp')
             .empty()
             .append('<option value="">-- Choose Control No. --</option>');
@@ -324,19 +279,19 @@ export async function fetchEmpNameAndOrg(empNo) {
                 $ctrlDrp.append(`
                     <option value="${c.CONTROL_NO}" 
                             data-divcode="${c.SDIVCODE}" 
+                            data-depcode="${c.SDEPCODE || ''}"
+                            data-seccode="${c.SSECCODE || '00'}"
                             data-divname="${c.DIVISION_NAME}">
                         ${c.CONTROL_NO} : ${c.CONTROL_NAME}
                     </option>
                 `);
             });
 
-            // เลือกตัวแรกให้อัตโนมัติ
             if (res.defaultControl) {
                 $ctrlDrp.val(res.defaultControl.CONTROL_NO);
             }
         }
 
-        // 5. แสดงไฟล์ Revision ล่าสุดของ Control แรกทันที
         renderPrevFile(res.prevFile);
     } catch (e) {
         console.error('fetchEmpFullContext error:', e);
@@ -344,6 +299,40 @@ export async function fetchEmpNameAndOrg(empNo) {
         await showLoader({ show: false });
     }
 }
+
+export async function loadSectionDropdown(depCode, selectedSec = '00') {
+    try {
+        let secs = [];
+        if (depCode && depCode !== '00') {
+            const res = await $.getJSON(
+                `${host}feform/FE-ASP/form/ajaxGetSections?depCode=${encodeURIComponent(depCode)}`,
+            );
+            if (res?.status && res.data) {
+                secs = res.data;
+            }
+        }
+
+        const $sec = $('#SecDrp').empty();
+        if (secs && secs.length > 0) {
+            secs.forEach((s) => {
+                const isSel = s.SSECCODE === selectedSec ? 'selected' : '';
+                const secName = s.SEC_NAME || s.SSEC || s.SSECTION || '';
+                $sec.append(
+                    `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${secName}</option>`,
+                );
+            });
+        } else {
+            $sec.append('<option value="00">00 : No Section</option>');
+        }
+
+        if (selectedSec) {
+            $sec.val(selectedSec);
+        }
+    } catch (e) {
+        console.error('Load Sections Error:', e);
+    }
+}
+
 export function applyReviewPeriodRules() {
     const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
         .toUpperCase()
@@ -427,7 +416,6 @@ export function buildSavePayload(form, isDraft = false, empno = '') {
     const payload = new FormData();
     payload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val() || '');
     payload.append('CONTROL_NO', controlNo);
-    // 🟢 ค่าที่เลือกจาก Dropdown ส่งบันทึกลง Header
     payload.append('SDIVCODE', $('#SDIVCODEHid').val() || '');
     payload.append('SDEPCODE', $('#DeptDrp').val() || '');
     payload.append('SSECCODE', $('#SecDrp').val() || '00');
