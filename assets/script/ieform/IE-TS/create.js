@@ -1,11 +1,13 @@
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { createTable } from '@amec/webasset/dataTable';
-import { showMessage } from '@amec/webasset/utils';
+import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
 import 'flatpickr/dist/plugins/monthSelect/style.css';
 import { getTsAdjustData } from './data';
+import { showLoader } from '@amec/webasset/preloader';
+
 let tsTableInstance = null;
 const transformDataForTable = (apiData, startIndex = 0) => {
     const flatData = [];
@@ -196,6 +198,65 @@ async function updateOrCreateTable(rawData) {
         tsTableInstance = await createTable(tableOption, setupOpt);
     }
 }
+
+function packDataForSave() {
+    if (!tsTableInstance) {
+        showMessage('Not have Data', 'warning');
+        return;
+    }
+
+    const dataToSave = [];
+
+    // ตัวแปรสำหรับจดจำข้อมูลของแถวหลัก (Parent) เพื่อเอาไปแปะให้แถวย่อย (Child)
+    let currentParentData = {};
+
+    // วนลูปทุกแถวจากบนลงล่าง
+    tsTableInstance.rows().every(function () {
+        const data = this.data();
+        const node = this.node();
+
+        // 1. ถ้าเจอแถว 'parent' ให้จดจำข้อมูลหลักไว้
+        if (data[14] === 'parent') {
+            currentParentData = {
+                partName: data[1], // Part Name
+                item: data[2], // ITEM
+                dwg: data[3], // DWG
+                qty: data[4], // QTY
+            };
+        }
+        // 2. ถ้าเจอแถว 'child' ให้ดึงข้อมูล process และ textbox มารวมกับ parent
+        else if (data[14] === 'child') {
+            let tpAfter =
+                $(node).find('td:eq(9) input').val() ||
+                $(node).find('td:eq(9)').text().trim() ||
+                data[9];
+            let tcAfter =
+                $(node).find('td:eq(10) input').val() ||
+                $(node).find('td:eq(10)').text().trim() ||
+                data[10];
+            if (data[6] != tpAfter || data[7] != tcAfter) {
+                const rowData = {
+                    // ดึงข้อมูลหลักจากตัวแปร currentParentData ที่จำไว้
+                    partName: currentParentData.partName,
+                    item: currentParentData.item,
+                    dwg: currentParentData.dwg,
+                    qty: currentParentData.qty,
+                    process: data[5],
+                    tpBefore: data[6],
+                    tcBefore: data[7],
+                    tpAfter: tpAfter,
+                    tcAfter: tcAfter,
+                };
+
+                dataToSave.push(rowData);
+            }
+        }
+    });
+
+    console.log('Data to save:', dataToSave);
+    return dataToSave;
+}
+
 $(document).ready(async function () {
     flatpickr('#jun', {
         dateFormat: 'm/Y',
@@ -335,94 +396,110 @@ async function initMyTable() {
 document.addEventListener('DOMContentLoaded', () => {
     initMyTable();
 });
+$(document).on('click', '.btnact', async function () {
+    const act = $(this).val();
+    console.log(act);
+    const dwgData = await packDataForSave();
+    console.log(dwgData);
+});
 
 $(document).on('click', '#btnAdd', async function () {
     console.log('ADD');
-    let rawMonth = $('#jun').val();
-    let month = rawMonth ? rawMonth.replace('/', '') : '';
+    try {
+        showLoader({ show: true });
+        let rawMonth = $('#jun').val();
+        let month = rawMonth ? rawMonth.replace('/', '') : '';
 
-    let baseDwg = $('#dwgNo').val().trim();
-    let gNo = $('#gNo').val().trim();
-    let l1Str = $('#l1No').val().trim();
-    let l2Str = $('#l2No').val().trim();
+        let baseDwg = $('#dwgNo').val().trim();
+        let gNo = $('#gNo').val().trim();
+        let l1Str = $('#l1No').val().trim();
+        let l2Str = $('#l2No').val().trim();
 
-    if (!baseDwg) {
-        showMessage('Please enter Drawing No.', 'warning');
-        return;
-    }
-    let dwgList = [];
-    let baseString = baseDwg;
-    if (gNo) {
-        baseString += ` ${gNo}`;
-    }
-    if (l1Str) {
-        // ดึงเฉพาะตัวเลขออกมา
-        let startL = parseInt(l1Str.replace(/\D/g, ''));
-        let endL = l2Str ? parseInt(l2Str.replace(/\D/g, '')) : null;
+        if (!baseDwg) {
+            showMessage('Please enter Drawing No.', 'warning');
+            return;
+        }
+        let dwgList = [];
+        let baseString = baseDwg;
+        if (gNo) {
+            baseString += ` ${gNo}`;
+        }
+        if (l1Str) {
+            // ดึงเฉพาะตัวเลขออกมา
+            let startL = parseInt(l1Str.replace(/\D/g, ''));
+            let endL = l2Str ? parseInt(l2Str.replace(/\D/g, '')) : null;
 
-        if (endL && endL >= startL) {
-            // กรณีมี L1 ถึง L2 (เช่น L2 - L5)
-            for (let i = startL; i <= endL; i++) {
-                let paddedI = String(i).padStart(2, '0');
-                dwgList.push(`${baseString} L${paddedI}`);
+            if (endL && endL >= startL) {
+                // กรณีมี L1 ถึง L2 (เช่น L2 - L5)
+                for (let i = startL; i <= endL; i++) {
+                    let paddedI = String(i).padStart(2, '0');
+                    dwgList.push(`${baseString} L${paddedI}`);
+                }
+            } else if (!isNaN(startL)) {
+                // กรณีมีแค่ L1 ตัวเดียว
+                let paddedStartL = String(startL).padStart(2, '0');
+                dwgList.push(`${baseString} L${paddedStartL}`);
+            } else {
+                // เผื่อกรณีพิมพ์ L1 แปลกๆ
+                dwgList.push(`${baseString} ${l1Str}`);
             }
-        } else if (!isNaN(startL)) {
-            // กรณีมีแค่ L1 ตัวเดียว
-            let paddedStartL = String(startL).padStart(2, '0');
-            dwgList.push(`${baseString} L${paddedStartL}`);
         } else {
-            // เผื่อกรณีพิมพ์ L1 แปลกๆ
-            dwgList.push(`${baseString} ${l1Str}`);
+            // *** กรณีไม่มีการกรอก L เลย ระบบจะส่งคำค้นหาเท่าที่มีเข้า Array ทันที ***
+            dwgList.push(baseString);
         }
-    } else {
-        // *** กรณีไม่มีการกรอก L เลย ระบบจะส่งคำค้นหาเท่าที่มีเข้า Array ทันที ***
-        dwgList.push(baseString);
-    }
-    const res = await getTsAdjustData({
-        month: month,
-        dwgNo: dwgList,
-    });
-    if (res && res.length > 0) {
-        // 💡 --- เริ่มส่วนตรวจสอบข้อมูลซ้ำ ---
-        if (tsTableInstance) {
-            // 1. ดึงข้อมูลทั้งหมดในตารางปัจจุบัน
-            const allData = tsTableInstance.rows().data().toArray();
+        let res = await getTsAdjustData({
+            month: month,
+            dwgNo: dwgList,
+        });
+        if (res && res.length > 0) {
+            // 💡 --- เริ่มส่วนตรวจสอบข้อมูลซ้ำ ---
+            if (tsTableInstance) {
+                // 1. ดึงข้อมูลทั้งหมดในตารางปัจจุบัน
+                const allData = tsTableInstance.rows().data().toArray();
 
-            // 2. ดึงเฉพาะชื่อ DWG ที่มีอยู่แล้ว (คอลัมน์ที่ 4 -> Index 3 ของแถว parent)
-            const existingDwgs = allData
-                .filter((row) => row[14] === 'parent')
-                .map((row) => (row[3] ? row[3].trim() : ''));
+                // 2. ดึงเฉพาะชื่อ DWG ที่มีอยู่แล้ว (คอลัมน์ที่ 4 -> Index 3 ของแถว parent)
+                const existingDwgs = allData
+                    .filter((row) => row[14] === 'parent')
+                    .map((row) => (row[3] ? row[3].trim() : ''));
 
-            // 3. กรองเอาเฉพาะข้อมูลจาก API ที่ยังไม่มีในตาราง
-            const newRecords = res.filter((item) => {
-                const itemDwg = item.F01R04 ? item.F01R04.trim() : '';
-                return !existingDwgs.includes(itemDwg);
-            });
+                // 3. กรองเอาเฉพาะข้อมูลจาก API ที่ยังไม่มีในตาราง
+                const newRecords = res.filter((item) => {
+                    const itemDwg = item.F01R04 ? item.F01R04.trim() : '';
+                    return !existingDwgs.includes(itemDwg);
+                });
 
-            // 4. เช็คผลลัพธ์หลังกรอง
-            if (newRecords.length === 0) {
-                showMessage('This DWG No. is already in the table.', 'warning');
-                return; // หยุดการทำงาน ไม่เพิ่มลงตาราง
-            } else if (newRecords.length < res.length) {
-                // ถ้ารายการมีทั้งตัวเก่าและตัวใหม่ปนกัน
-                showMessage(
-                    'Some DWG Nos. already exist. Only new items will be added.',
-                    'warning',
-                );
+                // 4. เช็คผลลัพธ์หลังกรอง
+                if (newRecords.length === 0) {
+                    showMessage(
+                        'This DWG No. is already in the table.',
+                        'warning',
+                    );
+                    return; // หยุดการทำงาน ไม่เพิ่มลงตาราง
+                } else if (newRecords.length < res.length) {
+                    // ถ้ารายการมีทั้งตัวเก่าและตัวใหม่ปนกัน
+                    showMessage(
+                        'Some DWG Nos. already exist. Only new items will be added.',
+                        'warning',
+                    );
+                }
+
+                // 5. เอาเฉพาะรายการใหม่ไปอัปเดตตาราง
+                res = newRecords;
             }
-
-            // 5. เอาเฉพาะรายการใหม่ไปอัปเดตตาราง
-            res = newRecords;
+            await updateOrCreateTable(res);
+            $('#dwgNo').val('');
+            $('#gNo').val('');
+            $('#l1No').val('');
+            $('#l2No').val('');
+        } else {
+            showMessage('Dwg No. not found.', 'warning');
         }
-        await updateOrCreateTable(res);
-        $('#dwgNo').val('');
-        $('#gNo').val('');
-        $('#l1No').val('');
-        $('#l2No').val('');
-    } else {
-        showMessage('Dwg No. not found.', 'warning');
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
     }
-    console.log(res);
 });
 
 // ดักจับเหตุการณ์เมื่อมีการ Paste (วางข้อความ) ในช่อง Dwg No.

@@ -208,13 +208,13 @@
 
                 <!-- SAVE: พาสเทลเทา (ดูเป็นปุ่มรอง) -->
                 <button type="button" id="btnDraft" name="btnDraft" value="draft"
-                    class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 font-bold py-2.5 px-8 rounded-lg shadow-sm transition">
+                    class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 font-bold py-2.5 px-8 rounded-lg shadow-sm transition btnact">
                     SAVE
                 </button>
 
                 <!-- SEND: พาสเทลฟ้า/น้ำเงิน (ปุ่มหลัก ดูซอฟต์แต่ยังโดดเด่น) -->
                 <button type="button" id="btnRequest" name="btnRequest" value="request"
-                    class="bg-blue-100 hover:bg-blue-200 border border-blue-200 text-blue-700 font-bold py-2.5 px-8 rounded-lg shadow-sm transition">
+                    class="bg-blue-100 hover:bg-blue-200 border border-blue-200 text-blue-700 font-bold py-2.5 px-8 rounded-lg shadow-sm transition btnact">
                     SEND
                 </button>
 
