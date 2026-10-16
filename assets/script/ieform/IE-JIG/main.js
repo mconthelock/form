@@ -1,3 +1,4 @@
+import { initializeRecheck } from './recheck';
 import Swal from 'sweetalert2';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import {
@@ -27,6 +28,8 @@ $(document).ready(function () {
     let storedFiles;
     let storedKey;
     let workflow;
+    let recheck;
+    let nextFileSeq = 1;
     let ngActions;
     let picReady;
     let processReady;
@@ -56,6 +59,7 @@ $(document).ready(function () {
             this.initFiles();
             this.bindFileEvents();
             this.bindPriceEvents();
+            recheck = initializeRecheck(form);
             this.initWorkflow();
         },
 
@@ -356,6 +360,7 @@ $(document).ready(function () {
             for (const input of form.querySelectorAll(
                 'input, select, textarea',
             )) {
+                if (input.closest('#jig-recheck')) continue;
                 if (input.closest('#ng-fields') && !hasNg) continue;
                 if (input.required && (input.disabled || !input.value.trim()))
                     errors.push('กรุณากรอก/เลือก ' + labelOf(input));
@@ -433,6 +438,7 @@ $(document).ready(function () {
             );
             const hasNg = results.includes('NG');
             document.querySelector('#ng-detail').hidden = !hasNg;
+            recheck?.setNg(hasNg);
             document.querySelector('#ng-fields').disabled = !hasNg;
             document.querySelector('#checkpoint-summary').textContent =
                 `${rows.children.length} จุดตรวจ · OK ${results.filter((x) => x === 'OK').length} · NG ${results.filter((x) => x === 'NG').length}`;
@@ -650,10 +656,13 @@ $(document).ready(function () {
             JIG.summarize();
             storedKey = key;
             document.querySelector('#generate-ng-pdf').href = jigNgTagPdfUrl(key);
-            storedFiles = snapshot.FILES || [];
+            storedFiles = (snapshot.FILES || []).filter(f => (f.FILE_GROUP || 'REFERENCE') === 'REFERENCE');
+            nextFileSeq = Math.max(0, ...(snapshot.FILES || []).map(f => Number(f.FILE_SEQ))) + 1;
             JIG.renderFiles();
             document.querySelector('#jig-fields').disabled =
                 pageMode !== 'edit';
+            document.querySelector('#checkpoint-fields').disabled = pageMode !== 'edit';
+            recheck.hydrate(snapshot, key);
             form.elements.namedItem('pic_empno').disabled = pageMode !== 'edit';
             if (pageMode === 'view') {
                 form.querySelectorAll(
@@ -672,7 +681,9 @@ $(document).ready(function () {
                 pageMode,
                 validate: JIG.validate,
                 hydrate: JIG.hydrate,
-                files: () => ({ stored: storedFiles, incoming: attachments }),
+                files: () => ({ stored: storedFiles, incoming: attachments, nextSeq: nextFileSeq }),
+                filesSaved: (saved) => { storedFiles = saved; attachments = []; nextFileSeq = Math.max(nextFileSeq, ...saved.map(f => Number(f.FILE_SEQ) + 1)); JIG.renderFiles(); },
+                recheck,
                 ready: Promise.all([picReady, processReady, locationReady]),
             });
         },
