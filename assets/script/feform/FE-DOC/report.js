@@ -22,17 +22,17 @@ const columns = [
             return `<span class="font-semibold text-blue-700">${escapeHtml(data ?? '-')}</span>`;
         },
     },
-    {
-        title: 'DOC TYPE',
-        data: null,
-        render: (data, type) => {
-            if (type !== 'display') return data?.DOC_TYPE_CODE ?? '';
-            return `
-                <span class="font-bold text-slate-700">${escapeHtml(data?.DOC_TYPE_CODE ?? '-')}</span>
-                <div class="text-[10px] text-slate-400">${escapeHtml(data?.DOC_TYPE_NAME ?? '')}</div>
-            `;
-        },
-    },
+    // {
+    //     title: 'DOC TYPE',
+    //     data: null,
+    //     render: (data, type) => {
+    //         if (type !== 'display') return data?.DOC_TYPE_CODE ?? '';
+    //         return `
+    //             <span class="font-bold text-slate-700">${escapeHtml(data?.DOC_TYPE_CODE ?? '-')}</span>
+    //             <div class="text-[10px] text-slate-400">${escapeHtml(data?.DOC_TYPE_NAME ?? '')}</div>
+    //         `;
+    //     },
+    // },
     {
         title: 'STATUS',
         data: 'STATUS',
@@ -60,8 +60,8 @@ const columns = [
     },
     {
         title: 'CREATE BY',
-        data: 'USER_ACTION',
-        className: 'text-slate-600 font-mono',
+        data: 'CREATE_BY',
+        className: 'text-center text-slate-600',
         defaultContent: '-',
         render: renderText,
     },

@@ -141,12 +141,42 @@ export async function stampFormAttachedFiles(
  * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง เรียงจาก ขวา ไป ซ้าย
  */
 /**
+ * แปลงวันที่ DD/MM/YYYY ให้เป็นรูปแบบ DD Mon YYYY (เช่น 06 Oct 2026)
+ */
+function formatStampDate(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.trim().split('/');
+    if (parts.length < 3) return dateStr;
+
+    const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ];
+    const day = parts[0].padStart(2, '0');
+    const monthIdx = parseInt(parts[1], 10) - 1;
+    const year = parts[2];
+
+    const mon = months[monthIdx] || parts[1];
+    return `${day} ${mon} ${year}`;
+}
+
+/**
  * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง เรียงจาก ขวา ไป ซ้าย
  */
 export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
     const {
-        colWidth = 76, // ขยายความกว้างช่องจาก 68 เป็น 76 เพื่อรองรับวงกลมที่ใหญ่ขึ้น
-        boxHeight = 65, // ขยายความสูงช่องจาก 56 เป็น 65
+        colWidth = 58, // ปรับลดความกว้างช่องลง เพื่อให้ระยะห่างระหว่างดวงตราน้อยลงตามต้องการ
+        boxHeight = 65,
         marginRight = 20,
         marginTop = 18,
     } = options;
@@ -165,7 +195,7 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
         return await pdfDoc.save();
     }
 
-    // 1. กรองตัด Requester (Step 00 หรือ CSTART == 1) ออก ไม่นำมา Stamp
+    // 1. กรอง Requester (Step 00 หรือ CSTART == 1) ออก
     const approverLogs = logs.filter((item) => {
         const ext = String(item.CEXTDATA || '').trim();
         const isStartStep = String(item.CSTART || '') === '1';
@@ -183,9 +213,10 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     const startY = height - marginTop;
-    const stampRadius = 26; // ขยายขนาดรัศมีวงกลมจาก 21 เป็น 26
+    const stampRadius = 26; // ขนาดรัศมีวงกลมคงเดิมที่ 26 pt (เส้นผ่านศูนย์กลาง 52 pt)
+    const stampColor = rgb(0.88, 0.15, 0.15); // สีแดงตรายางมาตรฐาน
 
-    // วนลูปวาดเฉพาะผู้อนุมัติ (คนแรก idx = 0 อยู่ชิดขวา คนถัดไปขยับไปซ้าย)
+    // วนลูปวาดตรายางผู้อนุมัติ (เรียงจากขวาไปซ้าย)
     approverLogs.forEach((app, idx) => {
         const cellX = width - marginRight - (idx + 1) * colWidth;
         const cellY = startY - boxHeight;
@@ -193,50 +224,88 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
         const centerX = cellX + colWidth / 2;
         const centerY = cellY + boxHeight / 2;
 
-        // วงกลมสีแดง (ขยายรัศมีเป็น 26)
+        // --- 1. วงกลมหลักด้านนอก ---
         firstPage.drawEllipse({
             x: centerX,
             y: centerY,
             xScale: stampRadius,
             yScale: stampRadius,
-            borderColor: rgb(0.85, 0.1, 0.1),
-            borderWidth: 1.3,
+            borderColor: stampColor,
+            borderWidth: 1.2,
             opacity: 0.95,
         });
 
-        // 1. ข้อความ AMEC
+        // --- 2. เส้นขีดแนวนอนด้านใน 2 เส้น (บน / ล่าง) ---
+        // คำนวณความกว้างเส้นให้อยู่พอดีภายในขอบวงกลมตามสูตร x = sqrt(r^2 - y^2)
+        const lineY1 = centerY + 8; // เส้นแบ่งด้านบน
+        const dy1 = lineY1 - centerY;
+        const lineHalfW1 =
+            Math.sqrt(Math.max(0, stampRadius * stampRadius - dy1 * dy1)) - 0.8;
+
+        firstPage.drawLine({
+            start: { x: centerX - lineHalfW1, y: lineY1 },
+            end: { x: centerX + lineHalfW1, y: lineY1 },
+            thickness: 0.8,
+            color: stampColor,
+            opacity: 0.9,
+        });
+
+        const lineY2 = centerY - 8; // เส้นแบ่งด้านล่าง
+        const dy2 = lineY2 - centerY;
+        const lineHalfW2 =
+            Math.sqrt(Math.max(0, stampRadius * stampRadius - dy2 * dy2)) - 0.8;
+
+        firstPage.drawLine({
+            start: { x: centerX - lineHalfW2, y: lineY2 },
+            end: { x: centerX + lineHalfW2, y: lineY2 },
+            thickness: 0.8,
+            color: stampColor,
+            opacity: 0.9,
+        });
+
+        // --- 3. ข้อความส่วนบน: CHECKED / APPROVED ---
+        const topTitle = 'CHECKED';
+        const topTitleW = fontBold.widthOfTextAtSize(topTitle, 7);
+        firstPage.drawText(topTitle, {
+            x: centerX - topTitleW / 2,
+            y: centerY + 13,
+            size: 7,
+            font: fontBold,
+            color: stampColor,
+        });
+
+        // --- 4. ข้อความตรงกลางบรรทัดแรก: AMEC ---
         const orgText = 'AMEC';
-        const orgW = fontBold.widthOfTextAtSize(orgText, 8);
+        const orgW = fontBold.widthOfTextAtSize(orgText, 8.5);
         firstPage.drawText(orgText, {
             x: centerX - orgW / 2,
-            y: centerY + 11,
-            size: 8,
+            y: centerY + 0.5,
+            size: 8.5,
             font: fontBold,
-            color: rgb(0.85, 0.1, 0.1),
+            color: stampColor,
         });
 
-        // 2. วันที่อนุมัติจริง
-        const dateText = (app.DAPVDATE_STR || '').trim();
-        const dateW = fontRegular.widthOfTextAtSize(dateText, 6.8);
+        // --- 5. ข้อความตรงกลางบรรทัดที่สอง: วันที่ (เช่น 06 Oct 2026) ---
+        const rawDate = (app.DAPVDATE_STR || '').trim();
+        const dateText = formatStampDate(rawDate);
+        const dateW = fontRegular.widthOfTextAtSize(dateText, 6.2);
         firstPage.drawText(dateText, {
             x: centerX - dateW / 2,
-            y: centerY - 0.5,
-            size: 6.8,
+            y: centerY - 6.5,
+            size: 6.2,
             font: fontRegular,
-            color: rgb(0.85, 0.1, 0.1),
+            color: stampColor,
         });
 
-        // 3. ชื่อ/นามสกุล (ถ้าชื่อยาว จะลดขนาด Font อัตโนมัติเพื่อไม่ให้ล้นวงกลม)
+        // --- 6. ข้อความส่วนล่าง: ชื่อ/นามสกุลผู้อนุมัติ ---
         const empCode = app.SEMPNO || app.VREALAPV || app.EMPNO || '';
         const rawName = app.SNAME || app.VREALAPV || '';
-        const displayName = getDisplayStampName(empCode, rawName);
+        const displayName = getDisplayStampName(empCode, rawName).toUpperCase();
 
-        // กำหนดความกว้างสูงสุดที่ยอมให้ตัวอักษรแสดง (ภายในวงกลม)
-        const maxTextWidth = stampRadius * 1.65; // ~43pt
-        let fontSize = 7.5;
+        const maxTextWidth = stampRadius * 1.55;
+        let fontSize = 7;
         let nameW = fontBold.widthOfTextAtSize(displayName, fontSize);
 
-        // ย่อขนาด Font ลงทีละนิด ถ้าชื่อยาวเกินพื้นที่
         while (nameW > maxTextWidth && fontSize > 4.5) {
             fontSize -= 0.5;
             nameW = fontBold.widthOfTextAtSize(displayName, fontSize);
@@ -244,10 +313,10 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
 
         firstPage.drawText(displayName, {
             x: centerX - nameW / 2,
-            y: centerY - 12.5,
+            y: centerY - 16.5,
             size: fontSize,
             font: fontBold,
-            color: rgb(0.85, 0.1, 0.1),
+            color: stampColor,
         });
     });
 

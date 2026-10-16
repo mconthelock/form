@@ -11,15 +11,15 @@ import { host } from '../../utils';
 import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
 import {
-    getCurrentPrevFile,
+    getCurrentPrevFiles, //  เติม s ให้ตรงกับ form.js (หรือตัดออกหากไม่ได้ใช้)
     initFormControls,
-    loadDepartmentDropdown,
     loadSectionDropdown,
     applyReviewPeriodRules,
     bindEmpSearchEvent,
     fetchEmpNameAndOrg,
     populateSavedDetails,
     buildSavePayload,
+    renderPrevFile, // เพิ่ม import ตัวนี้เข้ามา
 } from './form';
 
 let empno = '';
@@ -46,9 +46,6 @@ $(document).ready(async function () {
     bindEmpSearchEvent();
     initFormControls();
     applyReviewPeriodRules();
-
-    // 🟢 ไม่ต้องสั่ง fetchEmpNameAndOrg() หรือ loadDepartmentDropdown() ในหน้าแรกอีก
-    // ข้อมูลถูก Render ผ่าน PHP ฝั่ง Server ครบถ้วนตั้งแต่เปิดหน้า
 
     // เติมคำตอบตารางประเมินเดิม (ถ้ามี)
     populateSavedDetails(window.INITIAL_SAVED_DETAILS || []);
@@ -123,24 +120,33 @@ $(document).ready(async function () {
     // --------------------------------------------------------
     // ปุ่มเปิดดู Active Revision เดิม
     // --------------------------------------------------------
-    $(document).on('click', '#btn-open-prev-file', async function () {
-        const fileObj = getCurrentPrevFile();
-        if (!fileObj) return;
+    // ปุ่มเปิดดู Active Revision เดิม
+    $(document).on('click', '.btn-open-prev-file', async function (e) {
+        e.preventDefault();
+        const baseDir = $(this).data('base-dir');
+        const storedName = $(this).data('stored-name');
+        const originalName = $(this).data('original-name') || 'document.pdf';
+
+        if (!storedName) {
+            showErrorMessage('ไม่พบข้อมูลไฟล์');
+            return;
+        }
 
         try {
             await showLoader({ show: true });
             const file = await getFile({
-                baseDir: (fileObj.FILE_PATH || '').replace(/\\/g, '/'),
-                storedName: fileObj.FILE_FNAME,
-                originalName: fileObj.FILE_ONAME,
+                baseDir: baseDir,
+                storedName: storedName,
+                originalName: originalName,
                 mode: 'open',
             });
+
             const blobUrl = URL.createObjectURL(file);
             window.open(blobUrl, '_blank');
             setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
         } catch (err) {
-            console.error(err);
-            showErrorMessage('เปิดไฟล์ไม่สำเร็จ');
+            console.error('Open prev file error:', err);
+            showErrorMessage('เกิดข้อผิดพลาดในการเปิดไฟล์');
         } finally {
             await showLoader({ show: false });
         }
@@ -215,6 +221,18 @@ $(document).ready(async function () {
             await showLoader({ show: false });
         }
     });
+
+    // --------------------------------------------------------
+    // โหมดสร้างเอกสารใหม่: เรนเดอร์กล่อง Active Revision ของ Control No. ตัวแรกทันที
+    // --------------------------------------------------------
+    if (!form.NRUNNO && $('#ControlNoDrp').val()) {
+        const initPrev = window.INITIAL_PREV_FILE;
+        if (initPrev && initPrev.header) {
+            renderPrevFile(initPrev);
+        } else {
+            $('#ControlNoDrp').trigger('change');
+        }
+    }
 });
 
 /**
