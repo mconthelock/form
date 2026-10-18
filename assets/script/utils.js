@@ -72,6 +72,8 @@ export const tableOption = {
     initComplete: function (settings, json) {
         $(this).closest('.tableArea').find('.table-loader').addClass('hidden');
         const container = $(this.api().table().container());
+        $('.dt-search').addClass('hidden');
+        $('.dt-length').addClass('hidden');
         return { container };
     },
 };

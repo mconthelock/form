@@ -8,6 +8,18 @@ import {
     createMfgEdr,
     updateMfgEdrDetail,
 } from './data.js';
+
+import {
+    getcause,
+    getworktype,
+    getUserbyemp,
+    getprocess,
+    getline,
+    getamecorderdetail,
+    getSection,
+    searchMfgEdrReport,
+} from './data.js';
+
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage, showConfirm } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
@@ -91,7 +103,6 @@ $(document).ready(function () {
                         $(this).attr('id') === 'request_by'
                             ? '#request_by_name'
                             : '#repair_by_name';
-
                     $(target).text('');
                 }
             });
@@ -100,7 +111,6 @@ $(document).ready(function () {
                 EDR.loadCauseByWorkType($(this).val());
 
                 const newTableType = EDR.getCurrentTableType();
-
                 if (EDR.currentTableType === newTableType) {
                     return;
                 }
@@ -113,15 +123,12 @@ $(document).ready(function () {
             $('#btnSaveDraft').on('click', function () {
                 EDR.submitForm('save_draft');
             });
-
             $('#btnSendForm').on('click', function () {
                 EDR.submitForm('send_form');
             });
-
             $(document).on('input', 'input[name="order_no[]"]', function () {
                 EDR.checkOrderDetail($(this));
             });
-
             $(document).on('click', '.btnCopyRow', function (e) {
                 e.preventDefault();
                 EDR.copyRow($(this));
@@ -133,7 +140,6 @@ $(document).ready(function () {
                 const jobTypes = await getworktype();
                 const lines = await getline();
                 const processes = await getprocess();
-
                 const worktypeOptions = jobTypes.map(function (item) {
                     return {
                         value: item.TID,
@@ -176,12 +182,8 @@ $(document).ready(function () {
 
         loadCauseByWorkType: async function (tid) {
             const causeGroup = String(tid) === '4' ? 'PCB' : 'ALL';
-
             try {
-                const causes = await getcause({
-                    CAUSE_GROUP: causeGroup,
-                });
-
+                const causes = await getcause({ CAUSE_GROUP: causeGroup });
                 const causeOptions = causes.map(function (item) {
                     return {
                         value: item.CID,
@@ -209,7 +211,6 @@ $(document).ready(function () {
             if (isPCB) {
                 $table.addClass('tbl-pcb');
                 $thead.addClass('bg-purple-500 text-white');
-
                 $thead.html(`
                     <tr>
                         <th>#</th>
@@ -454,7 +455,6 @@ $(document).ready(function () {
                     .removeClass('text-red-500 text-emerald-700')
                     .addClass('text-slate-500')
                     .text('Checking...');
-
                 const user = await getUserbyemp(empno);
                 const empName = user?.SNAME || '';
 
@@ -663,7 +663,6 @@ $(document).ready(function () {
                             let val = $.trim(
                                 $tr.find('[name="prod_jun[]"]').val(),
                             );
-
                             if (!val) {
                                 return null;
                             }
@@ -671,7 +670,6 @@ $(document).ready(function () {
                             if (val.length > 6) {
                                 val = val.substring(2);
                             }
-
                             return val;
                         })(),
                     };
@@ -693,7 +691,6 @@ $(document).ready(function () {
                 DAILY_MONTH: String($('#daily_month').val() || ''),
                 DAILY_RUNNO: Number($('#daily_runno').val()) || null,
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
-
                 list,
                 att: uploadedFiles.map((file) => ({
                     FILENAME: file,

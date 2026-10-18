@@ -1,21 +1,21 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'models/my_model.php';
-class cn_model extends my_model 
+class cn_model extends my_model
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->database();
-        $this->dbas = $this->load->database('AS400', true);
-        
+        // $this->dbas = $this->load->database('AS400', true);
+
     }
 
     public function execsql($q)
 	{
 		return $this->db->query($q);
 	}
-    
+
     public function execAssql($q)
 	{
 		return $this->dbas->query($q);
@@ -32,7 +32,7 @@ class cn_model extends my_model
 	}
 
 
-    
+
     public function getcnform($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
@@ -51,7 +51,7 @@ class cn_model extends my_model
         ->where('Q.NRUNNO', $nrunno);
     return $this->db->get()->result();
     }
-    
+
     public function getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
     $sqlOra = "
@@ -113,7 +113,7 @@ class cn_model extends my_model
         return $this->db->get()->result();
     }
 
-    
+
 
 
 }

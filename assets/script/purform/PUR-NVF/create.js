@@ -14,11 +14,13 @@ import {
     vendorTypeManager,
     ReqtypeManager,
     vendorCodeManager,
-    provinceManager,
-    districtManager,
-    subDistrictManager,
+    cityEnManager,
+    stateEnManager,
+    postcodeEnManager,
 } from './formManager';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
+import { checkAttFile } from './function';
+import Swal from 'sweetalert2';
 
 $(async function () {
     formManager.init();
@@ -65,71 +67,7 @@ $(document).on('select2:select', '.country', async function (e) {
     countryManager.change(e);
 });
 
-$(document).on('select2:select', '.province', async function (e) {
-    console.log('province change');
-
-    provinceManager.change(e);
-    const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
-
-    const filteredDistricts = formManager.districtData.filter(
-        (d) => d.province_id == selectedProvinceId,
-    );
-    const districtOptions = filteredDistricts.map((d) => ({
-        id: d.id,
-        value: d.value,
-        text: d.text,
-        nameth: d.nameth,
-    }));
-
-    districtOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select District --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
-    });
-
-    districtManager.select.empty().trigger('change');
-    await districtManager.init(districtOptions);
-    //const value = $(this).val();
-    //currencyManager.syncValue(value, this);
-    // countryManager.change(e);
-});
-
-$(document).on('select2:select', '.district', async function (e) {
-    districtManager.change(e);
-    const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
-    const filteredSubDistricts = formManager.subDistrictData.filter(
-        (s) => s.district_id == selectedDistrictId,
-    );
-    const subDistrictOptions = filteredSubDistricts.map((s) => ({
-        id: s.id,
-        value: s.value,
-        text: s.text,
-        nameth: s.nameth,
-        district_id: s.district_id,
-        postcode: s.postcode,
-    }));
-    // console.log(subDistrictOptions);
-    subDistrictOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select Sub-district --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
-        district_id: '',
-        postcode: '',
-    });
-
-    subDistrictManager.select.empty().trigger('change');
-    await subDistrictManager.init(subDistrictOptions);
-});
-
-$(document).on('select2:select', '.sub-district', async function (e) {
-    subDistrictManager.change(e);
-});
-
 $(document).on('change', 'input[name="REQTYPE_SHOW"]', function (e) {
-    console.log('xxxxxxxxxx');
-
     ReqtypeManager.change(e);
 });
 
@@ -162,6 +100,49 @@ $(document).on('click', '.file-link', async function (e) {
         originalName: filename,
         mode: ext == 'pdf' ? 'open' : 'download',
     });
+});
+
+const selectedFilesCache = {};
+$(document).on('change', 'input[type="file"]', async function () {
+    let inputId = $(this).attr('id');
+    let wrapper = $(this).closest('.flex-col');
+    let showFileContainer = wrapper.find('.show-file');
+
+    if (!selectedFilesCache[inputId]) {
+        selectedFilesCache[inputId] = new DataTransfer();
+    }
+    let dataTransfer = selectedFilesCache[inputId];
+
+    if (this.files && this.files.length > 0) {
+        $.each(this.files, function (index, file) {
+            let isDuplicate = false;
+            for (let i = 0; i < dataTransfer.files.length; i++) {
+                if (dataTransfer.files[i].name === file.name) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                dataTransfer.items.add(file);
+            }
+        });
+    }
+    this.files = dataTransfer.files;
+    renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+});
+
+$(document).on('click', '.remove-new-file', function () {
+    let inputId = $(this).data('id');
+    let indexToRemove = $(this).data('index');
+    let dataTransfer = selectedFilesCache[inputId];
+    let inputElement = $('#' + inputId)[0];
+    let showFileContainer = $(this).closest('.show-file');
+
+    if (dataTransfer) {
+        dataTransfer.items.remove(indexToRemove);
+        inputElement.files = dataTransfer.files;
+        renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+    }
 });
 
 $(document).on('click', '.remove-file', async function (e) {
@@ -204,3 +185,28 @@ $(document).on('input', '#ACCNUMBER', function () {
             val.slice(9, 10);
     }
 });
+
+function renderNewFilesUI(inputId, dataTransfer, container) {
+    let newFilesDiv = container.find('.new-selected-files');
+    if (newFilesDiv.length === 0) {
+        container.append('<div class="new-selected-files mt-1"></div>');
+        newFilesDiv = container.find('.new-selected-files');
+    }
+
+    newFilesDiv.empty();
+
+    $.each(dataTransfer.files, function (index, file) {
+        let fileItemHtml = `
+            <div class="flex items-center gap-2 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                     class="cursor-pointer remove-new-file shrink-0"
+                     data-id="${inputId}" data-index="${index}" title="Remove file">
+                    <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
+                    <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
+                </svg>
+                <span class="text-sm text-gray-700">${file.name}</span>
+            </div>
+        `;
+        newFilesDiv.append(fileItemHtml);
+    });
+}

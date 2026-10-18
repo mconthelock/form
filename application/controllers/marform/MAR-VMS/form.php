@@ -17,7 +17,7 @@ class form extends MY_Controller{
     protected $client;
     private $nfrmno = "";
     private $vorgno = "";
-    private $cyear = "";  
+    private $cyear = "";
     function __construct(){
 		parent::__construct();
         $this->load->model('form_model', 'frm');
@@ -31,11 +31,11 @@ class form extends MY_Controller{
         $this->nfrmno = $formmst["data"]['NNO'];
         $this->vorgno = $formmst["data"]['VORGNO'];
         $this->cyear = $formmst["data"]['CYEAR'];
-       
+
     }
 
     public function main(){
-        $cform = true; 
+        $cform = true;
         if(!isset($_GET["y2"]) && !isset($_GET["runNo"]))
         {
             if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
@@ -43,7 +43,7 @@ class form extends MY_Controller{
                 if(isset($_GET["mode"]) && $_GET["mode"] == "A")
                 {
                     $cform = true;
-             
+
                 }else
                 {
                     $data = [
@@ -67,7 +67,7 @@ class form extends MY_Controller{
                     'VORGNO' => $_GET['orgNo'],
                     'CYEAR'  => $_GET['y'],
                 ];
-    
+
             }else{
                 $formmst = $this->frm->getFormMaster('MAR-VMS');
                 if(!empty($formmst)){
@@ -77,11 +77,12 @@ class form extends MY_Controller{
                         'CYEAR'  =>$formmst[0]->CYEAR,
                     ];
                 }
-    
+
             }
             $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-            $data['allgroup'] = $this->vms->get_group(array("GSTATUS" => '1')); 
+            $data['allgroup'] = $this->vms->get_group(array("GSTATUS" => '1'));
             $data['participants'] = $this->vms->get_participants();
+
             if(!isset($_GET["runNo"]))
             {
                 $data['mode'] = "1";
@@ -98,7 +99,7 @@ class form extends MY_Controller{
                 {
                     $data['mode'] = "3";
                 }
-               
+
             }
             // mode : ADD or EDIT
                 if(($data['mode'] == "1")||($data['mode'] == "2"))
@@ -172,7 +173,7 @@ class form extends MY_Controller{
                     }
                     $conprj["PROJTYPE"] = "P";
                     $data["pproj"] = $this->vms->customSelect("VMS_PROJECT",$conprj,'*','','','ID');
-                
+
 
                    /* foreach ($rows as $row) {
                         $projno = $row->PROJNO;
@@ -242,9 +243,9 @@ class form extends MY_Controller{
                 }else{
                     $this->views('marform/MAR-VMS/view', $data);
                 }
-            
+
         }
-        
+
     }
 
     /*public function master()
@@ -254,7 +255,7 @@ class form extends MY_Controller{
         $this->views('marform/MAR-VMS/master', $data);
 
     }*/
-    
+
     public function save()
     {
         $tab = $_POST["tab"];
@@ -364,7 +365,7 @@ class form extends MY_Controller{
                     ];
                     echo json_encode($result);
                 }
-              
+
             }
 
         }else if($tab == "stk")
@@ -385,7 +386,7 @@ class form extends MY_Controller{
                     );
                     $seq++;
                 }
-            } 
+            }
             $ist = $_POST["ist"];
             foreach($ist as $i)
             {
@@ -400,12 +401,12 @@ class form extends MY_Controller{
                     );
                     $seq++;
                 }
-            } 
-            
+            }
+
             $this->vms->trans_start();
             $delfn = $this->vms->delete("VMS_STAKEHOLDERS",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
             $this->vms->trans_complete();
-      
+
             if(count($data) > 0)
             {
                 try {
@@ -425,8 +426,8 @@ class form extends MY_Controller{
                     ];
                     echo json_encode($result);
                 }
-            } 
-     
+            }
+
 
         }else if($tab == "sch")
         {
@@ -443,7 +444,7 @@ class form extends MY_Controller{
             $data  = array();
             foreach($starttime as $s)
             {
-                if($s != "")
+                if(($s != "")&&($content[$i] !=""))
                 {
                     $id++;
                     $data[] = array(
@@ -462,7 +463,7 @@ class form extends MY_Controller{
                 $i++;
 
             }
-       
+
             $this->vms->trans_start();
             $delfn = $this->vms->delete("VMS_SCHEDULE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
             $this->vms->trans_complete();
@@ -490,9 +491,9 @@ class form extends MY_Controller{
                     ];
                     echo json_encode($result);
                 }
-    
-            } 
-         
+
+            }
+
 
         }else if($tab == "req")
         {
@@ -540,13 +541,13 @@ class form extends MY_Controller{
                     'message' => $status ? 'Data saved successfully' : 'Failed to save data'
                 ];
                 echo json_encode($result);
-            } 
+            }
         }else if($tab == "inf")
         {
             $country = $_POST["country"];
             $company = $_POST["company"];
-            $name    = $_POST["name"]; 
-            $pos = $_POST["pos"];      
+            $name    = $_POST["name"];
+            $pos = $_POST["pos"];
             $exp = $_POST["exp"];
             $lunch_provided = $_POST["lunch_provided"];
             $dinner_provided = $_POST["dinner_provided"];
@@ -596,7 +597,7 @@ class form extends MY_Controller{
                     'message' => $status ? 'Data saved successfully' : 'Failed to save data'
                 ];
                 echo json_encode($result);
-            } 
+            }
 
         }else if($tab == "meal")
         {
@@ -608,7 +609,7 @@ class form extends MY_Controller{
             $i = 0;
             foreach ($employee as $a) {
                if($a <> "")
-               {    
+               {
                  $data[] = array(
                     'CYEAR2' => $cyear2,
                     'NRUNNO' => $nrunno,
@@ -636,7 +637,7 @@ class form extends MY_Controller{
                     'message' => $status ? 'Data saved successfully' : 'Failed to save data'
                 ];
                 echo json_encode($result);
-            } 
+            }
         }else if($tab == "prj")
         {
               $projno = $_POST["secured_project_no"];
@@ -646,7 +647,7 @@ class form extends MY_Controller{
               {
                  if(!empty($pj))
                  {
-                    $projname = $_POST["sprojname_".$pj];  
+                    $projname = $_POST["sprojname_".$pj];
                     $model = $_POST["sprojmodel_".$pj];
                     $spec = $_POST["sprojspec_".$pj];
                     $qty = $_POST["sprojqty_".$pj];
@@ -671,7 +672,7 @@ class form extends MY_Controller{
                             );
                         }
                         $i++;
-                    } 
+                    }
                  }
               }
               $pprojno = $_POST["prospective_project_no"];
@@ -683,7 +684,7 @@ class form extends MY_Controller{
               $i=0;
               foreach( $pprojno as $pj)
               {
-                   
+
                     if(($pj <> "") || ($pprojname[$i] <> "") || ($pprojmodel[$i] <> "") || ($pprojspec[$i] <> "") || ($pprojqty[$i] <> "")|| ($pprojsta[$i] <> "") )
                     {
                         $id++;
@@ -718,10 +719,10 @@ class form extends MY_Controller{
                     'message' => $status ? 'Data saved successfully' : 'Failed to save data'
                 ];
                 echo json_encode($result);
-            } 
-              
+            }
+
         }
-        
+
     }
 
     public function save_vms_gpent()
@@ -746,12 +747,12 @@ class form extends MY_Controller{
                     'message' => $status ? 'Data saved successfully' : 'Failed to save data'
                 ];
                 echo json_encode($result);
-        } 
+        }
     }
 
     public function update_form_version()
     {
-        
+
        /* $result = [
             'status'  => true,
             'message' => ">>>".$_POST["formVersion"]
@@ -780,7 +781,7 @@ class form extends MY_Controller{
     $nfile = $_POST['nfile'];
     $this->deleteFile($nfile,$path);
     $this->vms->trans_start();
-   
+
     $delfn = $this->vms->delete("VMS_ATTFILE",array("ITEMNO" => $fid , "SFILE" => $nfile));
     $this->vms->trans_complete();
     $res = [
@@ -796,7 +797,7 @@ class form extends MY_Controller{
         $this->downloadFile($file,$ofile,$path);
     }
 
-    
+
     public function saveENTfile()
     {
         $vmsnfrmno = $_POST["vmsnfrmno"];
@@ -825,7 +826,7 @@ class form extends MY_Controller{
                 'message' => $status ? 'Save file successfully' : 'Failed to save file'
             ];
             echo json_encode($result);
-        } 
+        }
     }
 
     public function getFormData()
@@ -834,13 +835,13 @@ class form extends MY_Controller{
         $vmsnrunno = $_POST["vmsnrunno"];
         $con = array(
             'CYEAR2' => $vmscyear2,
-            'NRUNNO' => $vmsnrunno 
+            'NRUNNO' => $vmsnrunno
         );
-     
+
         $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"P");
         $head = array();
         $ent = $this->vms->get_vms_ent(array('VMSCYEAR2' => $vmscyear2 , 'VMSNRUNNO' => $vmsnrunno));
-        
+
         $visitint = $this->vms->customSelect("VMS_VISITINF",$con, '*', '', 'ID');
         $schedule = $this->vms->customSelect("VMS_SCHEDULE",$con, 'TO_CHAR(SCHSTIME, \'HH:MI AM\') as SCHSTIME , TO_CHAR(SCHETIME, \'HH:MI AM\') as SCHETIME , PLACE , CONTENT , AMECP , NOTE ', '', 'ID');
         $con["PROJTYPE"] = "S";
@@ -871,7 +872,7 @@ class form extends MY_Controller{
             ? $timelunch[0]->LUNCH_TIME
             : "12:00 PM - 01:00 PM";
         }
-        
+
         $data = array(
             "head" => $head,
             "visitint" => $visitint,
@@ -887,13 +888,13 @@ class form extends MY_Controller{
 
     public function showFormData()
     {
-          
+
         echo json_encode($this->getFormData());
     }
 
     public function sendmailpic()
     {
-        $vmscyear2 = $_POST["vmscyear2"]; 
+        $vmscyear2 = $_POST["vmscyear2"];
         $vmsnrunno = $_POST["vmsnrunno"];
         $data = $this->getFormData();
         $d['VIEW']    = 'layouts/mail/message';
@@ -945,7 +946,7 @@ class form extends MY_Controller{
                 'message' => $status ? 'Sent mail to PIC successfully' : 'Failed to sent mail to PIC'
             ];
             echo json_encode($result);
-        } 
+        }
     }
      // data is data from function getFormData
     public function create_save_vmsexcel($data)
@@ -984,7 +985,7 @@ class form extends MY_Controller{
             $sheet->setCellValue("L{$currentRow}", $row->NAME);
             $sheet->setCellValue("S{$currentRow}", $row->POSITION);
             $sheet->setCellValue("W{$currentRow}", ($row->VISITEXP == "N"? "No":"Yes"));
-          
+
         }
         $templateStart = $templateStart+ $templateCount +$extra+ 3; // แถวแรกของ template data
         $templateCount = 2;  // Template มี 3 แถว (12–14)
@@ -1002,20 +1003,20 @@ class form extends MY_Controller{
         {
             $currentRow = $templateStart + $i;
             $sheet->setCellValue(
-                "B{$currentRow}", 
+                "B{$currentRow}",
                 !empty($row->SCHSTIME) && !empty($row->SCHETIME)
                     ? $row->SCHSTIME . ' - ' . $row->SCHETIME
                     : '-'
             );
-          
+
             $sheet->setCellValue("E{$currentRow}", $row->PLACE);
             $sheet->setCellValue("H{$currentRow}", $row->CONTENT);
             $sheet->setCellValue("P{$currentRow}", $row->AMECP);
             $sheet->setCellValue("W{$currentRow}", !empty($row->NOTE) ? $row->NOTE : '-');
-          
+
         }
         $templateStart = $currentRow + 4;
-    
+
         $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
         $sheet->setCellValue("B".($templateStart + 2),($data['item'][0]->BOARD == "N"? "No":"Yes"));
         $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
@@ -1036,7 +1037,7 @@ class form extends MY_Controller{
                 return !empty($item->DIETREQ);
             })
         );
-        
+
         $dietText = implode(", ", $dietList);
         $sheet->setCellValue("G".($templateStart + 11),$dietText);
         $sheet->setCellValue("R".($templateStart + 9),($data['item'][0]->CARHOTEL == "Y"? "Yes":"No"));
@@ -1053,13 +1054,13 @@ class form extends MY_Controller{
         $total = 0;
         foreach($data['sproj'] as $i => $row)
         {
-            $currentRow = $templateStart + $i;          
+            $currentRow = $templateStart + $i;
             $sheet->setCellValue("B{$currentRow}", $row->PROJNO);
             $sheet->setCellValue("G{$currentRow}", $row->PROJNAME);
             $sheet->setCellValue("L{$currentRow}", $row->MODEL);
             $sheet->setCellValue("O{$currentRow}", $row->SPEC);
             $sheet->setCellValue("S{$currentRow}", $row->QTY);
-            $sheet->setCellValue("V{$currentRow}", $row->STATUS);   
+            $sheet->setCellValue("V{$currentRow}", $row->STATUS);
             $total += $row->QTY;
         }
         if(count($data['sproj']) >= 2)
@@ -1068,9 +1069,9 @@ class form extends MY_Controller{
         }else{
             $totalRow = $currentRow + 3;
         }
-        
-        
-        $sheet->setCellValue("S{$totalRow}",   $total);   
+
+
+        $sheet->setCellValue("S{$totalRow}",   $total);
        // $templateStart = $currentRow + 5;
         $templateStart = $totalRow + 3;
         $templateCount = 2;  // Template มี 3 แถว (12–14)
@@ -1083,13 +1084,13 @@ class form extends MY_Controller{
         $total = 0;
         foreach($data['pproj'] as $i => $row)
         {
-            $currentRow = $templateStart + $i;          
+            $currentRow = $templateStart + $i;
             $sheet->setCellValue("B{$currentRow}", $row->PROJNO);
             $sheet->setCellValue("G{$currentRow}", $row->PROJNAME);
             $sheet->setCellValue("L{$currentRow}", $row->MODEL);
             $sheet->setCellValue("O{$currentRow}", $row->SPEC);
             $sheet->setCellValue("S{$currentRow}", $row->QTY);
-            $sheet->setCellValue("V{$currentRow}", $row->STATUS);   
+            $sheet->setCellValue("V{$currentRow}", $row->STATUS);
             $total += $row->QTY;
         }
         if(count($data['pproj']) >= 2)
@@ -1098,7 +1099,7 @@ class form extends MY_Controller{
         }else{
             $totalRow = $currentRow + 3;
         }
-        $sheet->setCellValue("S{$totalRow}",   $total);   
+        $sheet->setCellValue("S{$totalRow}",   $total);
         $writer = new Xlsx($spreadsheet);
         $filename = $data['head']['REFNO'].'.xlsx';
         ob_start();
@@ -1108,7 +1109,7 @@ class form extends MY_Controller{
 
         $dFile = array(
             'content'  => $excelContent,
-            'filename' => $filename, 
+            'filename' => $filename,
         );
         return $dFile;
     }
@@ -1116,7 +1117,7 @@ class form extends MY_Controller{
     public function exportexcel()
     {
 
-        $vmscyear2 = $_POST["vmscyear2"]; 
+        $vmscyear2 = $_POST["vmscyear2"];
         $vmsnrunno = $_POST["vmsnrunno"];
         $data = $this->getFormData();
         $f = $this->create_save_vmsexcel($data);
@@ -1219,7 +1220,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
     $message = 'Delete form successfully';
 
     try {
-    
+
         $vmscyear2 = $_POST["vmscyear2"];
         $vmsnrunno = $_POST["vmsnrunno"];
 
@@ -1234,17 +1235,17 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
         $this->vms->delete("VMS_STAKEHOLDERS", $where_cond);
 
         $path = $this->upload_path.$this->nfrmno."_".$this->vorgno."_".$this->cyear."_".$vmscyear2."_".$vmsnrunno."/";
-        
+
         if (is_dir($path)) {
-          
+
             $files = glob($path . '*', GLOB_MARK);
             foreach ($files as $file) {
                 if (is_file($file)) {
-                    @unlink($file); 
+@unlink($file);
                 }
             }
-          
-            @rmdir($path);
+
+@rmdir($path);
         }
 
     } catch (Exception $e) {
@@ -1256,7 +1257,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
             'status'  => $status,
             'message' => $status ? 'Delete form successfully' : $message
         ];
-        
+
         // แนะนำให้ใส่ Header เพื่อบอกฝั่ง Frontend ว่าส่งกลับเป็น JSON ชัวร์ๆ
         header('Content-Type: application/json');
         echo json_encode($result);

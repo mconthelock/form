@@ -50,7 +50,7 @@ $(document).ready(async function () {
             flow: true,
             flowhtml: flow?.html || "",
             actionsForm: pageCanAction,
-            approve: pageCanAction,
+            approve: pageCanAction && flowStep() !== "02",
             reject: pageCanAction,
         }));
 
@@ -64,7 +64,7 @@ $(document).ready(async function () {
             `);
             $actionButtons.find("button").last().before(`
                 <button type="button" class="btn btn-success" id="btnSendToAs400">
-                    ${as400Sent ? "Sent to AS400" : "Send to AS400"}
+                    ${as400Sent ? "Complete Approval" : "Send to AS400"}
                 </button>
             `);
         }
@@ -170,7 +170,12 @@ $(document).on("click", "#btnPreviewAs400", async function () {
 });
 
 $(document).on("click", "#btnSendToAs400", async function () {
-    if (actionPending || !window.confirm("Send this order to RTNLIBF and backup to DBGDEV14 now?")) return;
+    if (actionPending) return;
+    if (as400Sent) {
+        await submitAction("approve");
+        return;
+    }
+    if (!window.confirm("Send this order to RTNLIBF, back it up to DBGDEV14, and approve this request now?")) return;
     const payload = {
         ...pickFormKey(formKey),
         EMPNO: formKey.EMPNO || $("#INPUTBY").val(),
@@ -178,7 +183,6 @@ $(document).on("click", "#btnSendToAs400", async function () {
     };
     if (!payload.DETAILS) return;
 
-    let sent = false;
     actionPending = true;
     $("#btnPreviewAs400, #btnSendToAs400").prop("disabled", true);
     showLoader({ show: true });
@@ -193,19 +197,18 @@ $(document).on("click", "#btnSendToAs400", async function () {
         );
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.status) throw new Error(data.message || "Send to AS400 failed.");
-        sent = true;
         as400Sent = true;
-        $(this).text("Sent to AS400");
         syncAs400Controls();
         renderPageState();
         console.info("[PS-CLM AS400 Send] Insert result:", data.data);
         showMessage(data.message, "success");
+        actionPending = false;
+        await submitAction("approve");
     } catch (error) {
         showErrorMessage(error.message || error);
     } finally {
         actionPending = false;
-        $("#btnPreviewAs400").prop("disabled", false);
-        if (!sent) $(this).prop("disabled", false);
+        $("#btnPreviewAs400, #btnSendToAs400").prop("disabled", false);
         showLoader({ show: false });
     }
 });
@@ -273,7 +276,7 @@ async function submitAction(action) {
 
     actionPending = true;
 
-    $("#actionform button[name='btnAction']")
+    $("#actionform button[name='btnAction'], #btnSendToAs400")
         .prop("disabled", true);
 
     try {
@@ -331,7 +334,7 @@ async function submitAction(action) {
     } finally {
         actionPending = false;
 
-        $("#actionform button[name='btnAction']")
+        $("#actionform button[name='btnAction'], #btnSendToAs400")
             .prop("disabled", false);
 
         showLoader({ show: false });
@@ -1208,7 +1211,7 @@ function renderItemMode() {
 
     $("#itemEditHint").text(
         as400Sent
-            ? "Sent to AS400. Schedule and P are locked; approve to continue."
+            ? "Sent to AS400. Schedule and P are locked; complete approval to continue."
             : canEditSchedule
             ? "Select a production date for each item. Schedule and P are filled automatically when a match is found."
             : "Review the requested parts, SCL information, and routing details.",
@@ -1219,14 +1222,8 @@ function renderItemMode() {
 function syncAs400Controls() {
     if (flowStep() !== "02" || !pageCanAction) return;
 
-    $("#actionform button[name='btnAction']")
-        .filter(function () {
-            return String($(this).val() || "").toLowerCase() === "approve";
-        })
-        .prop("disabled", !as400Sent);
     $("#btnSendToAs400")
-        .prop("disabled", as400Sent)
-        .text(as400Sent ? "Sent to AS400" : "Send to AS400");
+        .text(as400Sent ? "Complete Approval" : "Send to AS400");
     $(".ps-clm-schedule-date, .ps-clm-p, #bulkScheduleDate, #applyScheduleAll")
         .prop("disabled", as400Sent);
     renderItemMode();

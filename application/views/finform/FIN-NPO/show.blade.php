@@ -57,7 +57,13 @@
 
         #stampTable tbody td:nth-child(4),
         #stampTable tbody td:nth-child(5),
-        #stampTable tbody td:nth-child(6) {
+        #stampTable tbody td:nth-child(6),
+        #stampTable tbody td:nth-child(8) {
+            text-align: right;
+        }
+
+        #stampTable .wht-input {
+            min-width: 110px;
             text-align: right;
         }
     </style>
@@ -87,8 +93,6 @@
                                 </p>
                             </div>
                         </div>
-                        <span id="Pos"
-                            class="badge badge-outline badge-lg border-slate-300 px-5 py-4 font-bold text-slate-600"></span>
                     </div>
                 </div>
             </header>
@@ -108,13 +112,13 @@
 
                             <div class="space-y-4 rounded-xl border border-sky-200 border-l-4 border-l-sky-500 bg-sky-50/60 p-5 shadow-sm">
 
-                                {{-- <div class="form-control">
+                                <div class="form-control">
                                     <label class="label pb-1" for="FORMNO">
                                         <span class="label-text text-sm font-bold">Form No.</span>
                                     </label>
                                     <input id="FORMNO" name="FORMNO" type="text" readonly
                                         class="show-readonly input input-sm input-bordered w-full" />
-                                </div> --}}
+                                </div>
 
                                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                                     <div class="form-control">
@@ -151,7 +155,7 @@
                             </div>
 
                             <div class="space-y-4 rounded-xl border border-violet-200 border-l-4 border-l-violet-500 bg-violet-50/60 p-5 shadow-sm">
-                                <div class="form-control">
+                                <div class="form-control hidden">
                                     <label class="label pb-1" for="SUBJECT">
                                         <span class="label-text text-sm font-bold">Subject</span>
                                     </label>
@@ -205,18 +209,6 @@
                             </div>
                         </section>
 
-                        {{-- Remark --}}
-                        <section>
-                            <div class="mb-4 flex items-center gap-3">
-                                <span class="h-6 w-1.5 rounded-full bg-amber-500"></span>
-                                <h2 class="text-base font-bold uppercase tracking-widest text-amber-700">Remark</h2>
-                            </div>
-                            <div class="rounded-xl border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50/60 p-5 shadow-sm">
-                                <textarea id="REMARK" name="REMARK" rows="4" readonly
-                                    class="show-readonly textarea textarea-bordered w-full resize-none"></textarea>
-                            </div>
-                        </section>
-
                         {{-- Attachment --}}
                         <section>
                             <div class="mb-4 flex items-center gap-3">
@@ -241,5 +233,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/finNpoShow.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/finNpoShow.js?ver={{ $GLOBALS['version'] }}&rev=2"></script>
 @endsection

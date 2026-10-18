@@ -30,14 +30,18 @@ export async function getData(form) {
 
 export async function getTermcode() {
     return fetchUtils({
-        url: `${process.env.APP_API}/pursys/termcode`,
+        url: `${process.env.APP_API}/pursys/termcode/payment`,
         method: 'GET',
     });
 }
 
 export async function getCountries() {
+    // return fetchUtils({
+    //     url: `${process.env.APP_API}/purform/purnvf-location/countries`,
+    //     method: 'GET',
+    // });
     return fetchUtils({
-        url: `${process.env.APP_API}/purform/purnvf-location/countries`,
+        url: `${process.env.APP_API}/countries`,
         method: 'GET',
     });
 }
@@ -63,22 +67,30 @@ export async function getSubDistricts() {
     });
 }
 
+// export async function getVendor(searchParams) {
+//     const query = new URLSearchParams();
+
+//     if (searchParams) {
+//         // วนลูปคีย์ทั้งหมดใน searchParams ถ้ามีค่า (ไม่เป็น undefined หรือค่าว่าง) ให้ใส่ใน query
+//         Object.entries(searchParams).forEach(([key, value]) => {
+//             if (value !== undefined && value !== null && value !== '') {
+//                 query.append(key, String(value));
+//             }
+//         });
+//     }
+
+//     const queryString = query.toString() ? `?${query.toString()}` : '';
+
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/pursys/pur_vendors/search${queryString}`,
+//         method: 'GET',
+//     });
+// }
+
 export async function getVendor(searchParams) {
-    const query = new URLSearchParams();
-
-    if (searchParams) {
-        // วนลูปคีย์ทั้งหมดใน searchParams ถ้ามีค่า (ไม่เป็น undefined หรือค่าว่าง) ให้ใส่ใน query
-        Object.entries(searchParams).forEach(([key, value]) => {
-            if (value !== undefined && value !== null && value !== '') {
-                query.append(key, String(value));
-            }
-        });
-    }
-
-    const queryString = query.toString() ? `?${query.toString()}` : '';
-
     return fetchUtils({
-        url: `${process.env.APP_API}/pursys/pur_vendors/search${queryString}`,
-        method: 'GET',
+        url: `${process.env.APP_API}/pursys/vendors/search/`,
+        method: 'POST',
+        data: searchParams,
     });
 }

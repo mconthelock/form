@@ -50,3 +50,35 @@ export async function getData(form) {
         data: form,
     });
 }
+
+export async function approvePurEvaForm(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-eva/approve`,
+        method: 'PATCH',
+        data: form,
+    });
+}
+
+export async function searchrpt(con) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pureva-form/search`,
+        method: 'POST',
+        data: con,
+    });
+}
+
+// export async function createPurVmmAuto(form) {
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/purform/pur-vmm/createauto`,
+//         method: 'POST',
+//         data: form,
+//     });
+// }
+
+// export async function genVndCode(data) {
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/pursys/vendors/create`,
+//         method: 'POST',
+//         data: data,
+//     });
+// }

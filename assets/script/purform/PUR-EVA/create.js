@@ -13,7 +13,8 @@ import { getCountries, getTermcode, getVendor } from '../PUR-NVF/data';
 import {
     countryManager,
     paymentTermManager,
-    addrEnManager,
+    addr1EnManager,
+    addr2EnManager,
     addrThManager,
     cityEnManager,
     stateEnManager,
@@ -159,38 +160,6 @@ const requiredMessage = [
         element: $('input[name="AVGAGE"]'),
         message: 'Please input Average Age',
     },
-    {
-        element: $('input[name="SHARENAME[]"]'),
-        message: 'Please input Shareholder',
-    },
-    {
-        element: $('input[name="SHAREPER[]"]'),
-        message: 'Please input Shareholder',
-    },
-    {
-        element: $('input[name="CUSNAME[]"]'),
-        message: 'Please input Main Customer',
-    },
-    {
-        element: $('input[name="CUSPER[]"]'),
-        message: 'Please input Main Customer',
-    },
-    {
-        element: $('input[name="SUPNAME[]"]'),
-        message: 'Please input Supplier of Main Material',
-    },
-    {
-        element: $('input[name="SUPPER[]"]'),
-        message: 'Please input Supplier of Main Material',
-    },
-    {
-        element: $('input[name="PRONAME[]"]'),
-        message: 'Please input Main Product',
-    },
-    {
-        element: $('input[name="PROPER[]"]'),
-        message: 'Please input Main Product',
-    },
 ].filter(Boolean);
 
 // ==========================================
@@ -226,7 +195,7 @@ $(document).on('input', '#VENDCODE', async function () {
     if (keywordValue.length === 5) {
         try {
             showLoader();
-            const searchData = { KEYWORD: keywordValue };
+            const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
             const vendor = await getVendor(searchData);
             console.log(vendor);
 
@@ -266,6 +235,8 @@ $(document).on('change', '.radio-typec', async function () {
     let val = $(this).val().split(':')[0];
 
     if (val === '6') {
+        console.log('disable pro');
+
         // --- กรณีเลือก Non-Production (แสดง #nonpro / ซ่อน #pro) ---
 
         // 1. ซ่อนและสั่ง disable ก้อน #pro ก่อนทันที
@@ -343,6 +314,7 @@ $(document).on('change', '.radio-type', async function () {
         countryManager.disabled(false);
         countryEnManager.value = '';
     }
+    paymentTermManager.filterByRadio(val);
 });
 
 $(document).on('input', '#AMOUNT', async function () {
@@ -368,10 +340,23 @@ $(document).on('input', '.input-decimal', async function () {
     value = value.replace(/[^0-9.]/g, '');
     value = value.replace(/(\..*)\./g, '$1');
     value = value.replace(/(\.\d{2})\d+/g, '$1');
-    $(this).val(value);
+    let parts = value.split('.');
+    if (parts[0]) {
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    $(this).val(parts.join('.'));
 });
 
 $(document).on('input', '.input-integer', function () {
+    let value = $(this).val();
+    value = value.replace(/[^0-9]/g, '');
+    if (value) {
+        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    $(this).val(value);
+});
+
+$(document).on('input', '.input-year', function () {
     let value = $(this).val();
     value = value.replace(/[^0-9]/g, '');
     $(this).val(value);
@@ -427,6 +412,12 @@ $(document).on('keydown', '#modalSearch', async function (e) {
 $(document).on('click', '#tableContainer #tableSearch tbody tr', function () {
     const table = $('#tableSearch').DataTable();
     const rowData = table.row(this).data();
+    const nvfno =
+        'PRO-NVF' +
+        rowData.CYEAR2.slice(-2) +
+        '-' +
+        String(rowData.NRUNNO).padStart(6, '0');
+    $('#directSearchInput').val(nvfno);
     setVendorInfo(rowData);
     $('#searchModal')[0].close();
 });
@@ -514,6 +505,15 @@ $(document).on('change', '.legal_status', async function () {
         $('input[name="TAX_ID"]').addClass('req');
     } else {
         $('input[name="CORPORATE_ID"]').removeClass('req');
+    }
+});
+
+$(document).on('click', '.procat', async function () {
+    const procat = $(this).val();
+    if (procat == 'อื่นๆ') {
+        $('input[name="PRODCAT_OTHER"]').addClass('req');
+    } else {
+        $('input[name="PRODCAT_OTHER"]').removeClass('req');
     }
 });
 
@@ -610,7 +610,11 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
         let activeFields = requiredMessage.filter(
             (f) => !f.element.prop('disabled'),
         );
+        console.log('active');
+
         console.log(activeFields);
+        console.log('end active');
+
         // วนลูปเช็คทุก element ที่มีคลาส .req
         $('.req').each(function () {
             const $el = $(this);
@@ -633,6 +637,52 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
                 hasValue,
             );
         });
+        const selectedVendGroup =
+            $('input[name="VENDGROUP"]:checked').val() || '';
+        const isNonProd = selectedVendGroup.includes('6:Non-Production');
+
+        if (!isNonProd) {
+            if (
+                !validateTablePair(
+                    'share-name',
+                    'share-per',
+                    'Please fill in complete Shareholder information',
+                )
+            ) {
+                return false;
+            }
+
+            // 2. เช็คตารางที่ 2 (เช่น Customer) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'cus-name',
+                    'cus-per',
+                    'Please fill in complete Main Customer information',
+                )
+            ) {
+                return false;
+            }
+
+            // 3. เช็คตารางที่ 3 (เช่น Supplier) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'sup-name',
+                    'sup-per',
+                    'Please fill in complete Supplier of Main Material information',
+                )
+            ) {
+                return false;
+            }
+            if (
+                !validateTablePair(
+                    'pro-name',
+                    'pro-per',
+                    'Please fill in complete Main Product information',
+                )
+            ) {
+                return false;
+            }
+        }
 
         if (!(await requiredForm('#frmmain', activeFields))) return;
         if (!checkAttFile()) {
@@ -660,6 +710,11 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     $('input[name="ACTION"]').val('save');
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
+    console.log('ddddddddddddddddd');
+    logFormData(filteredFormData);
+    //console.log(filteredFormData);
+    //console.log('ddddddddddddddddd');
+
     if (this.id === 'btnDraft') {
         filteredFormData.append('DRAFT', '0');
     }
@@ -682,13 +737,74 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
 
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
+    const selectedVendGroup = $('input[name="VENDGROUP"]:checked').val() || '';
+    const isNonProd = selectedVendGroup.includes('6:Non-Production');
     $('input[name="ACTION"]').val(act);
     if (act == 'approve') {
+        if (!isNonProd) {
+            if (
+                !validateTablePair(
+                    'share-name',
+                    'share-per',
+                    'Please fill in complete Shareholder information',
+                )
+            ) {
+                return false;
+            }
+
+            // 2. เช็คตารางที่ 2 (เช่น Customer) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'cus-name',
+                    'cus-per',
+                    'Please fill in complete Main Customer information',
+                )
+            ) {
+                return false;
+            }
+
+            // 3. เช็คตารางที่ 3 (เช่น Supplier) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'sup-name',
+                    'sup-per',
+                    'Please fill in complete Supplier of Main Material information',
+                )
+            ) {
+                return false;
+            }
+            if (
+                !validateTablePair(
+                    'pro-name',
+                    'pro-per',
+                    'Please fill in complete Main Product information',
+                )
+            ) {
+                return false;
+            }
+        }
+
         let activeFields = requiredMessage.filter(
             (f) => !f.element.prop('disabled'),
         );
+
+        // console.log('============');
+        // console.log(activeFields);
+        // console.log('============');
+        $('#frmmain')
+            .find('input, select, textarea')
+            .each(function () {
+                if ($(this).hasClass('req')) {
+                    console.log(
+                        $(this).attr('name'),
+                        $(this).attr('id'),
+                        $(this).val(),
+                    );
+                }
+            });
+        // console.log('before require');
         if (!(await requiredForm('#frmmain', activeFields))) return;
-        console.log('after require');
+        // console.log('after require');
         if (!checkAttFile()) {
             return false;
         }
@@ -716,10 +832,12 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     }
 });
 $(document).on('input', '.empnum', function () {
-    const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
-    const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+    const directValue =
+        Number($('input[name="EMPDIRECT"]').val().replace(/,/g, '')) || 0;
+    const indirectValue =
+        Number($('input[name="EMPINDIRECT"]').val().replace(/,/g, '')) || 0;
     const total = directValue + indirectValue;
-    $('.totemp').val(total);
+    $('.totemp').val(total).trigger('input');
 });
 
 $(document).on('change', 'input[name="VENDGROUP"]', function () {
@@ -741,9 +859,9 @@ $(document).on('change', 'input[name="VENDGROUP"]', function () {
         } else {
             blockIe.show();
             blockQa.show();
-            blockCer.hide();
-            $('#file-cer').val('');
-            $('#file-cer').closest('.flex-col').find('.show-file').empty();
+            blockCer.show();
+            // $('#file-cer').val('');
+            // $('#file-cer').closest('.flex-col').find('.show-file').empty();
             $('input[name="TAX_ID"]').addClass('req');
         }
     } else {
@@ -759,11 +877,12 @@ $(document).on('change', 'input[name="VENDGROUP"]', function () {
 
 $(document).ready(async function () {
     const countries = await getCountries();
+    countries.sort((a, b) => a.name_en.localeCompare(b.name_en));
     const countriesData = countries.map((c) => ({
-        id: c.nameen,
-        value: c.nameen,
-        text: c.nameen,
-        nameth: c.nameth,
+        id: c.name_en,
+        value: c.name_en,
+        text: c.name_en,
+        nameth: c.name_th,
     }));
 
     // const province = await getProvinces();
@@ -822,6 +941,7 @@ $(document).ready(async function () {
     concernManager.init(orgdata);
 
     const formInfo = await getAllAttr('.form-info');
+
     form = {
         NFRMNO: formInfo.nfrmno,
         VORGNO: formInfo.vorgno,
@@ -846,7 +966,7 @@ $(document).ready(async function () {
                 let runNo = row.NRUNNO
                     ? String(row.NRUNNO).padStart(6, '0')
                     : '000000';
-                return `<span class="font-semibold text-blue-600">PUR-NVF${year2}-${runNo}</span>`;
+                return `<span class="font-semibold text-blue-600">PRO-NVF${year2}-${runNo}</span>`;
             },
         },
         {
@@ -905,59 +1025,158 @@ $(document).ready(async function () {
 
 // ฟังก์ชันช่วยเหลือต่าง ๆ
 function setVendorMstInfo(vendorMstData) {
+    console.log(vendorMstData);
+    // return false;
     $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
-    for (const address of vendorMstData.VENDOR_ADDRESS) {
-        if (address.ADDR_TYPE == 'E') {
-            addrEnManager.value = address.ADDR_LINE1;
-            postcodeEnManager.value = address.ADDR_ZIPCODE;
-            countryEnManager.value = address.ADDR_COUNTRY;
-            if (address.ADDR_COUNTRY == 'THAILAND') {
-                $('input[name="VENDTYPE"][value="Local"]').prop(
-                    'checked',
-                    true,
-                );
-                provinceManager.textToValue = address.ADDR_STATE;
-                districtManager.textToValue = address.ADDR_CITY;
-                subDistrictManager.textToValue = address.ADDR_SUB_CITY;
-                countryManager.disabled(true);
+    $('input[name="CONTACT"]').val(vendorMstData.VND_CONTACTNAME);
+    $('input[name="TELNO"]').val(vendorMstData.VND_PHONE);
+    $('input[name="FAX"]').val(vendorMstData.VND_FAX);
+    paymentTermManager.value = vendorMstData.VND_TERM;
+    currencyManager.value = vendorMstData.CURRENCY;
+    if (vendorMstData.STDCUR) {
+        $('#constdcur').text(vendorMstData.STDCUR.CURR_NAME);
+    }
+
+    const vendorfilter = vendorMstData.PURVMM.filter(
+        (item) => item.FORM.CST == '2',
+    );
+    // console.log(vendorfilter);
+    const latestVendor = vendorfilter.sort((a, b) => {
+        // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+        if (b.CYEAR2 !== a.CYEAR2) {
+            return b.CYEAR2.localeCompare(a.CYEAR2);
+        }
+        // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+        return b.NRUNNO - a.NRUNNO;
+    })[0];
+    if (latestVendor) {
+        $('input[name="EMAIL"]').val(latestVendor.EMAIL);
+        $('input[name="WEBSITE"]').val(latestVendor.WEBSITE);
+        $('input[name="BANKNAME"]').val(latestVendor.BANKNAME);
+        $('input[name="BRANCH"]').val(latestVendor.BRANCH);
+        $('input[name="ACCNUMBER"]').val(latestVendor.ACCNUMBER);
+        for (const address of latestVendor.ADDRESSES) {
+            if (address.ADDRTYPE == 'E') {
+                addr1EnManager.value = address.ADDR1;
+                addr2EnManager.value = address.ADDR2;
+                stateEnManager.value = address.STATE;
+                cityEnManager.value = address.CITY;
+                countryManager.value = address.COUNTRY;
+                postcodeEnManager.value = address.POSTCODE;
+                countryEnManager.value = address.COUNTRY;
+                if (address.COUNTRY.toUpperCase() == 'THAILAND') {
+                    $('input[name="VENDTYPE"][value="Local"]').prop(
+                        'checked',
+                        true,
+                    );
+                    countryManager.disabled(true);
+                } else {
+                    $('input[name="VENDTYPE"][value="Oversea"]').prop(
+                        'checked',
+                        true,
+                    );
+                    countryManager.disabled(false);
+                }
             } else {
-                $('input[name="VENDTYPE"][value="Oversea"]').prop(
-                    'checked',
-                    true,
-                );
-                stateEnManager.value = address.ADDR_STATE;
-                cityEnManager.value = address.ADDR_CITY;
-                countryManager.value = address.ADDR_COUNTRY;
-                countryManager.disabled(false);
+                const addrLine =
+                    `${address.ADDR1 || ''} ${address.ADDR2 || ''}`.trim();
+                const fullAddress = [
+                    addrLine,
+                    address.CITY,
+                    address.STATE,
+                    address.POSTCODE,
+                    address.COUNTRY,
+                ]
+                    .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                    .join(',');
+                addrThManager.value = fullAddress;
             }
-        } else {
-            addrThManager.value = address.ADDR_LINE1 || '';
         }
     }
-    $('input[name="CONTACT"]').val(vendorMstData.VND_SALE);
-    $('input[name="EMAIL"]').val(vendorMstData.EMAIL);
-    $('input[name="WEBSITE"]').val(vendorMstData.ADDR_WEB);
-    $('input[name="TELNO"]').val(vendorMstData.ADDR_PHONE);
-    $('input[name="FAX"]').val(vendorMstData.FAX);
-    $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
-    $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
-    $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
-    console.log(vendorMstData.VENDOR_CODES);
+    if (vendorMstData.PUREVA) {
+        const evafilter = vendorMstData.PUREVA.filter(
+            (item) => item.FORM.CST == '2',
+        );
+        // console.log(vendorfilter);
+        const latesteva = evafilter.sort((a, b) => {
+            // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+            if (b.CYEAR2 !== a.CYEAR2) {
+                return b.CYEAR2.localeCompare(a.CYEAR2);
+            }
+            // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+            return b.NRUNNO - a.NRUNNO;
+        })[0];
 
-    for (const VENDOR of vendorMstData.VENDOR_CODES) {
-        console.log(VENDOR.CODE_NUM);
-        console.log($('#VENDCODE').val());
+        if (latesteva) {
+            if (latesteva.VENDGROUP) {
+                $(`input.radio-typec[value="${latesteva.VENDGROUP}"]`)
+                    .prop('checked', true)
+                    .trigger('change');
+            }
+            if (latesteva.VENDPURPOSE) {
+                $(`input[name="VENDPURPOSE"][value="${latesteva.VENDPURPOSE}"]`)
+                    .prop('checked', true)
+                    .trigger('change');
+            }
 
-        if (VENDOR.CODE_NUM == $('#VENDCODE').val()) {
-            paymentTermManager.value = VENDOR.TERM.STERMCODE;
-            currencyManager.value = VENDOR.STDCUR.CURR_CODE;
-            console.log(VENDOR.STDCUR.CURR_NAME);
-
-            $('#constdcur').text(VENDOR.STDCUR.CURR_NAME);
-        } else {
-            console.log('else');
+            $('input[name="CORPORATE_ID"]').val(latesteva.CORPORATE_ID || '');
+            $('input[name="TAX_ID"]').val(latesteva.TAX_ID || '');
+            if (latesteva.LEGAL_STATUS) {
+                $(
+                    `input[name="LEGAL_STATUS"][value="${latesteva.LEGAL_STATUS}"]`,
+                )
+                    .prop('checked', true)
+                    .trigger('change');
+            }
         }
     }
+
+    // for (const address of vendorMstData.VENDOR_ADDRESS) {
+    //     if (address.ADDR_TYPE == 'E') {
+    //         addr1EnManager.value = address.ADDR_LINE1;
+    //         addr2EnManager.value = address.ADDR_LINE2;
+    //         postcodeEnManager.value = address.ADDR_ZIPCODE;
+    //         countryEnManager.value = address.ADDR_COUNTRY;
+    //         if (address.ADDR_COUNTRY.toUpperCase() == 'THAILAND') {
+    //             $('input[name="VENDTYPE"][value="Local"]').prop(
+    //                 'checked',
+    //                 true,
+    //             );
+    //             provinceManager.textToValue = address.ADDR_STATE;
+    //             districtManager.textToValue = address.ADDR_CITY;
+    //             subDistrictManager.textToValue = address.ADDR_SUB_CITY;
+    //             countryManager.disabled(true);
+    //         } else {
+    //             $('input[name="VENDTYPE"][value="Oversea"]').prop(
+    //                 'checked',
+    //                 true,
+    //             );
+    //             stateEnManager.value = address.ADDR_STATE;
+    //             cityEnManager.value = address.ADDR_CITY;
+    //             countryManager.value = address.ADDR_COUNTRY;
+    //             countryManager.disabled(false);
+    //         }
+    //     } else {
+    //         addrThManager.value = address.ADDR_LINE1 || '';
+    //     }
+    // }
+
+    // console.log(vendorMstData.VND_CODE);
+
+    // for (const VENDOR of vendorMstData.VND_CODE) {
+    //     console.log(VENDOR.CODE_NUM);
+    //     console.log($('#VENDCODE').val());
+
+    //     if (VENDOR.CODE_NUM == $('#VENDCODE').val()) {
+    //         paymentTermManager.value = VENDOR.TERM.STERMCODE;
+    //         currencyManager.value = VENDOR.STDCUR.CURR_CODE;
+    //         console.log(VENDOR.STDCUR.CURR_NAME);
+
+    //         $('#constdcur').text(VENDOR.STDCUR.CURR_NAME);
+    //     } else {
+    //         console.log('else');
+    //     }
+    // }
 }
 
 function setVendorInfo(vendorData) {
@@ -970,7 +1189,8 @@ function setVendorInfo(vendorData) {
 
     for (const address of vendorData.ADDRESSES) {
         if (address.ADDRTYPE === 'E') {
-            addrEnManager.value = address.ADDR || '';
+            addr1EnManager.value = address.ADDR1 || '';
+            addr2EnManager.value = address.ADDR2 || '';
             cityEnManager.value = address.CITY;
             stateEnManager.value = address.STATE;
             countryManager.value = address.COUNTRY;
@@ -978,7 +1198,7 @@ function setVendorInfo(vendorData) {
             postcodeEnManager.value = address.POSTCODE;
             countryEnManager.value = address.COUNTRY;
         } else {
-            addrThManager.value = address.ADDR || '';
+            addrThManager.value = address.ADDR1 || '';
             // provinceThManager.value = address.PROVINCE;
             // districtThManager.value = address.DISTRICT;
             // subDistrictThManager.value = address.SUBDISTRICT;
@@ -1062,6 +1282,8 @@ async function setVendorEvaInfo(formeva) {
     $('input[name="PRODCAT"][value="' + formeva.PRODCAT + '"]')
         .prop('checked', true)
         .trigger('change');
+
+    $('input[name="PRODCAT_OTHER"]').val(formeva.PRODCAT_OTHER);
     $('input[name="BUSTYPE_REG"]').val(formeva.BUSTYPE_REG);
     $('input[name="BUSTYPE_SUB"]').val(formeva.BUSTYPE_SUB);
 
@@ -1091,6 +1313,9 @@ async function setVendorEvaInfo(formeva) {
     $('input[name="EMPDIRECT"]').val(formeva.EMPDIRECT);
     $('input[name="EMPINDIRECT"]').val(formeva.EMPINDIRECT);
     $('.totemp').val(Number(formeva.EMPDIRECT) + Number(formeva.EMPINDIRECT));
+    $('input[name="AVGAGE"]').val(formeva.AVGAGE);
+    $('input[name="LAND"]').val(formeva.LAND);
+    $('input[name="FACTORY"]').val(formeva.FACTORY);
 
     $(`input[name="QM_STATUS"][value="${formeva.QM_STATUS}"]`)
         .prop('checked', true)
@@ -1130,7 +1355,8 @@ function clearVendorInfo() {
 
     $('input[name="VENDTYPE"]').prop('checked', false);
 
-    addrEnManager.value = '';
+    addr1EnManager.value = '';
+    addr2EnManager.value = '';
     addrThManager.value = '';
 
     const resetManager = (manager) => {
@@ -1235,8 +1461,8 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
     $.each(dataTransfer.files, function (index, file) {
         let fileItemHtml = `
             <div class="flex items-center gap-2 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
-                     class="cursor-pointer remove-new-file shrink-0" 
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                     class="cursor-pointer remove-new-file shrink-0"
                      data-id="${inputId}" data-index="${index}" title="Remove file">
                     <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
                     <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
@@ -1250,6 +1476,19 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
 
 async function packPurevaFormData(formElement) {
     const fd = new FormData(formElement);
+    $('.input-decimal, .input-integer').each(function () {
+        let name = $(this).attr('name'); // ดึงชื่อ name ของช่องนั้นๆ
+        let valueWithComma = $(this).val();
+
+        // ถ้าช่องนี้มีการตั้งค่า name ไว้
+        if (name) {
+            // ลบจุลภาคออก
+            let cleanValue = valueWithComma.replace(/,/g, '');
+
+            // อัปเดตทับค่าเดิมใน FormData ด้วย .set()
+            fd.set(name, cleanValue);
+        }
+    });
     const getAll = (key) => fd.getAll(key);
     const getStr = (key) => fd.get(key) || '';
 
@@ -1362,20 +1601,23 @@ async function packPurevaFormData(formElement) {
     appendObjArray('PROFIT_TURNOVERS', PROFIT_TURNOVERS);
     appendObjArray('RELATIONS', RELATIONS);
 
-    return filterFormData(fd);
+    return filterFormData(fd, { empty: true });
 }
 
 function checkAttFile() {
     const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
     const hasCer =
         $('#file-cer')[0].files.length > 0 ||
-        $('#file-type-11').children().length > 0;
+        $('#file-type-11').find('a').length > 0;
     const hasIe =
         $('#file-ie')[0].files.length > 0 ||
-        $('#file-type-12').children().length > 0;
+        $('#file-type-12').find('a').length > 0;
     const hasQa =
         $('#file-qa')[0].files.length > 0 ||
-        $('#file-type-13').children().length > 0;
+        $('#file-type-13').find('a').length > 0;
+    const hasQth =
+        $('#file-other')[0].files.length > 0 ||
+        $('#file-type-2').find('a').length > 0;
     if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
         if (!hasCer) {
             showMessage(
@@ -1385,11 +1627,8 @@ function checkAttFile() {
             return false;
         }
     } else {
-        if (!hasIe || !hasQa) {
-            showMessage(
-                "Please Attached IE's evaluation Document and QA's evaluation Document",
-                'warning',
-            );
+        if (!hasIe && !hasQa && !hasCer && !hasQth) {
+            showMessage('Please Attached file', 'warning');
             return false;
         }
     }
@@ -1564,3 +1803,47 @@ function formatText(inputString) {
     // ตัวแรกตัวใหญ่ นอกนั้นตัวเล็กทั้งหมด
     return noSpace.charAt(0).toUpperCase() + noSpace.slice(1).toLowerCase();
 }
+
+function validateTablePair(nameClass, perClass, message) {
+    let hasValidRow = false;
+
+    const names = document.querySelectorAll(`.${nameClass}`);
+    const pers = document.querySelectorAll(`.${perClass}`);
+
+    for (let i = 0; i < names.length; i++) {
+        let nameVal = names[i].value.trim();
+        let perVal = pers[i].value.trim();
+
+        // เช็คว่าช่องคู่ไหนกรอกครบถ้วนบ้าง
+        if (nameVal !== '' && perVal !== '') {
+            hasValidRow = true;
+            break;
+        }
+    }
+
+    // ถ้าตรวจสอบแล้ว "ไม่มี" แถวไหนกรอกครบเลยแม้แต่แถวเดียว
+    if (!hasValidRow) {
+        // แจ้งเตือนด้วยฟังก์ชันกลาง (หรือ alert ตามระบบของคุณ)
+        showMessage(message, 'warning');
+        return false; // สั่งหยุดการทำงานทันที ไม่ไปต่อ
+    }
+
+    return true; // ผ่าน ไปทำงานต่อได้
+}
+
+$(document).on('click', '.file-link', async function (e) {
+    console.log('xxxx');
+
+    e.preventDefault();
+    const filePath = $(this).attr('href');
+    const filename = $(this).attr('originalName');
+    const storedName = $(this).attr('storedName');
+    const ext = filename.split('.').pop();
+
+    await downloadOrOpenFile({
+        baseDir: filePath,
+        storedName: storedName,
+        originalName: filename,
+        mode: ext == 'pdf' ? 'open' : 'download',
+    });
+});

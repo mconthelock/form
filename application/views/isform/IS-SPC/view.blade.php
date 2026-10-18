@@ -101,6 +101,7 @@
                 </div>
             </div>
         @endif
+
         {{-- {{ $extdata }} --}}
         @if ($extdata == '01' && $data['ACTION'] == 'ADD')
             <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4">
@@ -120,6 +121,9 @@
             <input type="hidden" class="extdata" value="{{ $extdata }}">
             <input type="text" class="hidden" id="username_del" value="{{ $data['USERNAME'] }}" />
             <input type="text" class="hidden" id="platform" value="{{ $data['PLATFORM'] }}" />
+            <div class="mx-auto mt-6 space-x-4 w-80">
+                <textarea class="textarea rounded-lg bg-white w-full" id="remark" rows="3" placeholder="Remark"></textarea>
+            </div>
             <div class="flex justify-center mt-6 space-x-4">
                 <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
                     Approve

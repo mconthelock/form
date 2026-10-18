@@ -76,7 +76,7 @@
         </div>
       </div>
 
-    @if (in_array($EMPNO, ['15199', '01027', '14001', '02035']))
+    @if ( $EMPNO == '15199' || (!empty($emp_detail) && $emp_detail[0]->SSECCODE == '040302'))
       <div class="training-item border rounded-xl p-4 cursor-pointer hover:bg-teal-50 hover:border-teal-400 transition min-h-[90px] flex items-start" data-type="manage_group">
         <div class="flex items-start gap-2">
           <span class="text-2xl leading-none">👥</span>
