@@ -310,12 +310,16 @@ $(document).on('click', '#confirm-form', async function (e) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
     const form = $('#form-is-dev')[0];
     //Verify form
     // const formValid = await verifyForm(form);
     // if (!formValid) {
+<<<<<<< HEAD
 <<<<<<< HEAD
     //     return;
     // }
@@ -570,87 +574,116 @@ async function verifyROI(form) {
     //     await showMessage(
     //         'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
     //     );
+=======
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
     //     return;
     // }
-
-    // //Check detail must have at least 100 characters
-    // if ($('#detail-count').html() < 1) {
-    //     $('#detail-count')
-    //         .closest('.fieldset')
-    //         .find('textarea')
-    //         .addClass('text-red-500');
-    //     await showMessage(
-    //         'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //     );
-    //     return;
-    // }
-
+    // //Verify ROI form
     // if ($('.request-type:checked').val() < 3) {
-    //     //Verify form with ROI
-    //     let check2 = true;
-    //     if ($('#req-objective').val() == 8) {
-    //         $('#req-objective-other').addClass('req-2');
-    //     } else {
-    //         $('#req-objective-other').removeClass('req-2');
-    //         $('#req-objective-other').removeClass('border-red-500');
-    //     }
-    //     $(form)
-    //         .find('.req-2')
-    //         .map(function () {
-    //             $(this).removeClass('border-red-500');
-    //             $(this).closest('label.input').removeClass('border-red-500');
-    //             if (!$(this).val()) {
-    //                 $(this).addClass('border-red-500');
-    //                 $(this).closest('label.input').addClass('border-red-500');
-    //                 check2 = false;
-    //             }
-    //         });
-
-    //     if (!check2) {
-    //         await showMessage(
-    //             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-    //         );
-    //         return;
-    //     }
-
-    //     //Check detail must have at least 100 characters
-    //     if ($('#current-workflow-count').html() < 1) {
-    //         $('#current-workflow-count')
-    //             .closest('.fieldset')
-    //             .find('textarea')
-    //             .addClass('text-red-500');
-    //         await showMessage(
-    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //         );
-    //         return;
-    //     }
-
-    //     //Check detail must have at least 100 characters
-    //     if ($('#expected-workflow-count').html() < 1) {
-    //         $('#expected-workflow-count')
-    //             .closest('.fieldset')
-    //             .find('textarea')
-    //             .addClass('text-red-500');
-    //         await showMessage(
-    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //         );
-    //         return;
-    //     }
-
-    //     if ($('#roi-total-full').html() == 0) {
-    //         await showMessage(
-    //             'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
-    //         );
+    //     const roiValid = await verifyROI(form);
+    //     if (!roiValid) {
     //         return;
     //     }
     // }
 
     const formdata = await formData();
-    console.log(formdata);
     await createFormIsDev(formdata);
     //const files = $('#form-is-dev input[type="file"]');
 });
 >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
+
+async function verifyForm(form) {
+    let check = true;
+    $(form)
+        .find('.req-1')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                check = false;
+            }
+        });
+    if (!check) {
+        await showMessage(
+            `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
+        );
+        return false;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#detail-count').html() < 1) {
+        $('#detail-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
+        );
+        return false;
+    }
+    return true;
+}
+
+async function verifyROI(form) {
+    //Verify form with ROI
+    let check2 = true;
+    if ($('#req-objective').val() == 8) {
+        $('#req-objective-other').addClass('req-2');
+    } else {
+        $('#req-objective-other').removeClass('req-2');
+        $('#req-objective-other').removeClass('border-red-500');
+    }
+    $(form)
+        .find('.req-2')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            $(this).closest('label.input').removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                $(this).closest('label.input').addClass('border-red-500');
+                check2 = false;
+            }
+        });
+
+    if (!check2) {
+        await showMessage(
+            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+        );
+        return check2;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#current-workflow-count').html() < 1) {
+        $('#current-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#expected-workflow-count').html() < 1) {
+        $('#expected-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
+
+    if ($('#roi-total-full').html() == 0) {
+        await showMessage(
+            'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
+        );
+        return false;
+    }
+    return true;
+}
 
 async function formData() {
     const formData = new FormData();
@@ -661,6 +694,7 @@ async function formData() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             console.log(map);
 
@@ -671,6 +705,8 @@ async function formData() {
             console.log(map);
 
 >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
+=======
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
             if (map) {
                 formData.append(map, $(this).val());
             }
@@ -678,8 +714,11 @@ async function formData() {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
     formData.append('JOBTYPE', $('.request-type:checked').val());
     const requestor = $('#req-by-input').val();
     const user = await displayEmpInfo(requestor);
@@ -705,10 +744,14 @@ function setBenefit(formData) {
     for (const row of rows) {
         if ($(row).find('.subtotal-cost').val() > 0) {
 <<<<<<< HEAD
+<<<<<<< HEAD
             formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
 =======
             formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
             formData.append(
                 `benefit[${i}][BENEFIT_CURRENT]`,
                 $(row).find('.present-cost').val() || 0,
@@ -770,6 +813,7 @@ function setInvestmentCost(formData) {
     }
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     return formData;
 }
@@ -780,3 +824,5 @@ function setInvestmentCost(formData) {
     return formData;
 }
 >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
+=======
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)

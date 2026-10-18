@@ -20,6 +20,7 @@ class Form extends MY_Controller{
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         $data['CATEGORY'] = 2;
         $data['PLANYEAR'] = date('Y');
 =======
@@ -32,6 +33,10 @@ class Form extends MY_Controller{
 =======
         $data['CATAGORY'] = 2;
 >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
+=======
+        $data['CATEGORY'] = 2;
+        $data['PLANYEAR'] = date('Y');
+>>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
         if(empty($data)) throw new Exception("Error Processing Request", 1);
 
         $data['mode'] = 1;
