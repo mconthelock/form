@@ -2,12 +2,12 @@
 
 @section('contents')
     <form action="" id="form-is-dev">
-        <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" />
-        <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" />
-        <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" />
-        {{-- <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" /> --}}
-        {{-- <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" /> --}}
-        <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by" />
+        <input type="text" class="hidden" value="{{ $CATAGORY }}" data-map="CATAGORY" />
+        <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
+        <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
+        <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
+        <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
+            data-map="INPUTBY" />
         <section class="flex flex-col gap-3 mb-4">
             <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
             {{-- Request User --}}
@@ -17,7 +17,7 @@
                     <fieldset class="fieldset flex-1">
                         <legend class="fieldset-legend">Requrst By</legend>
                         <input type="text" class="input hidden req-1" placeholder="Employee No." id="req-by-input"
-                            value="{{ $EMPNO }}" name="req_by" />
+                            value="{{ $EMPNO }}" name="req_by" data-map="REQBY" />
                         <div class="flex items-center gap-3" id="req-by-info">
                             <div class="avatar flex-none">
                                 <div class="w-16 rounded-full" id="req-by-img">
@@ -101,19 +101,20 @@
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Program Name</legend>
                     <input type="text" class="input w-full req-1" name="program_name"
-                        placeholder="ชื่อโปรแกรม เช่น Webflow, SCM, Cost Reduction หรือ Procurement เป็นต้น" />
+                        placeholder="ชื่อโปรแกรม เช่น Webflow, SCM, Cost Reduction หรือ Procurement เป็นต้น"
+                        data-map="SYSTEMNAME" />
                 </fieldset>
 
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Title</legend>
                     <input type="text" class="input w-full req-1" name="title"
-                        placeholder="ตั้งชื่อ Request / ชื่อโปรเจค" />
+                        placeholder="ตั้งชื่อ Request / ชื่อโปรเจค" data-map="TITLE" />
                 </fieldset>
 
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Detail</legend>
                     <textarea class="textarea w-full h-56 text-comment req-1" name="detail" maxlength="500"
-                        placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้"></textarea>
+                        placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้" data-map="PURPOSE"></textarea>
                     <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
                     <div class="label text-xs justify-end text-count"><span class="text-count-no"
                             id="detail-count">0</span>/1000</div>
@@ -138,11 +139,11 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Objective</legend>
                             <div class="flex items-center gap-3">
-                                <select class="select s2 req-2" id="req-objective">
+                                <select class="select s2 req-2" id="req-objective" data-map="OBJECTIVE">
                                     <option value=""></option>
                                 </select>
                                 <input type="text" placeholder="Other Objective" class="input"
-                                    id="req-objective-other" readonly />
+                                    id="req-objective-other" readonly data-map="OBJECTIVE_OTHER" />
                             </div>
                         </fieldset>
                     </div>
@@ -151,7 +152,7 @@
                             <legend class="fieldset-legend">ROI Payback Period</legend>
                             <div class="flex items-center gap-3">
                                 <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
-                                    value="1" id="req-roi-years" />
+                                    value="1" id="req-roi-years" data-map="" />
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>
@@ -162,16 +163,17 @@
                     <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
                     <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
                     <label class="input">
-                        <input type="text" class="grow fdate req-2" placeholder="{{ Date('Y-M') }}" />
+                        <input type="text" class="grow fdate req-2" placeholder="{{ Date('Y-M') }}"
+                            data-map="SPEC_CONFIRM_PLAN" />
                         <i class="icofont-calendar"></i>
                     </label>
                 </fieldset>
 
-
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Current Workflow</legend>
                     <textarea class="textarea w-full h-56 text-comment req-2"
-                        placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"></textarea>
+                        placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"
+                        data-map="CURRENT_WORKFLOW"></textarea>
                     <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
                     <div class="label text-xs justify-end text-count"><span class="text-count-no"
                             id="current-workflow-count">0</span>/1000</div>
@@ -179,7 +181,7 @@
 
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Expected Workflow</legend>
-                    <textarea class="textarea w-full h-56 text-comment req-2"
+                    <textarea class="textarea w-full h-56 text-comment req-2" data-map="EXPECTED_WORKFLOW"
                         placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
                     <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
                     <div class="label text-xs justify-end text-count"><span class="text-count-no"
