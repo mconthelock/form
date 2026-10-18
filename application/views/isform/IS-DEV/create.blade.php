@@ -2,12 +2,16 @@
 
 @section('contents')
     <form action="" id="form-is-dev">
-        <input type="text" class="hidden" value="{{ $CATAGORY }}" data-map="CATAGORY" />
+        <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
+        <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
+        <input type="text" class="hidden" value="1" data-map="STATUS" />
         <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
         <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
             data-map="INPUTBY" />
+
+
         <section class="flex flex-col gap-3 mb-4">
             <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
             {{-- Request User --}}
@@ -87,14 +91,22 @@
                                 class="radio radio-primary request-type" value="1" checked />New Program/Additional
                             Request
                         </li>
-                        <li class="flex items-center gap-3"><input type="radio" name="request_type"
-                                class="radio radio-primary request-type" value="2" />Modify Program</li>
-                        <li class="flex items-center gap-3"><input type="radio" name="request_type"
-                                class="radio radio-primary request-type" value="3" />Fixed Error Program</li>
-                        <li class="flex items-center gap-3"><input type="radio" name="request_type"
-                                class="radio radio-primary request-type" value="4" />Data Change</li>
-                        <li class="flex items-center gap-3"><input type="radio" name="request_type"
-                                class="radio radio-primary request-type" value="5" />Search Data</li>
+                        <li class="flex items-center gap-3">
+                            <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                value="2" />Modify Program
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                value="3" />Fixed Error Program
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                value="4" />Data Change
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                value="5" />Search Data
+                        </li>
                     </ul>
                 </fieldset>
 
@@ -152,7 +164,7 @@
                             <legend class="fieldset-legend">ROI Payback Period</legend>
                             <div class="flex items-center gap-3">
                                 <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
-                                    value="1" id="req-roi-years" data-map="" />
+                                    value="1" id="req-roi-years" data-map="ROI_RETURN" />
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>
