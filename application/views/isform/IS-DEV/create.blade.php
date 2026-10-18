@@ -4,6 +4,7 @@
     <form action="" id="form-is-dev">
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
         <input type="text" class="hidden" value="1" data-map="STATUS" />
@@ -15,11 +16,15 @@
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
         <input type="text" class="hidden" value="1" data-map="STATUS" />
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+        <input type="text" class="hidden" value="{{ $CATAGORY }}" data-map="CATAGORY" />
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
         <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
         <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
             data-map="INPUTBY" />
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 
@@ -30,6 +35,8 @@
 
 
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
         <section class="flex flex-col gap-3 mb-4">
             <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
             {{-- Request User --}}
@@ -184,6 +191,7 @@
                                 <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                                     value="1" id="req-roi-years" data-map="ROI_RETURN" />
 =======
                                     value="1" id="req-roi-years" data-map="" />
@@ -191,6 +199,9 @@
 =======
                                     value="1" id="req-roi-years" data-map="ROI_RETURN" />
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+                                    value="1" id="req-roi-years" data-map="" />
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>

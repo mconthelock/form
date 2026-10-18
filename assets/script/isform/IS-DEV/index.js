@@ -309,6 +309,7 @@ $(document).on('click', '#confirm-form', async function (e) {
     e.preventDefault();
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
     const form = $('#form-is-dev')[0];
@@ -551,6 +552,105 @@ async function verifyROI(form) {
     }
     return true;
 }
+=======
+    // const form = $('#form-is-dev')[0];
+
+    // //Verify form
+    // let check = true;
+    // $(form)
+    //     .find('.req-1')
+    //     .map(function () {
+    //         $(this).removeClass('border-red-500');
+    //         if (!$(this).val()) {
+    //             $(this).addClass('border-red-500');
+    //             check = false;
+    //         }
+    //     });
+    // if (!check) {
+    //     await showMessage(
+    //         'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+    //     );
+    //     return;
+    // }
+
+    // //Check detail must have at least 100 characters
+    // if ($('#detail-count').html() < 1) {
+    //     $('#detail-count')
+    //         .closest('.fieldset')
+    //         .find('textarea')
+    //         .addClass('text-red-500');
+    //     await showMessage(
+    //         'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //     );
+    //     return;
+    // }
+
+    // if ($('.request-type:checked').val() < 3) {
+    //     //Verify form with ROI
+    //     let check2 = true;
+    //     if ($('#req-objective').val() == 8) {
+    //         $('#req-objective-other').addClass('req-2');
+    //     } else {
+    //         $('#req-objective-other').removeClass('req-2');
+    //         $('#req-objective-other').removeClass('border-red-500');
+    //     }
+    //     $(form)
+    //         .find('.req-2')
+    //         .map(function () {
+    //             $(this).removeClass('border-red-500');
+    //             $(this).closest('label.input').removeClass('border-red-500');
+    //             if (!$(this).val()) {
+    //                 $(this).addClass('border-red-500');
+    //                 $(this).closest('label.input').addClass('border-red-500');
+    //                 check2 = false;
+    //             }
+    //         });
+
+    //     if (!check2) {
+    //         await showMessage(
+    //             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+    //         );
+    //         return;
+    //     }
+
+    //     //Check detail must have at least 100 characters
+    //     if ($('#current-workflow-count').html() < 1) {
+    //         $('#current-workflow-count')
+    //             .closest('.fieldset')
+    //             .find('textarea')
+    //             .addClass('text-red-500');
+    //         await showMessage(
+    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //         );
+    //         return;
+    //     }
+
+    //     //Check detail must have at least 100 characters
+    //     if ($('#expected-workflow-count').html() < 1) {
+    //         $('#expected-workflow-count')
+    //             .closest('.fieldset')
+    //             .find('textarea')
+    //             .addClass('text-red-500');
+    //         await showMessage(
+    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //         );
+    //         return;
+    //     }
+
+    //     if ($('#roi-total-full').html() == 0) {
+    //         await showMessage(
+    //             'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
+    //         );
+    //         return;
+    //     }
+    // }
+
+    const formdata = await formData();
+    console.log(formdata);
+    await createFormIsDev(formdata);
+    //const files = $('#form-is-dev input[type="file"]');
+});
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
 
 async function formData() {
     const formData = new FormData();
@@ -560,16 +660,22 @@ async function formData() {
             const map = $(this).data('map');
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
             console.log(map);
 
 >>>>>>> 171584cc (feat: enhance form handling by adding category data and refactoring form submission logic)
 =======
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+            console.log(map);
+
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
             if (map) {
                 formData.append(map, $(this).val());
             }
         });
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -670,3 +776,7 @@ function setInvestmentCost(formData) {
 >>>>>>> 171584cc (feat: enhance form handling by adding category data and refactoring form submission logic)
 =======
 >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+    return formData;
+}
+>>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
