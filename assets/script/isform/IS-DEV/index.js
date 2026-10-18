@@ -33,20 +33,17 @@ $(document).ready(async function () {
     $('#add-row-investment').trigger('click');
     await setSelect2();
     await setDatePicker({
+        altInput: true,
         mode: 'month',
-        dateFormat: 'Y-M',
+        //dateFormat: 'Y-M',
+        altFormat: 'Y-M',
+        dateFormat: 'Y-m-01',
         minDate: dayjs().format('YYYY-MM'),
     });
     $('.flatpickr-input').removeClass('input');
 });
 
-$(document).on('click', '#change-req-employee', async function (e) {
-    e.preventDefault();
-    $('#req-by-input').removeClass('hidden');
-    $('#req-by-info').addClass('hidden');
-    $('#req-by-input').focus();
-});
-
+//General input number formatting
 $(document).on('keyup', '.input-number', function (e) {
     let value = $(this).val();
     value = value.replace(/[^\d.-]/g, '');
@@ -56,6 +53,7 @@ $(document).on('keyup', '.input-number', function (e) {
     $(this).val(value);
 });
 
+//Requester Information
 $(document).on('change', '#req-by-input', async function (e) {
     e.preventDefault();
     const inputuser = $(this).val();
@@ -78,10 +76,22 @@ $(document).on('change', '#req-by-input', async function (e) {
     $(this).val('').addClass('hidden');
 });
 
+$(document).on('click', '#change-req-employee', async function (e) {
+    e.preventDefault();
+    $('#req-by-input').removeClass('hidden');
+    $('#req-by-info').addClass('hidden');
+    $('#req-by-input').focus();
+});
+
 $(document).on('click', '.request-type', async function (e) {
     const val = $(this).val();
-    if (val >= '3') $('.form-roi').addClass('hidden');
-    else $('.form-roi').removeClass('hidden');
+    if (val >= '3') {
+        $('.form-roi').addClass('hidden');
+        $('.form-roi input').val('');
+        $('.form-roi select').val('');
+    } else {
+        $('.form-roi').removeClass('hidden');
+    }
 });
 
 $(document).on('keyup', '.text-comment', async function () {
@@ -101,12 +111,6 @@ $(document).on('keyup', '.text-comment', async function () {
         elCnt.addClass('text-red-500');
     }
     elCnt.html(cnt);
-});
-
-$(document).on('change', '.request-type', async function () {
-    const val = $(this).val();
-    if (val >= '3') $('.form-roi').addClass('hidden');
-    else $('.form-roi').removeClass('hidden');
 });
 
 $(document).on('click', '#add-file', async function (e) {
@@ -303,103 +307,117 @@ $(document).on('click', '.remove-row-investment', async function (e) {
 //Save Form
 $(document).on('click', '#confirm-form', async function (e) {
     e.preventDefault();
-    // const form = $('#form-is-dev')[0];
-
-    // //Verify form
-    // let check = true;
-    // $(form)
-    //     .find('.req-1')
-    //     .map(function () {
-    //         $(this).removeClass('border-red-500');
-    //         if (!$(this).val()) {
-    //             $(this).addClass('border-red-500');
-    //             check = false;
-    //         }
-    //     });
-    // if (!check) {
-    //     await showMessage(
-    //         'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-    //     );
+    const form = $('#form-is-dev')[0];
+    //Verify form
+    // const formValid = await verifyForm(form);
+    // if (!formValid) {
     //     return;
     // }
-
-    // //Check detail must have at least 100 characters
-    // if ($('#detail-count').html() < 1) {
-    //     $('#detail-count')
-    //         .closest('.fieldset')
-    //         .find('textarea')
-    //         .addClass('text-red-500');
-    //     await showMessage(
-    //         'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //     );
-    //     return;
-    // }
-
+    // //Verify ROI form
     // if ($('.request-type:checked').val() < 3) {
-    //     //Verify form with ROI
-    //     let check2 = true;
-    //     if ($('#req-objective').val() == 8) {
-    //         $('#req-objective-other').addClass('req-2');
-    //     } else {
-    //         $('#req-objective-other').removeClass('req-2');
-    //         $('#req-objective-other').removeClass('border-red-500');
-    //     }
-    //     $(form)
-    //         .find('.req-2')
-    //         .map(function () {
-    //             $(this).removeClass('border-red-500');
-    //             $(this).closest('label.input').removeClass('border-red-500');
-    //             if (!$(this).val()) {
-    //                 $(this).addClass('border-red-500');
-    //                 $(this).closest('label.input').addClass('border-red-500');
-    //                 check2 = false;
-    //             }
-    //         });
-
-    //     if (!check2) {
-    //         await showMessage(
-    //             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-    //         );
-    //         return;
-    //     }
-
-    //     //Check detail must have at least 100 characters
-    //     if ($('#current-workflow-count').html() < 1) {
-    //         $('#current-workflow-count')
-    //             .closest('.fieldset')
-    //             .find('textarea')
-    //             .addClass('text-red-500');
-    //         await showMessage(
-    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //         );
-    //         return;
-    //     }
-
-    //     //Check detail must have at least 100 characters
-    //     if ($('#expected-workflow-count').html() < 1) {
-    //         $('#expected-workflow-count')
-    //             .closest('.fieldset')
-    //             .find('textarea')
-    //             .addClass('text-red-500');
-    //         await showMessage(
-    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-    //         );
-    //         return;
-    //     }
-
-    //     if ($('#roi-total-full').html() == 0) {
-    //         await showMessage(
-    //             'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
-    //         );
+    //     const roiValid = await verifyROI(form);
+    //     if (!roiValid) {
     //         return;
     //     }
     // }
 
     const formdata = await formData();
-    console.log(formdata);
     await createFormIsDev(formdata);
     //const files = $('#form-is-dev input[type="file"]');
 });
+
+async function verifyForm(form) {
+    let check = true;
+    $(form)
+        .find('.req-1')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                check = false;
+            }
+        });
+    if (!check) {
+        await showMessage(
+            `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
+        );
+        return false;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#detail-count').html() < 1) {
+        $('#detail-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
+        );
+        return false;
+    }
+    return true;
+}
+
+async function verifyROI(form) {
+    //Verify form with ROI
+    let check2 = true;
+    if ($('#req-objective').val() == 8) {
+        $('#req-objective-other').addClass('req-2');
+    } else {
+        $('#req-objective-other').removeClass('req-2');
+        $('#req-objective-other').removeClass('border-red-500');
+    }
+    $(form)
+        .find('.req-2')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            $(this).closest('label.input').removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                $(this).closest('label.input').addClass('border-red-500');
+                check2 = false;
+            }
+        });
+
+    if (!check2) {
+        await showMessage(
+            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+        );
+        return check2;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#current-workflow-count').html() < 1) {
+        $('#current-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#expected-workflow-count').html() < 1) {
+        $('#expected-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
+
+    if ($('#roi-total-full').html() == 0) {
+        await showMessage(
+            'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
+        );
+        return false;
+    }
+    return true;
+}
 
 async function formData() {
     const formData = new FormData();
@@ -407,11 +425,92 @@ async function formData() {
         .find('input, textarea, select')
         .each(function () {
             const map = $(this).data('map');
-            console.log(map);
-
             if (map) {
                 formData.append(map, $(this).val());
             }
         });
+    formData.append('JOBTYPE', $('.request-type:checked').val());
+    const requestor = $('#req-by-input').val();
+    const user = await displayEmpInfo(requestor);
+    const org =
+        user.SSECCODE != '00'
+            ? user.SSECCODE
+            : user.SDEPCODE != '00'
+              ? user.SDEPCODE
+              : user.SDIVCODE;
+    formData.append('REQ_ORG', org);
+    formData.append('REQ_PIC', requestor);
+    formData.append('REQ_DATE', dayjs().format('YYYY-MM-DD'));
+    if ($('.total-benefit').val() > 0) setBenefit(formData);
+    if ($('.total-labor').val() > 0) setLabor(formData);
+    if ($('.total-investment-cost').val() > 0) setInvestmentCost(formData);
+    if ($('.attachments').length > 0) setAttachments(formData);
     return formData;
+}
+
+function setBenefit(formData) {
+    const rows = $('#table-benefit').find('tbody tr');
+    let i = 0;
+    for (const row of rows) {
+        if ($(row).find('.subtotal-cost').val() > 0) {
+            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
+            formData.append(
+                `benefit[${i}][BENEFIT_CURRENT]`,
+                $(row).find('.present-cost').val() || 0,
+            );
+            formData.append(
+                `benefit[${i}][BENEFIT_AFTER]`,
+                $(row).find('.future-cost').val() || 0,
+            );
+            i++;
+        }
+    }
+}
+
+function setLabor(formData) {
+    const rows = $('#table-labor').find('tbody tr');
+    let i = 0;
+    for (const row of rows) {
+        if ($(row).find('.labor-total').val() > 0) {
+            formData.append(
+                `manhours[${i}][POSITION]`,
+                $(row).find('td:eq(0) select').val(),
+            );
+            formData.append(
+                `manhours[${i}][COST]`,
+                $(row).find('td:eq(1) input').val() || 0,
+            );
+            formData.append(
+                `manhours[${i}][HOURS_PRESENT]`,
+                $(row).find('td:eq(2) input').val() || 0,
+            );
+            formData.append(
+                `manhours[${i}][HOURS_AFTER]`,
+                $(row).find('td:eq(3) input').val() || 0,
+            );
+            i++;
+        }
+    }
+}
+
+function setInvestmentCost(formData) {
+    const rows = $('#table-investment').find('tbody tr');
+    let i = 0;
+    for (const row of rows) {
+        if ($(row).find('.device-total').val() > 0) {
+            formData.append(
+                `invest[${i}][DEVICE]`,
+                $(row).find('td:eq(0) select').val(),
+            );
+            formData.append(
+                `invest[${i}][QTY]`,
+                $(row).find('td:eq(1) input').val() || 0,
+            );
+            formData.append(
+                `invest[${i}][PRICE]`,
+                $(row).find('td:eq(2) input').val() || 0,
+            );
+            i++;
+        }
+    }
 }
