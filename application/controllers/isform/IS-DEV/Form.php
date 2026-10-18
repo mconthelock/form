@@ -17,8 +17,12 @@ class Form extends MY_Controller{
 
     public function main(){
         $data = $this->setFormProp($this->formname);
+<<<<<<< HEAD
         $data['CATEGORY'] = 2;
         $data['PLANYEAR'] = date('Y');
+=======
+        $data['CATAGORY'] = 2;
+>>>>>>> 171584cc (feat: enhance form handling by adding category data and refactoring form submission logic)
         if(empty($data)) throw new Exception("Error Processing Request", 1);
 
         $data['mode'] = 1;
