@@ -15,7 +15,8 @@ import {
     totalBenefit,
     totalLabor,
     totalInvestment,
-} from '../FORM-1/data.js';
+    createFormIsDev,
+} from './data.js';
 select2();
 
 $(document).ready(async function () {
@@ -302,98 +303,115 @@ $(document).on('click', '.remove-row-investment', async function (e) {
 //Save Form
 $(document).on('click', '#confirm-form', async function (e) {
     e.preventDefault();
-    const form = $('#form-is-dev')[0];
+    // const form = $('#form-is-dev')[0];
 
-    //Verify form
-    let check = true;
-    $(form)
-        .find('.req-1')
-        .map(function () {
-            $(this).removeClass('border-red-500');
-            if (!$(this).val()) {
-                $(this).addClass('border-red-500');
-                check = false;
-            }
-        });
-    if (!check) {
-        await showMessage(
-            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-        );
-        return;
-    }
+    // //Verify form
+    // let check = true;
+    // $(form)
+    //     .find('.req-1')
+    //     .map(function () {
+    //         $(this).removeClass('border-red-500');
+    //         if (!$(this).val()) {
+    //             $(this).addClass('border-red-500');
+    //             check = false;
+    //         }
+    //     });
+    // if (!check) {
+    //     await showMessage(
+    //         'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+    //     );
+    //     return;
+    // }
 
-    //Check detail must have at least 100 characters
-    if ($('#detail-count').html() < 1) {
-        $('#detail-count')
-            .closest('.fieldset')
-            .find('textarea')
-            .addClass('text-red-500');
-        await showMessage(
-            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-        );
-        return;
-    }
+    // //Check detail must have at least 100 characters
+    // if ($('#detail-count').html() < 1) {
+    //     $('#detail-count')
+    //         .closest('.fieldset')
+    //         .find('textarea')
+    //         .addClass('text-red-500');
+    //     await showMessage(
+    //         'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //     );
+    //     return;
+    // }
 
-    if ($('.request-type:checked').val() < 3) {
-        //Verify form with ROI
-        let check2 = true;
-        if ($('#req-objective').val() == 8) {
-            $('#req-objective-other').addClass('req-2');
-        } else {
-            $('#req-objective-other').removeClass('req-2');
-            $('#req-objective-other').removeClass('border-red-500');
-        }
-        $(form)
-            .find('.req-2')
-            .map(function () {
-                $(this).removeClass('border-red-500');
-                $(this).closest('label.input').removeClass('border-red-500');
-                if (!$(this).val()) {
-                    $(this).addClass('border-red-500');
-                    $(this).closest('label.input').addClass('border-red-500');
-                    check2 = false;
-                }
-            });
+    // if ($('.request-type:checked').val() < 3) {
+    //     //Verify form with ROI
+    //     let check2 = true;
+    //     if ($('#req-objective').val() == 8) {
+    //         $('#req-objective-other').addClass('req-2');
+    //     } else {
+    //         $('#req-objective-other').removeClass('req-2');
+    //         $('#req-objective-other').removeClass('border-red-500');
+    //     }
+    //     $(form)
+    //         .find('.req-2')
+    //         .map(function () {
+    //             $(this).removeClass('border-red-500');
+    //             $(this).closest('label.input').removeClass('border-red-500');
+    //             if (!$(this).val()) {
+    //                 $(this).addClass('border-red-500');
+    //                 $(this).closest('label.input').addClass('border-red-500');
+    //                 check2 = false;
+    //             }
+    //         });
 
-        if (!check2) {
-            await showMessage(
-                'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-            );
-            return;
-        }
+    //     if (!check2) {
+    //         await showMessage(
+    //             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+    //         );
+    //         return;
+    //     }
 
-        //Check detail must have at least 100 characters
-        if ($('#current-workflow-count').html() < 1) {
-            $('#current-workflow-count')
-                .closest('.fieldset')
-                .find('textarea')
-                .addClass('text-red-500');
-            await showMessage(
-                'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-            );
-            return;
-        }
+    //     //Check detail must have at least 100 characters
+    //     if ($('#current-workflow-count').html() < 1) {
+    //         $('#current-workflow-count')
+    //             .closest('.fieldset')
+    //             .find('textarea')
+    //             .addClass('text-red-500');
+    //         await showMessage(
+    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //         );
+    //         return;
+    //     }
 
-        //Check detail must have at least 100 characters
-        if ($('#expected-workflow-count').html() < 1) {
-            $('#expected-workflow-count')
-                .closest('.fieldset')
-                .find('textarea')
-                .addClass('text-red-500');
-            await showMessage(
-                'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-            );
-            return;
-        }
+    //     //Check detail must have at least 100 characters
+    //     if ($('#expected-workflow-count').html() < 1) {
+    //         $('#expected-workflow-count')
+    //             .closest('.fieldset')
+    //             .find('textarea')
+    //             .addClass('text-red-500');
+    //         await showMessage(
+    //             'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+    //         );
+    //         return;
+    //     }
 
-        if ($('#roi-total-full').html() == 0) {
-            await showMessage(
-                'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
-            );
-            return;
-        }
-    }
+    //     if ($('#roi-total-full').html() == 0) {
+    //         await showMessage(
+    //             'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
+    //         );
+    //         return;
+    //     }
+    // }
 
-    //const formData = new FormData();
+    const formdata = await formData();
+    console.log(formdata);
+    await createFormIsDev(formdata);
     //const files = $('#form-is-dev input[type="file"]');
 });
+
+async function formData() {
+    const formData = new FormData();
+    $('#form-is-dev')
+        .find('input, textarea, select')
+        .each(function () {
+            const map = $(this).data('map');
+            console.log(map);
+
+            if (map) {
+                formData.append(map, $(this).val());
+            }
+        });
+    return formData;
+}
