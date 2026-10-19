@@ -227,10 +227,12 @@ $(document).ready(async function () {
                         let dwgNo = $(this).find('.btn-open').data('dwgfull');
                         let radValue = $(this).find('.radDwg:checked').val();
                         let remark = $(this).find('.txtDwgRem').val();
+                        let revNo = $(this).find('.btn-open').data('rev');
                         // นำข้อมูลของแถวนี้มาจัดรูปเป็น Object แล้วใส่ใน Array
                         if (dwgNo) {
                             dwgArray.push({
                                 DWGNO: dwgNo,
+                                REVNO: revNo,
                                 RESULT:
                                     radValue !== undefined ? radValue : null, // ถ้าไม่ได้เลือกให้เป็น null
                                 REMARK: remark,
