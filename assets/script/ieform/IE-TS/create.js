@@ -1,6 +1,10 @@
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { createTable } from '@amec/webasset/dataTable';
-import { showErrorMessage, showMessage } from '@amec/webasset/utils';
+import {
+    showConfirm,
+    showErrorMessage,
+    showMessage,
+} from '@amec/webasset/utils';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
@@ -9,6 +13,14 @@ import { getTsAdjustData } from './data';
 import { showLoader } from '@amec/webasset/preloader';
 
 let tsTableInstance = null;
+
+// 💡 สร้าง HTML ปุ่มลบเตรียมไว้ (ไอคอนถังขยะ)
+const btnDeleteHTML = `<button type="button" class="btn-delete text-red-500 hover:text-red-700 transition" title="Delete">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mx-auto" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+    </svg>
+</button>`;
+
 const transformDataForTable = (apiData, startIndex = 0) => {
     const flatData = [];
 
@@ -53,7 +65,8 @@ const transformDataForTable = (apiData, startIndex = 0) => {
             afterTS.toFixed(4), // [11]
             totalReq.toFixed(4), // [12]
             '-', // [13] Date/Remarks
-            'parent', // [14] ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
+            btnDeleteHTML, // [14] 💡 คอลัมน์ Action
+            'parent', // [15] 💡 ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
         ]);
 
         // 3. วนลูปสร้างแถวย่อย (Child Row) สำหรับแต่ละ Process
@@ -70,12 +83,10 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                 const pTotalReq = pAfterTS - pTS;
 
                 // สร้าง Input HTML (จัด Style ด้วย Tailwind)
-                // 💡 แก้ไข inputAfterTP
                 const inputAfterTP = `<input type="number" step="0.0001"
     class="w-[85px] block mx-auto text-center py-1 px-2 text-amber-950 font-medium bg-white border border-amber-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200 hover:border-amber-400 input-after-tp"
     value="${pAfterTP.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
 
-                // 💡 แก้ไข inputAfterTC
                 const inputAfterTC = `<input type="number" step="0.0001"
     class="w-[85px] block mx-auto text-center py-1 px-2 text-amber-950 font-medium bg-white border border-amber-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200 hover:border-amber-400 input-after-tc"
     value="${pAfterTC.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
@@ -90,16 +101,17 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                     '', // [2]
                     '', // [3]
                     '', // [4]
-                    process.F02R03 ? process.F02R03.trim() : '-', // [5] เปลี่ยน index ตรงนี้ให้ตรงกับ DataTables ของคุณ
+                    process.F02R03 ? process.F02R03.trim() : '-', // [5]
                     pTP.toFixed(4), // [6]
                     pTC.toFixed(4), // [7]
                     pTS.toFixed(4), // [8]
-                    inputAfterTP, // [9] กลายเป็นช่องกรอก
-                    inputAfterTC, // [10] กลายเป็นช่องกรอก
-                    spanAfterTS, // [11] ผลลัพธ์
-                    spanTotalReq, // [12] ผลลัพธ์
+                    inputAfterTP, // [9]
+                    inputAfterTC, // [10]
+                    spanAfterTS, // [11]
+                    spanTotalReq, // [12]
                     '-', // [13]
-                    'child', // [14] ตัวบอกว่าเป็นแถวย่อย
+                    '', // [14] 💡 ว่างไว้สำหรับแถว Child
+                    'child', // [15] 💡 ตัวบอกว่าเป็นแถวย่อย
                 ]);
             });
         }
@@ -111,20 +123,14 @@ const transformDataForTable = (apiData, startIndex = 0) => {
 // 2. ฟังก์ชันอัปเดตหรือสร้างตาราง
 async function updateOrCreateTable(rawData) {
     if (tsTableInstance) {
-        // --- กรณีที่ 1: มีตารางอยู่แล้ว (กด Add ตัวที่ 2, 3...) ---
-        // นับจำนวนแถวเดิมก่อน เพื่อส่งไปให้ฟังก์ชันแปลงข้อมูลรันเลข No. ต่อ
-        // const currentRowCount = tsTableInstance.rows().count();
-        // const tableData = transformDataForTable(rawData, currentRowCount);
         const allCurrentData = tsTableInstance.rows().data().toArray();
         const parentRowsCount = allCurrentData.filter(
-            (row) => row[14] === 'parent',
+            (row) => row[15] === 'parent', // 💡 แก้เป็น 15
         ).length;
         const tableData = transformDataForTable(rawData, parentRowsCount);
 
-        // เอาข้อมูลใหม่ต่อท้าย แล้วสั่งวาดตารางใหม่ (ยอดรวมด้านบนจะอัปเดตเองอัตโนมัติ)
         tsTableInstance.rows.add(tableData).draw(false);
     } else {
-        // --- กรณีที่ 2: เพิ่งกด Add ครั้งแรก (ยังไม่มีตาราง) ---
         const tableData = transformDataForTable(rawData, 0);
 
         const tableOption = {
@@ -134,34 +140,35 @@ async function updateOrCreateTable(rawData) {
             ordering: false,
             info: false,
             createdRow: function (row, data, dataIndex) {
-                if (data[14] === 'child') {
-                    // <--- เปลี่ยนจาก 15 เป็น 14
+                if (data[15] === 'child') {
+                    // 💡 แก้เป็น 15
                     $(row).addClass('text-gray-500 border-t-0 bg-transparent');
-                    $('td:eq(5)', row).addClass('text-right text-xs'); // <--- เปลี่ยนจาก 6 เป็น 5
+                    $('td:eq(5)', row).addClass('text-right text-xs');
                 } else {
                     $(row).addClass(
                         'font-bold bg-white border-b-2 border-gray-200',
                     );
                 }
             },
-            columns: Array(14).fill({ defaultContent: '-' }),
+            columns: Array(15).fill({ defaultContent: '-' }), // 💡 เปลี่ยนเป็น 15
             columnDefs: [
-                { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' }, // จาก 9 เป็น 8
-                { targets: [9, 10], className: 'bg-[#ffffe6] text-center' }, // จาก 10,11 เป็น 9,10
-                { targets: 11, className: 'bg-[#ffff99] text-center border-r' }, // จาก 12 เป็น 11
+                { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' },
+                { targets: [9, 10], className: 'bg-[#ffffe6] text-center' },
+                { targets: 11, className: 'bg-[#ffff99] text-center border-r' },
                 {
-                    targets: 12, // จาก 13 เป็น 12
+                    targets: 12,
                     className:
                         'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
                 },
-                { targets: [0, 4, 5, 13], className: 'text-center' }, // จาก [0,4,5,6,14] เป็น [0,4,5,13]
+                // 💡 เพิ่ม 14 ลงไปเพื่อให้ปุ่มจัดกึ่งกลาง
+                { targets: [0, 4, 5, 13, 14], className: 'text-center' },
             ],
             drawCallback: function (settings) {
                 const api = this.api();
                 const allData = api.rows({ page: 'current' }).data().toArray();
 
                 const parentRows = allData.filter(
-                    (row) => row[14] === 'parent',
+                    (row) => row[15] === 'parent', // 💡 แก้เป็น 15
                 );
 
                 const sumCurrentTS = parentRows.reduce(
@@ -189,12 +196,11 @@ async function updateOrCreateTable(rawData) {
         };
 
         const setupOpt = {
-            id: 'TsTable', // ต้องตรงกับ ID ของ <table id="TsTable"> ใน HTML
+            id: 'TsTable',
             domScroll: { status: true, type: 'default', maxHeight: '400px' },
             headerSticky: { status: true },
         };
 
-        // สร้างตารางและเก็บ instance ไว้
         tsTableInstance = await createTable(tableOption, setupOpt);
     }
 }
@@ -206,26 +212,22 @@ function packDataForSave() {
     }
 
     const dataToSave = [];
-
-    // ตัวแปรสำหรับจดจำข้อมูลของแถวหลัก (Parent) เพื่อเอาไปแปะให้แถวย่อย (Child)
     let currentParentData = {};
 
-    // วนลูปทุกแถวจากบนลงล่าง
     tsTableInstance.rows().every(function () {
         const data = this.data();
         const node = this.node();
 
-        // 1. ถ้าเจอแถว 'parent' ให้จดจำข้อมูลหลักไว้
-        if (data[14] === 'parent') {
+        if (data[15] === 'parent') {
+            // 💡 แก้เป็น 15
             currentParentData = {
-                partName: data[1], // Part Name
-                item: data[2], // ITEM
-                dwg: data[3], // DWG
-                qty: data[4], // QTY
+                partName: data[1],
+                item: data[2],
+                dwg: data[3],
+                qty: data[4],
             };
-        }
-        // 2. ถ้าเจอแถว 'child' ให้ดึงข้อมูล process และ textbox มารวมกับ parent
-        else if (data[14] === 'child') {
+        } else if (data[15] === 'child') {
+            // 💡 แก้เป็น 15
             let tpAfter =
                 $(node).find('td:eq(9) input').val() ||
                 $(node).find('td:eq(9)').text().trim() ||
@@ -236,7 +238,6 @@ function packDataForSave() {
                 data[10];
             if (data[6] != tpAfter || data[7] != tcAfter) {
                 const rowData = {
-                    // ดึงข้อมูลหลักจากตัวแปร currentParentData ที่จำไว้
                     partName: currentParentData.partName,
                     item: currentParentData.item,
                     dwg: currentParentData.dwg,
@@ -264,7 +265,7 @@ $(document).ready(async function () {
         minDate: 'today',
         plugins: [
             new monthSelectPlugin({
-                shorthand: true, // ใช้ชื่อเดือนย่อ (Jan, Feb)
+                shorthand: true,
                 dateFormat: 'Y/m',
                 altFormat: 'Y/m',
             }),
@@ -276,9 +277,6 @@ $(document).ready(async function () {
 const generateMockData = () => {
     return Array.from({ length: 30 }, (_, i) => {
         const no = i + 1;
-
-        // จำลองรหัส DWG ให้ครบ 19 ตัวอักษร (เช่น DWG-000000000000001)
-        // "DWG-" มี 4 ตัวอักษร + ตัวเลขอีก 15 ตัว = 19 ตัวอักษร
         const dwgNo = `DWG-${String(no).padStart(15, '0')}`;
 
         const currentTS = (0.3 + i * 0.01).toFixed(4);
@@ -294,7 +292,6 @@ const generateMockData = () => {
             dwgNo, // [3]
             'X', // [4]
             'K', // [5]
-            // '-', <--- ลบบรรทัดนี้ออก (Rev)
             '0.0500', // [6]
             '0.2500', // [7]
             currentTS, // [8]
@@ -303,7 +300,8 @@ const generateMockData = () => {
             afterTS, // [11]
             totalReq, // [12]
             no === 3 ? '20-Feb-26' : '-', // [13]
-            'parent', // [14] (แนะนำให้ใส่ flag เข้าไปด้วยเพื่อให้ drawCallback ใน init ทำงานถูกถ้าใช้ filter)
+            btnDeleteHTML, // [14] 💡 เพิ่ม Action ลบ
+            'parent', // [15] 💡 เลื่อน flag มาที่ 15
         ];
     });
 };
@@ -312,29 +310,26 @@ async function initMyTable() {
     const mockData = generateMockData();
     console.log(mockData);
 
-    // 1. กำหนด Option ของ DataTables
     const tableOption = {
-        // ตัวอย่างโครงสร้างข้อมูล (คุณสามารถเปลี่ยนไปใช้ ajax ได้)
         //data: mockData,
         data: [],
         searching: false,
-        paging: false, // ปิดแบ่งหน้าเพื่อเน้น scroll
-        ordering: false, // ปิดการเรียงลำดับ
+        paging: false,
+        ordering: false,
         info: false,
-        columns: Array(14).fill({ defaultContent: '-' }),
-        // กำหนดสีพื้นหลังให้แต่ละคอลัมน์ด้วย Tailwind CSS
+        columns: Array(15).fill({ defaultContent: '-' }), // 💡 เปลี่ยนเป็น 15
         columnDefs: [
-            { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' }, // จาก 9 เป็น 8
-            { targets: [9, 10], className: 'bg-[#ffffe6] text-center' }, // จาก 10,11 เป็น 9,10
-            { targets: 11, className: 'bg-[#ffff99] text-center border-r' }, // จาก 12 เป็น 11
+            { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' },
+            { targets: [9, 10], className: 'bg-[#ffffe6] text-center' },
+            { targets: 11, className: 'bg-[#ffff99] text-center border-r' },
             {
                 targets: 12,
                 className:
                     'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
-            }, // จาก 13 เป็น 12
-            { targets: [0, 4, 5, 13], className: 'text-center' }, // จาก [0,4,5,6,14] เป็น [0,4,5,13]
+            },
+            // 💡 เพิ่ม 14 จัดปุ่มกึ่งกลาง
+            { targets: [0, 4, 5, 13, 14], className: 'text-center' },
         ],
-        // คำนวณยอดรวมทุกครั้งที่มีการวาดตาราง (เช่น โหลดครั้งแรก หรือค้นหาข้อมูล)
         drawCallback: function (settings) {
             const api = this.api();
             const intVal = function (i) {
@@ -358,7 +353,6 @@ async function initMyTable() {
                 .data()
                 .reduce((a, b) => intVal(a) + intVal(b), 0);
 
-            // เปลี่ยนจาก .toFixed(2) เป็น .toFixed(4)
             document.getElementById('sum-current-ts').innerHTML =
                 sumCurrentTS.toFixed(4);
             document.getElementById('sum-after-ts').innerHTML =
@@ -370,32 +364,22 @@ async function initMyTable() {
         },
     };
 
-    // 2. กำหนด Setup Option สำหรับฟังก์ชัน createTable ของคุณ
     const setupOpt = {
-        id: 'TsTable', // ตรงกับ ID ใน HTML
-
-        // เปิดใช้งาน Scroll แนวตั้ง
+        id: 'TsTable',
         domScroll: {
             status: true,
-            type: 'default', // หรือ 'tailwind4' ตามที่คุณเซ็ตไว้
-            maxHeight: '400px', // ปรับความสูงได้ตามต้องการ
+            type: 'default',
+            maxHeight: '400px',
         },
-
-        // เปิดใช้งาน Sticky Header (แถว Sum จะติดไปด้วยเพราะอยู่ใน <thead>)
         headerSticky: {
             status: true,
         },
     };
 
-    // 3. เรียกสร้างตาราง
     const myTable = await createTable(tableOption, setupOpt);
     return myTable;
 }
 
-// เรียกใช้งานเมื่อหน้าเว็บโหลดเสร็จ
-document.addEventListener('DOMContentLoaded', () => {
-    initMyTable();
-});
 $(document).on('click', '.btnact', async function () {
     const act = $(this).val();
     console.log(act);
@@ -425,26 +409,21 @@ $(document).on('click', '#btnAdd', async function () {
             baseString += ` ${gNo}`;
         }
         if (l1Str) {
-            // ดึงเฉพาะตัวเลขออกมา
             let startL = parseInt(l1Str.replace(/\D/g, ''));
             let endL = l2Str ? parseInt(l2Str.replace(/\D/g, '')) : null;
 
             if (endL && endL >= startL) {
-                // กรณีมี L1 ถึง L2 (เช่น L2 - L5)
                 for (let i = startL; i <= endL; i++) {
                     let paddedI = String(i).padStart(2, '0');
                     dwgList.push(`${baseString} L${paddedI}`);
                 }
             } else if (!isNaN(startL)) {
-                // กรณีมีแค่ L1 ตัวเดียว
                 let paddedStartL = String(startL).padStart(2, '0');
                 dwgList.push(`${baseString} L${paddedStartL}`);
             } else {
-                // เผื่อกรณีพิมพ์ L1 แปลกๆ
                 dwgList.push(`${baseString} ${l1Str}`);
             }
         } else {
-            // *** กรณีไม่มีการกรอก L เลย ระบบจะส่งคำค้นหาเท่าที่มีเข้า Array ทันที ***
             dwgList.push(baseString);
         }
         let res = await getTsAdjustData({
@@ -452,38 +431,31 @@ $(document).on('click', '#btnAdd', async function () {
             dwgNo: dwgList,
         });
         if (res && res.length > 0) {
-            // 💡 --- เริ่มส่วนตรวจสอบข้อมูลซ้ำ ---
             if (tsTableInstance) {
-                // 1. ดึงข้อมูลทั้งหมดในตารางปัจจุบัน
                 const allData = tsTableInstance.rows().data().toArray();
 
-                // 2. ดึงเฉพาะชื่อ DWG ที่มีอยู่แล้ว (คอลัมน์ที่ 4 -> Index 3 ของแถว parent)
                 const existingDwgs = allData
-                    .filter((row) => row[14] === 'parent')
+                    .filter((row) => row[15] === 'parent') // 💡 แก้เป็น 15
                     .map((row) => (row[3] ? row[3].trim() : ''));
 
-                // 3. กรองเอาเฉพาะข้อมูลจาก API ที่ยังไม่มีในตาราง
                 const newRecords = res.filter((item) => {
                     const itemDwg = item.F01R04 ? item.F01R04.trim() : '';
                     return !existingDwgs.includes(itemDwg);
                 });
 
-                // 4. เช็คผลลัพธ์หลังกรอง
                 if (newRecords.length === 0) {
                     showMessage(
                         'This DWG No. is already in the table.',
                         'warning',
                     );
-                    return; // หยุดการทำงาน ไม่เพิ่มลงตาราง
+                    return;
                 } else if (newRecords.length < res.length) {
-                    // ถ้ารายการมีทั้งตัวเก่าและตัวใหม่ปนกัน
                     showMessage(
                         'Some DWG Nos. already exist. Only new items will be added.',
                         'warning',
                     );
                 }
 
-                // 5. เอาเฉพาะรายการใหม่ไปอัปเดตตาราง
                 res = newRecords;
             }
             await updateOrCreateTable(res);
@@ -502,69 +474,51 @@ $(document).on('click', '#btnAdd', async function () {
     }
 });
 
-// ดักจับเหตุการณ์เมื่อมีการ Paste (วางข้อความ) ในช่อง Dwg No.
 $(document).on('paste', '#dwgNo', function (e) {
-    // 1. หยุดการวางข้อความแบบปกติ (เพื่อไม่ให้มันไปกระจุกอยู่ในช่องแรกช่องเดียว)
     e.preventDefault();
 
-    // 2. ดึงข้อความที่ผู้ใช้ Copy มา (เช่น "BA178A612 G03 L51")
     let pastedText = (e.originalEvent || e).clipboardData
         .getData('text/plain')
         .trim();
 
-    // 3. แยกข้อความด้วยช่องว่าง (Space)
-    // ผลลัพธ์จะได้เป็น Array: ["BA178A612", "G03", "L51"]
     let parts = pastedText.split(/\s+/);
 
-    // 4. นำค่าที่แยกได้ไปใส่ตามช่องต่างๆ อัตโนมัติ
     if (parts.length > 0) {
-        $(this).val(parts[0]); // ใส่ช่อง Dwg No. (เช่น BA178A612)
+        $(this).val(parts[0]);
     }
 
     if (parts.length > 1) {
-        $('#gNo').val(parts[1]); // ใส่ช่อง G no. (เช่น G03)
+        $('#gNo').val(parts[1]);
     }
 
     if (parts.length > 2) {
-        // ถ้าข้อความที่ Copy มามีช่อง L ด้วย ก็ให้เอามาใส่ช่อง L1
-        $('#l1No').val(parts[2]); // ใส่ช่อง L no. เริ่มต้น (เช่น L51)
-
-        // เคลียร์ค่าช่อง L2 เผื่อไว้ (กรณีผู้ใช้เคยวางอันอื่นไว้ก่อนหน้า)
+        $('#l1No').val(parts[2]);
         $('#l2No').val('');
     }
 });
 
-// ดักจับ Event เมื่อมีการพิมพ์หรือเปลี่ยนตัวเลขในช่อง TP หรือ TC
 $(document).on('input', '.input-after-tp, .input-after-tc', function () {
-    // 1. หาแถวลูก (Child Row) ปัจจุบันที่กำลังพิมพ์อยู่
     const childTr = $(this).closest('tr');
 
-    // ดึงค่า QTY และ PTS เดิมของบรรทัดนี้ (ที่ฝังไว้ใน data-attribute ตอนสร้าง Input)
     const qty = parseFloat($(this).data('qty')) || 0;
     const pts = parseFloat($(this).data('pts')) || 0;
 
-    // ดึงตัวเลขล่าสุดที่ผู้ใช้กำลังพิมพ์อยู่
     const newTP = parseFloat(childTr.find('.input-after-tp').val()) || 0;
     const newTC = parseFloat(childTr.find('.input-after-tc').val()) || 0;
 
-    // คำนวณ TS และ Total Request ของแถวลูกใหม่ ( TS = TP + (QTY * TC) )
     const newAfterTS = newTP + qty * newTC;
     const newTotalReq = newAfterTS - pts;
 
-    // 2. อัปเดตตัวเลขหน้าจอในแถวลูกทันที
     childTr.find('.span-after-ts').text(newAfterTS.toFixed(4));
 
     const spanReq = childTr.find('.span-total-req');
     spanReq.text(newTotalReq.toFixed(4));
-    // ถ้า Total Request ไม่เป็น 0 ให้ทำตัวหนาสีแดง
     if (newTotalReq !== 0) {
         spanReq.addClass('text-red-600 font-bold');
     } else {
         spanReq.removeClass('text-red-600 font-bold');
     }
 
-    // 3. หาแถวหลัก (Parent Row) ของกลุ่ม Process นี้ เพื่ออัปเดตยอดรวมระดับ Item
-    // โดยถอยกลับไปเรื่อยๆ จนกว่าจะเจอแถวที่คอลัมน์แรก (NO.) ไม่เป็นค่าว่าง
     let parentTr = childTr.prev();
     while (
         parentTr.length > 0 &&
@@ -577,7 +531,6 @@ $(document).on('input', '.input-after-tp, .input-after-tc', function () {
         const parentRow = tsTableInstance.row(parentTr);
         const parentData = parentRow.data();
 
-        // วนลูปบวกผลรวม TP, TC จากแถวลูกทุกๆ แถวที่อยู่ใต้ Parent นี้
         let sumTP = 0,
             sumTC = 0;
         let nextTr = parentTr.next();
@@ -591,44 +544,37 @@ $(document).on('input', '.input-after-tp, .input-after-tc', function () {
             nextTr = nextTr.next();
         }
 
-        const parentQty = parseFloat(parentData[4]) || 0; // Index 4 คือ Q'ty
-        const parentCurrentTS = parseFloat(parentData[8]) || 0; // Index 8 คือ Current TS
+        const parentQty = parseFloat(parentData[4]) || 0;
+        const parentCurrentTS = parseFloat(parentData[8]) || 0;
 
-        // คำนวณยอด Parent TS แบบใหม่
         const parentAfterTS = sumTP + parentQty * sumTC;
         const parentTotalReq = parentAfterTS - parentCurrentTS;
 
-        // อัปเดตตัวเลขขึ้นบนจอของแถว Parent (Index 9, 10, 11, 12)
         parentTr.find('td:eq(9)').text(sumTP.toFixed(4));
         parentTr.find('td:eq(10)').text(sumTC.toFixed(4));
         parentTr.find('td:eq(11)').text(parentAfterTS.toFixed(4));
         parentTr.find('td:eq(12)').text(parentTotalReq.toFixed(4));
 
-        // สำคัญ: อัปเดตข้อมูลเบื้องหลัง (Array) ของ DataTables
-        // เพื่อให้ฟังก์ชัน drawCallback มีข้อมูลล่าสุดไว้ใช้คำนวณ Grand Total รวมด้านบนสุด
         parentData[9] = sumTP.toFixed(4);
         parentData[10] = sumTC.toFixed(4);
         parentData[11] = parentAfterTS.toFixed(4);
         parentData[12] = parentTotalReq.toFixed(4);
     }
 
-    // 4. คำนวณ Grand Total (แถว Sum ด้านบนสุดของตาราง) ใหม่ทันที
     let sumGrandAfterTS = 0;
     let sumGrandTotalReq = 0;
 
-    // วนลูปเฉพาะข้อมูลที่เป็น 'parent' เพื่อหายอดรวมทั้งหมด
     if (tsTableInstance) {
         const allData = tsTableInstance.rows().data().toArray();
         allData.forEach((row) => {
-            if (row[14] === 'parent') {
-                // Index 14 คือตัวเช็ค flag
-                sumGrandAfterTS += parseFloat(row[11] || 0); // Index 11 คือ After TS
-                sumGrandTotalReq += parseFloat(row[12] || 0); // Index 12 คือ Total Req
+            if (row[15] === 'parent') {
+                // 💡 แก้เป็น 15
+                sumGrandAfterTS += parseFloat(row[11] || 0);
+                sumGrandTotalReq += parseFloat(row[12] || 0);
             }
         });
     }
 
-    // อัปเดตยอดรวมสูงสุด (ช่อง Badge สีเหลืองและสีแดง)
     document.getElementById('sum-after-ts').innerHTML =
         sumGrandAfterTS.toFixed(4);
 
@@ -636,4 +582,51 @@ $(document).on('input', '.input-after-tp, .input-after-tc', function () {
         sumGrandTotalReq > 0 ? '+ ' : sumGrandTotalReq < 0 ? '- ' : '';
     document.getElementById('sum-total').innerHTML =
         totalPrefix + Math.abs(sumGrandTotalReq).toFixed(4);
+});
+
+// 💡 --------------------------------------------------------
+// 💡 เพิ่ม Event สำหรับดักจับการกดปุ่ม "ลบ" (ถังขยะ)
+// 💡 --------------------------------------------------------
+$(document).on('click', '.btn-delete', async function () {
+    if (!tsTableInstance) return;
+
+    const tr = $(this).closest('tr');
+    const row = tsTableInstance.row(tr);
+    const rowIndex = row.index();
+    const allData = tsTableInstance.rows().data();
+
+    // 1. หาแถวแม่ และแถวลูกที่อยู่ข้างใต้เพื่อเตรียมลบออกพร้อมกัน
+    const rowsToDelete = [rowIndex];
+    for (let i = rowIndex + 1; i < allData.length; i++) {
+        if (allData[i][15] === 'child') {
+            // เช็คว่าเป็นลูกหรือไม่
+            rowsToDelete.push(i);
+        } else {
+            break; // ถ้าเจอ Parent ตัวถัดไปให้หยุด
+        }
+    }
+    const opt = {
+        title: 'Are you sure?',
+        message: 'you want to remove this item!', // เปลี่ยนจาก text เป็น message ให้ตรงกับที่เรียกใช้
+        acceptText: 'Yes',
+        cancelText: 'No',
+    };
+    const isConfirmed = await showConfirm(opt);
+    if (isConfirmed) {
+        // ลบแถวออกจาก DataTables
+        tsTableInstance.rows(rowsToDelete).remove();
+
+        // 2. รันลำดับเลข No. (คอลัมน์แรก) ใหม่ทั้งหมด
+        let currentNo = 1;
+        tsTableInstance.rows().every(function () {
+            const data = this.data();
+            if (data[15] === 'parent') {
+                // อัปเดตข้อมูลช่อง index 0 เป็นเลขลำดับใหม่
+                tsTableInstance.cell(this.index(), 0).data(currentNo++);
+            }
+        });
+
+        // 3. วาดตารางใหม่ (ยอดรวม Grand Total ด้านบนจะอัปเดตอัตโนมัติ)
+        tsTableInstance.draw(false);
+    }
 });

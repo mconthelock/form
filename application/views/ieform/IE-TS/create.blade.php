@@ -101,6 +101,7 @@
                     ADD
                 </button>
             </div>
+
             <table id="TsTable"
                 class="display w-full whitespace-nowrap border-separate border-spacing-0 text-xs font-medium border-t border-l border-slate-200">
                 <thead>
@@ -125,8 +126,6 @@
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
                             Process</th>
 
-                        <!-- เอา Rev ออกไปแล้ว -->
-
                         <!-- Current -->
                         <th colspan="3"
                             class="border-b border-r border-slate-200 px-3 py-2 text-center bg-slate-100 text-blue-900 font-bold">
@@ -144,6 +143,12 @@
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
                             Requested<br>History</th>
+
+                        <!-- เพิ่มคอลัมน์ใหม่ Action ด้านหลังสุด (คอลัมน์ที่ 15) -->
+                        <th rowspan="2"
+                            class="border-b border-slate-200 px-3 py-2.5 text-center font-bold text-red-500 tracking-wider">
+                            Action
+                        </th>
                     </tr>
 
                     <!-- แถวที่ 2: หัวตารางย่อย -->
@@ -167,7 +172,6 @@
 
                     <!-- แถวที่ 3: แถว Sum -->
                     <tr class="bg-white">
-                        <!-- แก้ไขตรงนี้จาก colspan="7" เป็น colspan="6" -->
                         <th colspan="6" class="border-b border-slate-200"></th>
 
                         <!-- Sum Current -->
@@ -197,7 +201,11 @@
                             </div>
                         </th>
 
+                        <!-- เว้นช่องประวัติ -->
                         <th class="border-b border-r border-slate-200 bg-white"></th>
+
+                        <!-- เพิ่มช่องว่างในแถว sum สำหรับคอลัมน์ Action ด้านหลังสุด (คอลัมน์ที่ 15) -->
+                        <th class="border-b border-slate-200 bg-white"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -217,7 +225,6 @@
                     class="bg-blue-100 hover:bg-blue-200 border border-blue-200 text-blue-700 font-bold py-2.5 px-8 rounded-lg shadow-sm transition btnact">
                     SEND
                 </button>
-
 
             </div>
 
