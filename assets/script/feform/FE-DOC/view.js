@@ -13,6 +13,7 @@ import { initFlow, actionFlow } from './flow';
 
 let empno = '';
 let selectedFilesArray = [];
+const empCache = {}; // Cache รหัสพนักงานสำหรับ frontend ป้องกันการยิง query ซ้ำ
 
 $(document).ready(async function () {
     const formData = $('.form-info').data() || {};
@@ -29,9 +30,24 @@ $(document).ready(async function () {
     };
 
     $('#DOC_IDTxt').val(form.DOC_NO);
-    $('#REQUEST_BYTxt').val(formData.reqby || empno);
-    $('#INPUT_BYTxt').val(formData.inputby || empno);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
+
+    // กำหนดค่าเริ่มต้น Request By & Input By (ถ้ามีค่าใน input อยู่แล้ว ให้ยึดตามนั้น)
+    const initialReq = $('#REQUEST_BY_EMPNO').val() || formData.reqby || empno;
+    const initialInput =
+        $('#INPUT_BY_EMPNO').val() || formData.inputby || empno;
+
+    $('#REQUEST_BY_EMPNO').val(initialReq);
+    $('#INPUT_BY_EMPNO').val(initialInput);
+
+    // เก็บชื่อเริ่มต้นลง Cache
+    const initialReqName = $('#REQUEST_BY_NAME').val();
+    if (initialReq && initialReqName) {
+        empCache[initialReq.trim()] = initialReqName.trim();
+    }
+
+    // เปิดใช้งาน Event ค้นหาชื่อพนักงานอัตโนมัติ
+    bindEmpSearchEvent();
 
     await initFlow(form, formData.status);
 
@@ -68,12 +84,19 @@ $(document).ready(async function () {
             return;
         }
 
-        const userReq = ($('#REQUEST_BYTxt').val() || '').trim();
+        // ดึงเฉพาะรหัสพนักงาน 5 หลักส่งบันทึก
+        const userReq = ($('#REQUEST_BY_EMPNO').val() || '').trim();
         const userEmpNo = empno || $('#EMPNOHid').val() || '';
 
         if (!userReq) {
             showMessage('กรุณากรอก Request By', 'warning');
-            $('#REQUEST_BYTxt').focus();
+            $('#REQUEST_BY_EMPNO').focus();
+            return;
+        }
+
+        if (userReq.length !== 5) {
+            showMessage('รหัสพนักงานต้องมีความยาว 5 หลัก', 'warning');
+            $('#REQUEST_BY_EMPNO').focus();
             return;
         }
 
@@ -92,12 +115,11 @@ $(document).ready(async function () {
             await showLoader({ show: true });
             let targetForm = { ...form };
 
-            // ไม่ว่าจะสร้างใหม่ หรือ Resubmit ให้อัปเดตข้อมูล Header (Doc Type, Request By, Remark)
             let headerPayload = new FormData();
             headerPayload.append('DOC_TYPE_CODE', docType);
             headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
             headerPayload.append('EMPNO', userEmpNo);
-            headerPayload.append('REQBY', userReq); // ค่า Request By ที่แก้ไขใหม่
+            headerPayload.append('REQBY', userReq); // บันทึกเฉพาะรหัส 5 หลัก
 
             if (isResubmit) {
                 headerPayload.append('DOC_HEADER_ID', docHeaderId);
@@ -120,7 +142,7 @@ $(document).ready(async function () {
                 targetForm.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
             }
 
-            // ส่งไฟล์ PDF แนบใหม่ (ถ้ามีการแนบเพิ่ม)
+            // ส่งไฟล์ PDF แนบใหม่
             if (validFiles.length > 0) {
                 let nestJsData = new FormData();
                 nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -139,7 +161,6 @@ $(document).ready(async function () {
                 }
             }
 
-            // ถ้าเป็นการ Resubmit ให้ส่ง Action Approve ของผู้จัดทำเพื่อเริ่มเดิน Flow อีกครั้ง
             if (isResubmit) {
                 await actionFlow('approve', targetForm);
                 return;
@@ -335,8 +356,8 @@ $(document).ready(async function () {
                     ${
                         isStep00
                             ? `<input type="text" class="w-full h-8 px-2 border border-slate-200 rounded text-xs in-target-empno font-medium" 
-                                      value="${data.TARGET_EMPNO || ''}" 
-                                      placeholder="เว้นว่าง = ใช้รหัสผู้สร้างเอกสาร">`
+                                     value="${data.TARGET_EMPNO || ''}" 
+                                     placeholder="เว้นว่าง = ใช้รหัสผู้สร้างเอกสาร">`
                             : `<span class="text-xs text-slate-400 italic">สายอนุมัติตาม Webflow</span>`
                     }
                 </td>
@@ -474,6 +495,63 @@ $(document).ready(async function () {
 });
 
 // ==========================================
+// ค้นหาชื่อพนักงานอัตโนมัติ (Request By)
+// ==========================================
+function bindEmpSearchEvent() {
+    const $empInput = $('#REQUEST_BY_EMPNO');
+    const $nameInput = $('#REQUEST_BY_NAME');
+
+    if ($empInput.length === 0 || $empInput.prop('readonly')) return;
+
+    function fetchEmpName(empNo) {
+        empNo = (empNo || '').trim();
+
+        if (empNo.length !== 5) {
+            $nameInput.val('');
+            return;
+        }
+
+        // ค้นหาจาก In-memory cache ก่อนเสมอ (เร็วทันที 0ms ไม่ต้องต่อ network ซ้ำ)
+        if (empCache[empNo] !== undefined) {
+            $nameInput.val(empCache[empNo]);
+            return;
+        }
+
+        $nameInput.val('กำลังค้นหา...');
+
+        $.ajax({
+            url: host + 'feform/FE-DOC/form/ajaxGetEmpName',
+            type: 'GET',
+            data: { empno: empNo },
+            dataType: 'json',
+            success: function (res) {
+                const name =
+                    res.status && res.name ? res.name : 'ไม่พบข้อมูลพนักงาน';
+                empCache[empNo] = name;
+                $nameInput.val(name);
+            },
+            error: function () {
+                $nameInput.val('');
+            },
+        });
+    }
+
+    // ยิงทันทีเมื่อครบ 5 ตัว
+    $empInput.on('input', function () {
+        if (this.value.length === 5) {
+            fetchEmpName(this.value);
+        } else {
+            $nameInput.val('');
+        }
+    });
+
+    // ตรวจสอบความถูกต้องอีกครั้งเมื่อเลื่อนเมาส์ออกหรือกด Tab
+    $empInput.on('blur', function () {
+        fetchEmpName(this.value);
+    });
+}
+
+// ==========================================
 // การเลือกไฟล์และลากวาง (เฉพาะ PDF)
 // ==========================================
 function initFileDropEvents() {
@@ -570,7 +648,7 @@ function renderFileList(files) {
 
     if (mode === '1' || mode === '2') {
         const reqBy = (
-            $('#REQUEST_BYTxt').val() ||
+            $('#REQUEST_BY_EMPNO').val() ||
             formData.reqby ||
             ''
         ).toString();

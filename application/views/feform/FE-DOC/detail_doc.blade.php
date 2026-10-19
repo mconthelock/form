@@ -4,81 +4,117 @@
     window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
 </script>
 
-<div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+<div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6 shadow-xs">
+    <!-- แถวที่ 1: ข้อมูลเอกสาร (Doc No. และ Document Type) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Doc No. -->
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Doc No.</label>
             <input type="text" id="DOC_IDTxt" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-blue-700 cursor-not-allowed" readonly value="{{ $DOC_NO ?? '' }}">
             <input type="hidden" name="DocHeaderIDHid" id="DocHeaderIDHid" value="{{ $DOC_HEADER_ID ?? '' }}" />
         </div>
 
+        <!-- Document Type (Master) -->
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Input By</label>
-            <input type="text" id="INPUT_BYTxt" name="INPUT_BY" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$INPUTBY}}" readonly>
-        </div>
-
-        <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                Request By <span class="{{ empty($NRUNNO) ? 'text-rose-500' : 'hidden' }}">*</span>
-            </label>
-            <input type="text" 
-                id="REQUEST_BYTxt" 
-                name="REQUEST_BY" 
-                maxlength="5" 
-                placeholder="กรอกรหัสพนักงาน"
-                value="{{ $REQBY }}"
-                {{ !empty($NRUNNO) ? 'readonly' : '' }}
-                class="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-semibold transition-all {{ !empty($NRUNNO) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500' }}">
-        </div>
-
-        <!-- Dropdown Document Type (Master) -->
-        <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                DOCUMENT TYPE <span class="text-rose-500">*</span>
-            </label>
-            <select id="DocTypeDrp" name="DocTypeDrp" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                <option value="">-- Choose Type --</option>
-                @if(!empty($docTypes))
-                    @foreach ($docTypes as $item)
-                        <option value="{{ $item->DOC_TYPE_CODE }}" 
-                                data-orientation="{{ $item->DEFAULT_ORIENTATION }}" {{ (isset($DOC_TYPE_CODE) && $DOC_TYPE_CODE == $item->DOC_TYPE_CODE) ? 'selected' : '' }}>{{ $item->DOC_TYPE_NAME }}
-                        </option>
-                    @endforeach
-                @endif
-            </select>
+            <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    DOCUMENT TYPE <span class="text-rose-500">*</span>
+                </label>
                 @if(empty($NRUNNO) && !empty($isAdmin))
                     <button type="button" id="btn-open-master-modal" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer transition-colors">
                         ⚙️ จัดการ Master Type & Steps
                     </button>
                 @endif
+            </div>
+            <select id="DocTypeDrp" name="DocTypeDrp" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                <option value="">-- Choose Type --</option>
+                @if(!empty($docTypes))
+                    @foreach ($docTypes as $item)
+                        <option value="{{ $item->DOC_TYPE_CODE }}" 
+                                data-orientation="{{ $item->DEFAULT_ORIENTATION }}" {{ (isset($DOC_TYPE_CODE) && $DOC_TYPE_CODE == $item->DOC_TYPE_CODE) ? 'selected' : '' }}>
+                            {{ $item->DOC_TYPE_NAME }}
+                        </option>
+                    @endforeach
+                @endif
+            </select>
         </div>
     </div>
 
-    <!-- โซนแนบไฟล์เอกสาร (PDF & Excel) -->
-    <!-- <div class="mt-4">
-        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-            ATTACHMENT FILES (รองรับไฟล์ PDF และ Excel) <span class="text-rose-500">*</span>
-        </label>
-        
-        <input type="file" id="files" class="hidden" multiple accept=".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+    <!-- แถวที่ 2: ข้อมูลผู้ดำเนินการ (Input By และ Request By) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Input By (Readonly ทั้งหมด) -->
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Input By</label>
+            <div class="flex items-center gap-2">
+                <!-- รหัสพนักงาน -->
+                <div class="relative w-28 shrink-0">
+                    <input type="text" 
+                        id="INPUT_BY_EMPNO" 
+                        name="INPUT_BY" 
+                        readonly 
+                        tabindex="-1"
+                        placeholder="รหัส"
+                        value="{{ $INPUTBY_EMPNO ?? '' }}"
+                        class="w-full h-10 px-2 text-center bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold tracking-wide text-slate-600 cursor-not-allowed">
+                </div>
 
-        <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center cursor-pointer transition-all">
-            <div class="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
-                <span class="text-3xl">📁</span>
-                <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PDF, Excel (.xlsx, .xls) สูงสุด 5MB ต่อไฟล์</p>
+                <!-- ชื่อพนักงาน -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <input type="text" 
+                        id="INPUT_BY_NAME" 
+                        readonly 
+                        tabindex="-1"
+                        placeholder="ชื่อพนักงาน"
+                        value="{{ $INPUTBY_NAME ?? '' }}"
+                        class="w-full h-10 pl-9 pr-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed truncate">
+                </div>
             </div>
         </div>
 
-        <div id="file-list-container" class="mt-3 hidden">
-            <ul id="selected-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2"></ul>
-        </div>
+        <!-- Request By (กรอกรหัสพนักงานได้เมื่อสร้างใหม่ / Auto ค้นหาชื่อ) -->
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Request By <span class="{{ empty($NRUNNO) ? 'text-rose-500' : 'hidden' }}">*</span>
+            </label>
+            <div class="flex items-center gap-2">
+                <!-- รหัสพนักงาน -->
+                <div class="relative w-28 shrink-0">
+                    <input type="text" 
+                        id="REQUEST_BY_EMPNO" 
+                        name="REQUEST_BY" 
+                        maxlength="5" 
+                        placeholder="รหัส 5 หลัก"
+                        value="{{ $REQBY_EMPNO ?? '' }}"
+                        {{ !empty($NRUNNO) ? 'readonly' : '' }}
+                        class="w-full h-10 px-2 text-center border border-slate-200 rounded-lg text-sm font-semibold tracking-wide transition-all {{ !empty($NRUNNO) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500' }}">
+                </div>
 
-        <div id="download-zone" class="mt-3 hidden">
-            <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-sm"></ul>
+                <!-- ชื่อพนักงาน -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <input type="text" 
+                        id="REQUEST_BY_NAME" 
+                        readonly 
+                        tabindex="-1"
+                        placeholder="ชื่อพนักงาน"
+                        value="{{ $REQBY_NAME ?? '' }}"
+                        class="w-full h-10 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-not-allowed truncate">
+                </div>
+            </div>
         </div>
-    </div> -->
-    <div class="mt-4">
+    </div>
+
+    <!-- โซนแนบไฟล์เอกสาร (PDF) -->
+    <div class="mt-5 pt-4 border-t border-slate-200/60">
         <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
             ATTACHMENT FILES (รองรับเฉพาะไฟล์ PDF สำหรับประทับตรา) <span class="text-rose-500">*</span>
         </label>
@@ -89,8 +125,7 @@
             <div class="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
                 <span class="text-3xl">📄</span>
                 <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <!-- 🟢 นำข้อความจำกัด 5MB ออก -->
-                <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PDF (.pdf) </p>
+                <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PDF (.pdf)</p>
             </div>
         </div>
 
@@ -99,10 +134,9 @@
         </div>
 
         <div id="download-zone" class="mt-3 hidden">
-            <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-sm"></ul>
+            <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-xs"></ul>
         </div>
     </div>
-
 </div>
 
 <!-- Modal จัดการ Master -->

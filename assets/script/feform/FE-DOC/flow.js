@@ -40,7 +40,8 @@ export async function initFlow(form, status) {
 
 export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     const rawStatus = (status || '').toUpperCase().trim();
-    const requestBy = ($('#REQUEST_BYTxt').val() || '').trim();
+    // ดึงรหัสพนักงานจาก ID ใหม่ (#REQUEST_BY_EMPNO)
+    const requestBy = ($('#REQUEST_BY_EMPNO').val() || '').trim();
     const currentEmpNo = (empno || $('#EMPNOHid').val() || '').trim();
 
     const isOwner =
@@ -56,13 +57,13 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
 
         // แก้ไข Request By ได้เฉพาะตอนสร้างเอกสารใหม่ครั้งแรกสุดเท่านั้น
         if (rawStatus === '' && !$('#DocHeaderIDHid').val()) {
-            $('#REQUEST_BYTxt')
+            $('#REQUEST_BY_EMPNO')
                 .prop('readonly', false)
                 .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
                 .addClass('bg-white text-slate-800');
         } else {
             // ถ้าเคยบันทึกแล้ว/มี ID แล้ว -> ล็อกห้ามแก้ไข
-            $('#REQUEST_BYTxt')
+            $('#REQUEST_BY_EMPNO')
                 .prop('readonly', true)
                 .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
                 .removeClass('bg-white text-slate-800');
@@ -73,27 +74,23 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         }
     } else if (mode === '2') {
         // ล็อก Request By ให้เป็น Readonly เสมอ (รวมถึงกรณี Return กลับมาหา Owner ด้วย)
-        $('#REQUEST_BYTxt')
+        $('#REQUEST_BY_EMPNO')
             .prop('readonly', true)
             .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
             .removeClass('bg-white text-slate-800');
 
         $('#DocTypeDrp').prop('disabled', true);
         if (isOwner) {
-            // เจ้าของเอกสารที่ได้รับ Return: แก้ไขประเภทเอกสาร, แก้ไขรายละเอียด, และแนบไฟล์ใหม่ได้ แต่ห้ามแก้ Request By
-            // $('#DocTypeDrp').prop('disabled', false);
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
         } else {
-            // ผู้อนุมัติคนอื่นๆ ใน Flow
-            // $('#DocTypeDrp').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
         }
     } else {
         // Mode 3 (View Mode): ล็อกทั้งหมด
-        $('#REQUEST_BYTxt')
+        $('#REQUEST_BY_EMPNO')
             .prop('readonly', true)
             .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
             .removeClass('bg-white text-slate-800');
@@ -139,7 +136,7 @@ function bindFlowEvents(form) {
             });
 
             if (isConfirm) {
-                actionFlow('return', form);
+                actionFlow('returnp', form);
             }
         });
 
@@ -272,9 +269,6 @@ export async function actionFlow(actionType, form) {
     }
 }
 
-/**
- * ดึง Steps/Logs แล้วส่งให้ stampFormAttachedFiles ใน pdfStamper.js ดำเนินการ
- */
 export async function executeFinalStamping(form) {
     const res = await $.ajax({
         url: host + 'feform/FE-DOC/form/GetStampData',
