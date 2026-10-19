@@ -987,12 +987,14 @@ function deletefile(data) {
 $(document).on('click', '.btn-open', function () {
     // var dwg = $(this).attr("data-dwg");
     // var rev = $(this).attr("data-rev");
+
     var dwg = $(this).data('dwg');
     var rev = $(this).data('rev');
     if (rev === '*') rev = '0';
 
     var url =
-        'http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg=' +
+        window.location.protocol +
+        '//amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg=' +
         encodeURIComponent(dwg) +
         '&rev=' +
         encodeURIComponent(rev);
