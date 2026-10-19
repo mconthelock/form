@@ -131,6 +131,13 @@ export class ChangeReason {
             }
         });
     }
+    static getInstance(containerId) {
+        return reasons.get(containerId);
+    }
+    static getLists(containerId) {
+        const instance = reasons.get(containerId);
+        return instance ? instance.lists : [];
+    }
     /**
      * @author Sutthipong tangmongkhoncharoen(24008)
      * @since 2026-10-07

@@ -60,6 +60,9 @@
                             <button type="button" class="btn btn-neutral join-item" id="btn-view-compare">
                                 <i class="fi fi-rr-eye"></i>View record
                             </button>
+                            <button type="button" class="btn btn-neutral join-item hidden" id="btn-edit-compare">
+                                <i class="fi fi-rr-edit"></i>Edit Price Comparison
+                            </button>
                         </div>
                     </fieldset>
                     {{-- Refer Price compare file. --}}

@@ -14,8 +14,7 @@ import { tableComparison } from '../PUR-CPC/table/table-comparison';
 import { getCommittee, getFormPriceApprove, getGroup, getVendor } from './data';
 import { checkReturn, getFormDetail } from '@amec/webasset/api/webform';
 import { ChangeReason, getReasons } from './reason';
-import { setDatePicker } from '@amec/webasset/flatpickr';
-import { webflowSubmit } from '@amec/webasset/components/form';
+import { getFlatpickrDate, setDatePicker } from '@amec/webasset/flatpickr';
 import { dragDropInit, dragDropListImage } from '@amec/webasset/dragdrop';
 import { ShowFile } from '@amec/webasset/components/showFile';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
@@ -79,6 +78,7 @@ export const setAutoField = ({
     mode = 1,
     trigger = true,
     removeError = true,
+    isReturn = false,
 } = {}) => {
     const autoField = getAutoField();
     const priceCompareFile = $('#price-compare-file-fieldset');
@@ -100,7 +100,9 @@ export const setAutoField = ({
         const label = autoField[key].closest('label');
         const element = label.length ? label : autoField[key];
         autoField[key].prop('readonly', mode === 1);
-        autoField[key].val(data?.[key] || '');
+        if (!isReturn) {
+            autoField[key].val(data?.[key] || '');
+        }
         if (removeError) removeClassError(autoField[key]);
         if (trigger) autoField[key].trigger('blur');
         if (mode == 1) {
@@ -304,7 +306,7 @@ export async function setForm({
             name: 'FILE_ADDITIONAL',
             format: 'pdf',
             text: 'Drag & Drop PDF files here or click to select',
-            class: 'req',
+            // class: 'req',
             attributes: {
                 'data-message': 'Please select an Additional PDF file',
             },
@@ -382,6 +384,9 @@ export async function setReturn() {
     // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
     const tempForm = $('#template-form-detail').html();
     $('#form-detail').html(tempForm);
+    // แสดงปุ่มแก้ไขและลบปุ่มเลือกการเปรียบเทียบ (Price Comparison)
+    $('#btn-edit-compare').removeClass('hidden');
+    $('#btn-view-compare').remove();
 
     // แสดง Request no
     $('#req-form').text(formDetail.FORMNO);
@@ -399,6 +404,7 @@ export async function setReturn() {
         const vendor = await checkVendor(data.VVENDOR);
         if (vendor.status) {
             vendName = vendor.data.VNDNAM || '';
+            data.VVENDOR_NAME = vendName;
         }
     }
     // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
@@ -722,4 +728,85 @@ export async function setView() {
     getReasons('reason-cost-up-container').setValue(data.REASONS, true);
     getReasons('reason-basic-condition-container').setValue(data.REASONS, true);
     getReasons('reason-estimate-price-container').setValue(data.REASONS, true);
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-12
+ * @description สร้างและจัดการข้อมูลฟอร์ม Price Approval
+ * @returns {FormData} ข้อมูลฟอร์มที่ถูกจัดเตรียมสำหรับการส่ง
+ */
+export function setFormData() {
+    const formData = new FormData($('#form-price-approval')[0]);
+    const startDate = getFlatpickrDate('#VEFT_MONTH', 0);
+    const endDate = getFlatpickrDate('#VEFT_MONTH', 1);
+    if (startDate) {
+        formData.set('DEFT_MONTH_START', startDate);
+    }
+    if (endDate) {
+        formData.set('DEFT_MONTH_END', endDate);
+    }
+    const costDown = getReasons('reason-cost-down-container').getValue();
+    const costUp = getReasons('reason-cost-up-container').getValue();
+    const basic = getReasons('reason-basic-condition-container').getValue();
+    const estimate = getReasons('reason-estimate-price-container').getValue();
+    const reasons = [...costDown, ...costUp, ...basic, ...estimate];
+    reasons.forEach((item, i) => {
+        // NestJS จะมองเป็น data[0][field], data[1][field]
+        Object.keys(item).forEach((key) => {
+            formData.append(`REASONS[${i}][${key}]`, item[key] ?? '');
+        });
+    });
+    // ดึงรายการไฟล์ที่ถูกลบ
+    const deleteList = [
+        ...ShowFile.getDeleteLists('drop-quotation'),
+        ...ShowFile.getDeleteLists('drop-additional'),
+    ];
+    $('.delete-from-db').each(function (i, el) {
+        deleteList.push($(el).data('id'));
+    });
+    deleteList.forEach((fileId, index) => {
+        formData.append(`DELETE_LISTS[${index}]`, +fileId);
+    });
+    return formData;
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-19
+ * @description จัดการการตรวจสอบไฟล์ที่จำเป็นตามเหตุผลและสถานะการ Return Form
+ * @param {number} reasonID
+ * @param {boolean} isReturn
+ * @returns
+ * @example
+ * handleReqFile(1, true);
+ */
+export function handleReqFile(reasonID, isReturn) {
+    const lists = ChangeReason.getLists('reason-estimate-price-container');
+    const fileQuotation = $('#FILE_QUOTATION');
+    // ลูปตรวจสอบรายการเหตุผลและจัดการคลาส 'req' ของไฟล์
+    for (const list of lists) {
+        // ตรวจสอบว่ารายการเหตุผลตรงกับ reasonID และลำดับเป็น 1 หรือไม่ (PO issue with temporary price)
+        if (list.NID == reasonID && list.NSEQ === 1) {
+            fileQuotation.removeClass('req');
+            removeClassError(fileQuotation);
+            return;
+        } else {
+            fileQuotation.addClass('req');
+        }
+    }
+    // หากเป็นการ Return Form ให้ตรวจสอบว่ามีไฟล์อยู่แล้วหรือไม่ด้วย
+    if (isReturn) {
+        const quotationFiles = $('#drop-quotation').find('.show-file-list');
+        // const additionalFiles =
+        //     $('#drop-additional').find('.show-file-list');
+
+        quotationFiles.length > 0
+            ? fileQuotation.removeClass('req')
+            : fileQuotation.addClass('req');
+
+        // additionalFiles.length > 0
+        //     ? $('#FILE_ADDITIONAL').removeClass('req')
+        //     : $('#FILE_ADDITIONAL').addClass('req');
+    }
 }
