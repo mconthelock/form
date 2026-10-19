@@ -190,24 +190,24 @@ export class ChangeReason {
         if (list.VVALUE_TYPE) {
             switch (list.VVALUE_TYPE.toLowerCase()) {
                 case 'text':
-                    valueHtml = `<input type="text" name="${childrenName}_text" class="input w-full hidden" data-parent="${list.NID}" disabled>`;
+                    valueHtml = `<input type="text" name="${childrenName}_text" class="input w-full req hidden" data-parent="${list.NID}" data-message="Please enter a ${list.VNAME}" disabled>`;
                     break;
                 case 'number':
-                    valueHtml = `<input type="number" name="${childrenName}_number" class="input w-full hidden" data-parent="${list.NID}" disabled>`;
+                    valueHtml = `<input type="number" name="${childrenName}_number" class="input w-full req hidden" data-parent="${list.NID}" data-message="Please enter a ${list.VNAME}" disabled>`;
                     break;
                 case 'area':
-                    valueHtml = `<textarea name="${childrenName}_area" class="textarea w-full hidden" rows="2" data-parent="${list.NID}" disabled></textarea>`;
+                    valueHtml = `<textarea name="${childrenName}_area" class="textarea w-full req hidden" rows="2" data-parent="${list.NID}" data-message="Please enter a ${list.VNAME}" disabled></textarea>`;
                     break;
                 case 'from_to_percent':
                     valueHtml2 = `
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="number" name="${childrenName}_from" class="w-32" step="0.01" min="0" max="100" data-parent="${list.NID}" data-input="from" disabled>
+                                <input type="number" name="${childrenName}_from" class="req" class="w-32" step="0.01" min="0" max="100" data-message="Please enter a ${list.VNAME}" data-parent="${list.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="number" name="${childrenName}_to" class="w-32" step="0.01" min="0" max="100" data-parent="${list.NID}" data-input="to" disabled>
+                                <input type="number" name="${childrenName}_to" class="req" class="w-32" step="0.01" min="0" max="100" data-message="Please enter a ${list.VNAME}" data-parent="${list.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
@@ -216,11 +216,11 @@ export class ChangeReason {
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="text" name="${childrenName}_from" data-parent="${list.NID}" data-input="from" disabled>
+                                <input type="text" name="${childrenName}_from" class="req" data-message="Please enter a ${list.VNAME}" data-parent="${list.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="text" name="${childrenName}_to" data-parent="${list.NID}" data-input="to" disabled>
+                                <input type="text" name="${childrenName}_to" class="req" data-message="Please enter a ${list.VNAME}" data-parent="${list.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
