@@ -394,9 +394,17 @@ export async function setReturn() {
             .prop('disabled', false)
             .val(data.VEFT_TYPE_OTHER || '');
     }
+    let vendName = '';
+    if (data.VVENDOR) {
+        const vendor = await checkVendor(data.VVENDOR);
+        if (vendor.status) {
+            vendName = vendor.data.VNDNAM || '';
+        }
+    }
     // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
     if (data.LINK_FORM) {
         priceComparisonForms = data.LINK_FORM.CNO;
+
         const vendor = await checkVendor(data.VVENDOR);
         if (!vendor.status) {
             throw new Error('Vendor Name not found');
@@ -404,7 +412,7 @@ export async function setReturn() {
         const comparisonData = {
             formComparison: priceComparisonForms,
             vendor: data.VVENDOR,
-            vendorName: vendor.data.VNDNAM,
+            vendorName: vendName,
             planner: data.VPLANNER,
             totalPresent: data.NTOTAL_PRES,
             totalNew: data.NTOTAL_NEW,
@@ -428,12 +436,16 @@ export async function setReturn() {
         setAutoField({ mode: data.NMODE, trigger: false });
     }
 
-    // ตั้งค่าฟิลด์ของฟอร์มตามข้อมูลที่ดึงมา
+    // เพิ่มข้อมูลตาม fieald
     Object.keys(data).forEach((key) => {
         if (typeof data?.[key] === 'object' || Array.isArray(data?.[key]))
             return;
-        $(`#${key}`).val(data?.[key] || '');
+        const element = $(`#${key}`);
+        if (element.length) {
+            element.val(data?.[key] === 0 ? '0' : data?.[key] || '-');
+        }
     });
+
     // ตั้งค่าฟิลด์ (VEFT_TYPE)
     $(`input[name="VEFT_TYPE"][value="${data.VEFT_TYPE}"]`).prop(
         'checked',
@@ -459,15 +471,6 @@ export async function setReturn() {
     getReasons('reason-cost-up-container').setValue(data.REASONS);
     getReasons('reason-basic-condition-container').setValue(data.REASONS);
     getReasons('reason-estimate-price-container').setValue(data.REASONS);
-    // สร้างปุ่ม สำหรับ request form
-    $('#btnRequest').html(
-        await webflowSubmit({
-            save: true,
-            approve: true,
-            reject: true,
-            form: form,
-        }),
-    );
     return true;
 }
 
@@ -676,13 +679,13 @@ export async function setView() {
             function: data.NMODE,
         });
     }
-
     // ตรวจสอบและตั้งค่าข้อมูล Vendor
-    const vendor = await checkVendor(data.VVENDOR);
-    if (!vendor.status) {
-        throw new Error('Vendor Name not found');
+    if (data.VVENDOR) {
+        const vendor = await checkVendor(data.VVENDOR);
+        if (vendor.status) {
+            data.VVENDOR_NAME = vendor.data.VNDNAM;
+        }
     }
-    data.VVENDOR_NAME = vendor.data.VNDNAM;
 
     // เพิ่มข้อมูลตาม fieald
     Object.keys(data).forEach((key) => {
@@ -719,14 +722,4 @@ export async function setView() {
     getReasons('reason-cost-up-container').setValue(data.REASONS, true);
     getReasons('reason-basic-condition-container').setValue(data.REASONS, true);
     getReasons('reason-estimate-price-container').setValue(data.REASONS, true);
-
-    // สร้างปุ่ม สำหรับ request form
-    $('#btnRequest').html(
-        await webflowSubmit({
-            approve: true,
-            reject: true,
-            returnp: true,
-            form: form,
-        }),
-    );
 }

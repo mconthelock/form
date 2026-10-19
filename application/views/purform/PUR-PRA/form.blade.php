@@ -86,13 +86,13 @@
 </template>
 
 <template id="template-price-comparison">
-    <fieldset class="fieldset col-span-2">
-        <legend class="fieldset-legend">Refer Price compare</legend>
+    <div class="col-span-2">
+        <legend class="text-xs font-bold mb-5">Refer Price compare</legend>
         <table id="table-comparison" class="table table-zebra table-sm">
         </table>
         <div id="price-compare-container">
         </div>
-    </fieldset>
+    </div>
 </template>
 
 @endsection

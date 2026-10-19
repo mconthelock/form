@@ -287,6 +287,8 @@ export class ChangeReason {
                         const divElement = labelElement.parentElement;
                         const parent = element.getAttribute('data-parent');
                         if (checked) {
+                            divElement.style.borderColor =
+                                'oklch(0.84 0.09 278.07)';
                             divElement.style.backgroundColor =
                                 'oklch(0.97 0.01 256.9)';
                             if (parent) {
@@ -296,6 +298,8 @@ export class ChangeReason {
                                     'oklch(0.48 0.26 267.11)';
                             }
                         } else {
+                            divElement.style.borderColor =
+                                'var(--color-slate-200)';
                             divElement.style.backgroundColor = 'white';
                             if (parent) {
                                 divElement.style.backgroundColor =

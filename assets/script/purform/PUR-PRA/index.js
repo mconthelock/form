@@ -68,12 +68,38 @@ $(async function () {
                 console.log('isReturn', isReturn);
                 if (!isReturn) {
                     await setView();
+                    // สร้างปุ่ม สำหรับ request form
+                    $('#btnRequest').html(
+                        await webflowSubmit({
+                            approve: true,
+                            reject: true,
+                            returnp: true,
+                            form: form,
+                        }),
+                    );
                     return;
                 }
                 setContent('create');
+                // สร้างปุ่ม สำหรับ request form
+                $('#btnRequest').html(
+                    await webflowSubmit({
+                        save: true,
+                        approve: true,
+                        reject: true,
+                        form: form,
+                    }),
+                );
                 break;
             case 3:
                 await setView();
+                // สร้างปุ่ม สำหรับ request form
+                $('#btnRequest').html(
+                    await webflowSubmit({
+                        remark: false,
+                        back: false,
+                        form: form,
+                    }),
+                );
                 break;
             default:
                 throw new Error('Invalid form mode');
@@ -119,7 +145,9 @@ $(document).on('change', '#REQBY', async function () {
 $(document).on('click', '#btn-view-compare', async function () {
     try {
         showLoader();
-        const req = $('#REQBY').val();
+        const req =
+            $('#REQBY').val() ??
+            $('#requester-fieldset span#card-empno').text();
         if (!req) {
             showMessage('Please enter the requester.', 'warning');
             showLoader({ show: false });
@@ -249,6 +277,16 @@ $(document).on(
             const params = getUrlParams();
             const form = getFormByUrlParam();
             const val = $(this).val();
+
+            const quotationFiles = $('#drop-quotation').find('.show-file-list');
+            quotationFiles.length > 0
+                ? $('#FILE_QUOTATION').removeClass('req')
+                : $('#FILE_QUOTATION').addClass('req');
+            const additionalFiles =
+                $('#drop-additional').find('.show-file-list');
+            additionalFiles.length > 0
+                ? $('#FILE_ADDITIONAL').removeClass('req')
+                : $('#FILE_ADDITIONAL').addClass('req');
             // กรณีเป็น draft หรือ save ให้ตรวจสอบว่า REQBY ถูกกรอกหรือไม่
             if (val === 'draft' || val === 'save') {
                 if ($('#REQBY').val() === '') {
@@ -266,75 +304,61 @@ $(document).on(
             ) {
                 return;
             }
-            const formData = setFormData();
+            if (
+                ['draft', 'save', 'request'].includes(val) ||
+                (val === 'approve' && isReturn)
+            ) {
+                const formData = setFormData();
 
-            disabledElementsForm();
+                disabledElementsForm();
 
-            // ดึงรายการไฟล์ที่ถูกลบ
-            const deleteList = [
-                ...ShowFile.getDeleteLists('drop-quotation'),
-                ...ShowFile.getDeleteLists('drop-additional'),
-            ];
-            $('.delete-from-db').each(function (i, el) {
-                deleteList.push($(el).data('id'));
-            });
-            deleteList.forEach((fileId, index) => {
-                formData.append(`DELETE_LISTS[${index}]`, +fileId);
-            });
-
-            switch (val) {
-                case 'draft':
-                    formData.set('isDraft', true);
-                    formData.set('DRAFT', '0');
-                    res = await createPriceApproveForm(formData);
-                    break;
-                case 'save':
-                    redirect = false;
-                    reload = true;
-                    formData.set('isSave', true);
-                    Object.keys(form).forEach((key) => {
-                        formData.set(key, form[key]);
-                    });
-                    res = await createPriceApproveForm(formData);
-                    break;
-                case 'request':
-                    res = await createPriceApproveForm(formData);
-                    break;
-                case 'approve':
-                    if (isReturn) {
+                switch (val) {
+                    case 'draft':
+                        formData.set('isDraft', true);
+                        formData.set('DRAFT', '0');
+                        break;
+                    case 'save':
+                        redirect = false;
+                        reload = true;
+                        formData.set('isSave', true);
+                        Object.keys(form).forEach((key) => {
+                            formData.set(key, form[key]);
+                        });
+                        break;
+                    case 'approve':
                         formData.set('isReturn', true);
                         Object.keys(form).forEach((key) => {
                             formData.set(key, form[key]);
                         });
                         formData.set('EMPNO', params.EMPNO);
-                        res = await createPriceApproveForm(formData);
-                    } else {
-                        if (!params.EMPNO || val === '')
-                            throw new Error(
-                                'Missing required EMPNO or action value',
-                            );
-
-                        res = await doaction({
-                            ...form,
-                            EMPNO: params.EMPNO,
-                            ACTION: val,
-                            REMARK: $('#remark').val(),
-                        });
-                    }
-                    break;
-                default:
-                    if (!params.EMPNO || val === '')
-                        throw new Error(
-                            'Missing required EMPNO or action value',
+                        break;
+                }
+                res = await createPriceApproveForm(formData);
+            } else {
+                if (
+                    val === 'return' ||
+                    val === 'returnp' ||
+                    val === 'returnb'
+                ) {
+                    const remark = $('#remark').val();
+                    if (!remark) {
+                        showMessage(
+                            'Remark is required for return actions',
+                            'warning',
                         );
+                        return;
+                    }
+                }
+                if (!params.EMPNO || val === '') {
+                    throw new Error('Missing required EMPNO or action value');
+                }
 
-                    res = await doaction({
-                        ...form,
-                        EMPNO: params.EMPNO,
-                        ACTION: val,
-                        REMARK: $('#remark').val(),
-                    });
-                    break;
+                res = await doaction({
+                    ...form,
+                    EMPNO: params.EMPNO,
+                    ACTION: val,
+                    REMARK: $('#remark').val(),
+                });
             }
             if (!res.status) {
                 throw new Error('Failed to create price approval.');
@@ -378,6 +402,17 @@ function setFormData() {
         Object.keys(item).forEach((key) => {
             formData.append(`REASONS[${i}][${key}]`, item[key] ?? '');
         });
+    });
+    // ดึงรายการไฟล์ที่ถูกลบ
+    const deleteList = [
+        ...ShowFile.getDeleteLists('drop-quotation'),
+        ...ShowFile.getDeleteLists('drop-additional'),
+    ];
+    $('.delete-from-db').each(function (i, el) {
+        deleteList.push($(el).data('id'));
+    });
+    deleteList.forEach((fileId, index) => {
+        formData.append(`DELETE_LISTS[${index}]`, +fileId);
     });
     return formData;
 }
