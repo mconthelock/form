@@ -987,6 +987,9 @@ function deletefile(data) {
 $(document).on('click', '.btn-open', function () {
     // var dwg = $(this).attr("data-dwg");
     // var rev = $(this).attr("data-rev");
+
+    console.log(window.location.protocol);
+
     var dwg = $(this).data('dwg');
     var rev = $(this).data('rev');
     if (rev === '*') rev = '0';
