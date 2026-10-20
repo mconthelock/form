@@ -329,9 +329,10 @@ $(document).ready(async function () {
                 }
             }
             filterFormData(cnformData, { empty: true });
-            // logFormData(cnformData);
+            logFormData(cnformData);
 
             const status = await approve(cnformData);
+            logFormData(status);
             if (!status.status) {
                 showMessage(status.message, 'warning');
                 return false;
