@@ -1,4 +1,10 @@
 <?php
+// === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+// === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+
+// http://localhost:8080/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+// http://localhost:8080/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    
 use GuzzleHttp\Client;
 
 defined('BASEPATH') OR exit('No direct script access allowed');
@@ -29,7 +35,7 @@ class Form extends MY_Controller {
         $this->webflowBase = 'DEFAULT'; 
     }
 
-    public function main() {
+        public function main() {
         $empno          = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
         $data['NRUNNO'] = $this->input->get('runNo') ?? '';
@@ -327,7 +333,7 @@ class Form extends MY_Controller {
             $cyear2 = $this->input->post('CYEAR2');
             $nrunno = $this->input->post('NRUNNO');
 
-            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
+            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : '');
 
             if (empty($controlNo)) throw new Exception("กรุณาเลือก Control No.");
             if (empty($sDepCode))  throw new Exception("กรุณาระบุ Department");
@@ -455,7 +461,7 @@ class Form extends MY_Controller {
             $nrunno   = (int)$this->input->post('NRUNNO');
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
             $extdata  = trim((string)$this->input->post('EXTDATA'));
-            $empno    = (string)($this->input->post('EMPNO') ?: ($this->session->userdata('empno') ?? ''));
+            $empno    = (string)($this->input->post('EMPNO') ?: '');
             $headerId = $this->input->post('DOC_HEADER_ID');
 
             $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
