@@ -341,7 +341,7 @@ $(document).ready(async function () {
 
             console.log('LLLLLLLLLL');
             const status = await approve(cnformData);
-            logFormData(status);
+            //logFormData(status);
             if (!status.status) {
                 showMessage(status.message, 'warning');
                 return false;
@@ -1021,6 +1021,7 @@ export async function approve(form) {
         url: `${process.env.APP_API}/qaform/qa-cn/approve`,
         method: 'PATCH',
         data: form,
+        timeout: 600000,
     });
 }
 //function opendwg(dwg , rev) {
