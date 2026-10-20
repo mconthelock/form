@@ -31,6 +31,7 @@ export const steps = {
     _priceApvForm: null,
     _vendor: null,
     _compareMode: null,
+    _isReturn: false,
     set compareMode(value) {
         $('input[name="compare-mode"][value="' + value + '"]').prop(
             'checked',
@@ -153,7 +154,8 @@ export const steps = {
         this._vendor = null;
         this._compareMode = null;
     },
-    async init(returnOrDraft = false) {
+    async init(isReturn = false) {
+        this._isReturn = isReturn;
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
@@ -163,8 +165,8 @@ export const steps = {
                 { label: 'Select Item Code' },
                 { label: 'Upload File' },
             ],
-            currentStep: returnOrDraft ? 3 : 0,
-            disabledSteps: returnOrDraft ? [0, 1, 2] : [],
+            currentStep: isReturn ? 3 : 0,
+            disabledSteps: isReturn ? [0, 1, 2] : [],
             clickable: true,
             allowClickForward: false,
             onChange: async function (currentStep) {
@@ -177,7 +179,7 @@ export const steps = {
                 }
             },
         });
-        if (returnOrDraft) {
+        if (isReturn) {
             this.handlePanel(3);
         } else {
             this.handlePanel(0);
@@ -374,7 +376,9 @@ export const steps = {
                     PLANNER: this.plannerCode,
                     SYSTEM: this.system,
                 });
-                btnPrevious.removeClass('hidden');
+                if (!this._isReturn) {
+                    btnPrevious.removeClass('hidden');
+                }
                 btnNext.removeClass('hidden');
                 break;
             case 4:
@@ -394,10 +398,12 @@ export const steps = {
                     submitOpt.save = true;
                     submitOpt.request = true;
                 }
+                let submitHtml = webflowSubmit(submitOpt);
                 if (this.priceApvForm != null) {
+                    submitOpt.request = false;
                     submitOpt.form = this.priceApvForm;
+                    submitHtml = await webflowSubmit(submitOpt);
                 }
-                const submitHtml = webflowSubmit(submitOpt);
                 webformSubmitContainer.html(submitHtml).removeClass('hidden');
                 break;
         }

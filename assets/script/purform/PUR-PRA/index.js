@@ -1,5 +1,6 @@
 import {
     getUrlParams,
+    openNewTab,
     renderLoadError,
     requiredForm,
     showErrorMessage,
@@ -182,8 +183,17 @@ $(document).on('click', '#btn-view-compare', async function () {
     }
 });
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-20
+ * @description เปิดฟอร์ม Price Comparison ในแท็บใหม่เมื่อคลิกปุ่มแก้ไข
+ */
 $(document).on('click', '#btn-edit-compare', async function () {
     try {
+        const params = getUrlParams();
+        openNewTab({
+            url: `${process.env.APP_ENV}/purform/PUR-CPC/form/main?no=${params.NFRMNO}&orgNo=${params.VORGNO}&y=${params.CYEAR}&y2=${params.CYEAR2}&runNo=${params.NRUNNO}&empno=${params.EMPNO}`,
+        });
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);

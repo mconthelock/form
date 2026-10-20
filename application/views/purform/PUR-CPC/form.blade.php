@@ -108,7 +108,7 @@
                 <div id="webform-submit" class="hidden"></div>
                 <div class="flex justify-between gap-3" id="step-navigation">
                     <button type="button" class="hidden btn" id="previous-step"><i class="fi fi-rr-angle-circle-left"></i>Back</button>
-                    <button type="button" class="hidden btn" id="next-step">Next<i class="fi fi-rr-angle-circle-right"></i></button>
+                    <button type="button" class="hidden btn ml-auto" id="next-step">Next<i class="fi fi-rr-angle-circle-right"></i></button>
                 </div>
             </div>
         </div>
