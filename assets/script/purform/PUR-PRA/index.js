@@ -6,7 +6,7 @@ import {
     showMessage,
 } from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
-import { handleFiles } from '@amec/webasset/dragdrop';
+import { getDropFiles, handleFiles } from '@amec/webasset/dragdrop';
 import { tableDraft } from '../PUR-CPC/table/table-draft';
 import { createPriceApproveForm, getListCreate, getPlanner } from './data';
 import {
@@ -119,6 +119,22 @@ $(document).on(
     'change',
     '#IMAGE_DETAIL, #FILE_QUOTATION, #FILE_ADDITIONAL',
     function () {
+        const name = $(this).attr('name');
+        const files = this.files;
+        const oldFiles = getDropFiles()[name] || [];
+        const maxSize = 10; // 10 MB
+        const dataTransfer = new DataTransfer();
+        if (
+            maxSize &&
+            Array.from(files).some((file) => file.size > maxSize * 1024 * 1024)
+        ) {
+            showMessage(`File size must not exceed ${maxSize} MB`, 'warning');
+            for (const file of oldFiles) {
+                dataTransfer.items.add(file);
+            }
+            this.files = dataTransfer.files; // ล้างค่าฟิลด์ไฟล์และเก็บไฟล์ที่ถูกต้อง
+            return;
+        }
         handleFiles({ element: $(this) });
     },
 );
@@ -163,6 +179,14 @@ $(document).on('click', '#btn-view-compare', async function () {
         showErrorMessage(error.message);
     } finally {
         showLoader({ show: false });
+    }
+});
+
+$(document).on('click', '#btn-edit-compare', async function () {
+    try {
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.message);
     }
 });
 

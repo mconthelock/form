@@ -178,7 +178,8 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req"
-                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Amount" readonly>
+                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Amount"
+                                    readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. CC</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
@@ -189,7 +190,8 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req"
-                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Ratio %" readonly>
+                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Ratio %"
+                                    readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. DD</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">%</div>
@@ -206,19 +208,22 @@
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="PO issue basis"
-                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
+                                    class="radio radio-sm radio-primary req"
+                                    data-message="Please select effective type">
                                 <span class="label-text">PO issue basis</span>
                             </label>
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="Delivery basis"
-                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
+                                    class="radio radio-sm radio-primary req"
+                                    data-message="Please select effective type">
                                 <span class="label-text">Delivery basis</span>
                             </label>
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="Others"
-                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
+                                    class="radio radio-sm radio-primary req"
+                                    data-message="Please select effective type">
                                 <span class="label-text">Others</span>
                             </label>
                             <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full hidden"
@@ -279,15 +284,19 @@
             <section class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">5</span>
-                    <h3 class="font-semibold text-slate-700">ไฟล์แนบ (Attach file)</h3>
+                    <h3 class="font-semibold text-slate-700">ไฟล์แนบ (Attach file)
+                        <span class="text-red-500 text-xs">Maximum file size 10 MB</span>
+                    </h3>
                 </header>
                 <div class="flex flex-col gap-4 p-4">
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Quotation price (E-Stamp)</legend>
+                        <legend class="fieldset-legend req">Quotation price (E-Stamp)
+                        </legend>
                         <div id="drop-quotation"></div>
                     </fieldset>
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Additional document</legend>
+                        <legend class="fieldset-legend">Additional document
+                        </legend>
                         <div id="drop-additional"></div>
                     </fieldset>
                 </div>

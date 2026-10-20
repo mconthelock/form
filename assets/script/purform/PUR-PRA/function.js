@@ -285,6 +285,7 @@ export async function setForm({
             name: 'IMAGE_DETAIL',
             format: 'image',
             showImg: true,
+            maxSize: 10,
             text: 'Drag & Drop Image here or click to select',
         }),
     );
@@ -295,6 +296,7 @@ export async function setForm({
             format: 'pdf',
             text: 'Drag & Drop PDF files here or click to select',
             class: 'req',
+            maxSize: 10,
             attributes: {
                 'data-message': 'Please select a Quotation PDF file',
             },
@@ -307,6 +309,7 @@ export async function setForm({
             format: 'pdf',
             text: 'Drag & Drop PDF files here or click to select',
             // class: 'req',
+            maxSize: 10,
             attributes: {
                 'data-message': 'Please select an Additional PDF file',
             },
@@ -784,15 +787,20 @@ export function setFormData() {
 export function handleReqFile(reasonID, isReturn) {
     const lists = ChangeReason.getLists('reason-estimate-price-container');
     const fileQuotation = $('#FILE_QUOTATION');
+    const quotationLegend = $('#drop-quotation')
+        .closest('fieldset')
+        .find('legend');
     // ลูปตรวจสอบรายการเหตุผลและจัดการคลาส 'req' ของไฟล์
     for (const list of lists) {
         // ตรวจสอบว่ารายการเหตุผลตรงกับ reasonID และลำดับเป็น 1 หรือไม่ (PO issue with temporary price)
         if (list.NID == reasonID && list.NSEQ === 1) {
             fileQuotation.removeClass('req');
+            quotationLegend.removeClass('req');
             removeClassError(fileQuotation);
             return;
         } else {
             fileQuotation.addClass('req');
+            quotationLegend.addClass('req');
         }
     }
     // หากเป็นการ Return Form ให้ตรวจสอบว่ามีไฟล์อยู่แล้วหรือไม่ด้วย
@@ -801,9 +809,13 @@ export function handleReqFile(reasonID, isReturn) {
         // const additionalFiles =
         //     $('#drop-additional').find('.show-file-list');
 
-        quotationFiles.length > 0
-            ? fileQuotation.removeClass('req')
-            : fileQuotation.addClass('req');
+        if (quotationFiles.length > 0) {
+            fileQuotation.removeClass('req');
+            quotationLegend.removeClass('req');
+        } else {
+            fileQuotation.addClass('req');
+            quotationLegend.addClass('req');
+        }
 
         // additionalFiles.length > 0
         //     ? $('#FILE_ADDITIONAL').removeClass('req')
