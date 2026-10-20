@@ -185,15 +185,15 @@
                                                     @endif
 
                                                     <!-- <span class="px-2">Rev no. :</span>
-                                            <span>
-                                                @if (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                                                    <span>
+                                                        @if (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
     <input type="text" name="revNo[]"
-                                                class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                                                value="{{ !empty($d->REVNO) ? $d->REVNO : '' }}">
+                                                        class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                                                        value="{{ !empty($d->REVNO) ? $d->REVNO : '' }}">
 @else
     {{ !empty($d->REVNO) ? $d->REVNO : '' }}
     @endif
-                                            </span> -->
+                                                    </span> -->
 
                                                     @if (($cextData >= 1 && $cextData <= 3) || $cextData == 6 || $cextData == 7)
                                                         <span class="px-2 text-red-600 font-semibold">
@@ -1267,7 +1267,7 @@
                                 @endif
                                 @if (!empty($empinf) && in_array($empinf[0]->SSECCODE, ['000502', '000503']))
                                     <button type="button" data-action="printFrm"
-                                        class="btn-print btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                                        class="btn-print  cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                                         Print Form
                                     </button>
                                 @endif

@@ -14,6 +14,7 @@ import {
     requiredForm,
     logFormData,
     filterFormData,
+    showErrorMessage,
 } from '@amec/webasset/utils';
 import {
     showflow,
@@ -226,10 +227,12 @@ $(document).ready(async function () {
                         let dwgNo = $(this).find('.btn-open').data('dwgfull');
                         let radValue = $(this).find('.radDwg:checked').val();
                         let remark = $(this).find('.txtDwgRem').val();
+                        let revNo = $(this).find('.btn-open').data('rev');
                         // นำข้อมูลของแถวนี้มาจัดรูปเป็น Object แล้วใส่ใน Array
                         if (dwgNo) {
                             dwgArray.push({
                                 DWGNO: dwgNo,
+                                REVNO: revNo,
                                 RESULT:
                                     radValue !== undefined ? radValue : null, // ถ้าไม่ได้เลือกให้เป็น null
                                 REMARK: remark,
@@ -984,12 +987,14 @@ function deletefile(data) {
 $(document).on('click', '.btn-open', function () {
     // var dwg = $(this).attr("data-dwg");
     // var rev = $(this).attr("data-rev");
+
     var dwg = $(this).data('dwg');
     var rev = $(this).data('rev');
     if (rev === '*') rev = '0';
 
     var url =
-        'http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg=' +
+        window.location.protocol +
+        '//amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg=' +
         encodeURIComponent(dwg) +
         '&rev=' +
         encodeURIComponent(rev);

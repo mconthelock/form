@@ -143,8 +143,12 @@ export function initializeJigWorkflow(editor) {
                 const existing = await loadJigForm(key, true);
                 if (existing) {
                     // The JIG snapshot may be saved even if the separate WEBFORM transaction failed.
-                    const picCode = form.elements.namedItem('location').selectedOptions[0]?.dataset.piccode?.trim();
-                    checkResponse(await configureJigRequesterFlow(key, picCode));
+                    const picCode = form.elements
+                        .namedItem('location')
+                        .selectedOptions[0]?.dataset.piccode?.trim();
+                    checkResponse(
+                        await configureJigRequesterFlow(key, picCode),
+                    );
                     await completeCreate(existing);
                     return true;
                 }
@@ -194,8 +198,27 @@ export function initializeJigWorkflow(editor) {
         } else {
             const uploaded = await uploadJigFiles(key, actor, files.incoming);
             payload.FILES = [
-                ...files.stored.map(({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE }) => ({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE, FILE_GROUP: 'REFERENCE' })),
-                ...uploaded.map((file, i) => ({ ...file, FILE_SEQ: files.nextSeq + i, FILE_GROUP: 'REFERENCE' })),
+                ...files.stored.map(
+                    ({
+                        FILE_SEQ,
+                        FILE_NAME,
+                        FILE_PATH,
+                        FILE_TYPE,
+                        FILE_SIZE,
+                    }) => ({
+                        FILE_SEQ,
+                        FILE_NAME,
+                        FILE_PATH,
+                        FILE_TYPE,
+                        FILE_SIZE,
+                        FILE_GROUP: 'REFERENCE',
+                    }),
+                ),
+                ...uploaded.map((file, i) => ({
+                    ...file,
+                    FILE_SEQ: files.nextSeq + i,
+                    FILE_GROUP: 'REFERENCE',
+                })),
             ];
             editor.filesSaved(payload.FILES);
             if (!inspection || !requesterStep) delete payload.REV;
@@ -251,7 +274,12 @@ export function initializeJigWorkflow(editor) {
                 await editor.ready;
                 if (!(await editor.validate())) return false;
             }
-            if (action === 'approve' && recheckStep && !(await editor.recheck.validate())) return false;
+            if (
+                action === 'approve' &&
+                recheckStep &&
+                !(await editor.recheck.validate())
+            )
+                return false;
             const remark = remarkInput.value.trim();
             if (action === 'return' && !remark) {
                 remarkInput.setAttribute('aria-invalid', 'true');
@@ -340,7 +368,7 @@ export function initializeJigWorkflow(editor) {
         });
     }
     document.querySelector('#jig-approve').onclick = () => void act('approve');
-    document.querySelector('#jig-return').onclick = () => void act('return');
+    document.querySelector('#jig-return').onclick = () => void act('returnb');
     void load();
     return {
         save: () =>
