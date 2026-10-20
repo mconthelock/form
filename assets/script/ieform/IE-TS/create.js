@@ -630,3 +630,19 @@ $(document).on('click', '.btn-delete', async function () {
         tsTableInstance.draw(false);
     }
 });
+
+$(document).on('input', '.auto-tab', function () {
+    // เช็คความยาวข้อความกับ maxlength
+    if (this.value.length == this.maxLength) {
+        // ค้นหาช่อง input ที่มีคลาส .auto-tab ทั้งหมดในหน้า ณ ปัจจุบัน
+        var $inputs = $('.auto-tab');
+
+        // หาตำแหน่ง (index) ถัดไป
+        var nextIndex = $inputs.index(this) + 1;
+
+        // ถ้ามีช่องถัดไป ให้เลื่อน focus ไป
+        if (nextIndex < $inputs.length) {
+            $inputs.eq(nextIndex).focus();
+        }
+    }
+});

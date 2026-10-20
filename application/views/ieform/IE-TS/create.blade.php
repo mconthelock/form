@@ -15,6 +15,9 @@
     </style>
 @endsection
 @section('contents')
+    <div class="hidden form-info" nfrmno="{{ $NFRMNO }}" vorgno="{{ $VORGNO }}" cyear="{{ $CYEAR }}"
+        mode="{{ $mode }}" cyear2="{{ $mode != 1 ? $CYEAR2 : '' }}" nrunno="{{ $mode != 1 ? $NRUNNO : '' }}"
+        return="{{ $return ?? '' }}"></div>
     <form id="frmmain">
         <div class="max-w-7xl mx-auto space-y-6">
             <!-- Header -->
@@ -33,7 +36,7 @@
                                 class="flex items-center justify-center w-1/3 bg-slate-50 text-slate-600 font-medium text-sm border-r border-slate-300 px-3">
                                 Input by
                             </label>
-                            <input type="text" value="15111" readonly
+                            <input name="INPUTBY" type="text" value="{{ $empno }}" readonly
                                 class="w-2/3 border-0 bg-transparent py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none">
                         </div>
 
@@ -44,7 +47,7 @@
                                 class="flex items-center justify-center w-1/3 bg-slate-50 text-slate-600 font-medium text-sm border-r border-slate-300 px-3">
                                 Request by
                             </label>
-                            <input type="text" value="15111"
+                            <input name = "REQBY" type="text" value="{{ $empno }}" maxlength="5"
                                 class="w-2/3 border-0 bg-white py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none">
                         </div>
 
@@ -66,7 +69,7 @@
                         <div class="bg-slate-50 text-slate-600 font-medium text-sm px-4 py-2 border-b border-slate-300">
                             Reason &
                             Remark</div>
-                        <textarea class="flex-1 w-full bg-white p-3 text-sm text-slate-900 focus:outline-none resize-none"
+                        <textarea name="txtRemark" class="flex-1 w-full bg-white p-3 text-sm text-slate-900 focus:outline-none resize-none"
                             placeholder="Type your remarks here..."></textarea>
                     </div>
                 </div>
@@ -74,28 +77,21 @@
 
             <!-- Search Bar Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center gap-3">
-
-                <!-- แก้ไขส่วน Drawing: เปลี่ยนสีพื้นหลังเป็นเทาอ่อน และตัวหนังสือเป็นสีเทาเข้ม -->
                 <div class="flex rounded-md shadow-sm border border-slate-300 overflow-hidden">
                     <span
                         class="bg-slate-100 text-slate-700 border-r border-slate-300 px-4 py-2 text-sm font-bold flex items-center">
                         Drawing
                     </span>
                     <input id="dwgNo" type="text" placeholder="Dwg No."
-                        class="border-0 bg-white px-3 py-2 text-sm w-32 outline-none focus:ring-0" maxlength="9">
+                        class="auto-tab border-0 bg-white px-3 py-2 text-sm w-32 outline-none focus:ring-0" maxlength="9">
                 </div>
-
-                <!-- ส่วน Input อื่นๆ คงเดิม -->
-                <input type="text" placeholder="G no." id="gNo"
-                    class="rounded-md border border-slate-300 px-3 py-2 text-sm w-24 outline-none focus:ring-2 focus:ring-[#245D9B]">
+                <input type="text" placeholder="G no." id="gNo" maxlength="3"
+                    class="auto-tab rounded-md border border-slate-300 px-3 py-2 text-sm w-24 outline-none focus:ring-2 focus:ring-[#245D9B]">
                 <input type="text" placeholder="L no." id="l1No"
-                    class="rounded-md border border-slate-300 px-3 py-2 text-sm w-24 outline-none focus:ring-2 focus:ring-[#245D9B]">
+                    class="auto-tab rounded-md border border-slate-300 px-3 py-2 text-sm w-24 outline-none focus:ring-2 focus:ring-[#245D9B]">
                 <span class="text-slate-400 font-bold">-</span>
                 <input type="text" placeholder="L no." id="l2No"
                     class="rounded-md border border-slate-300 px-3 py-2 text-sm w-24 outline-none focus:ring-2 focus:ring-[#245D9B]">
-
-                <!-- ปุ่ม ADD คงเดิม -->
-                <!-- ปุ่ม ADD แบบพาสเทล (สไตล์เดียวกับปุ่ม SEND) -->
                 <button type="button" id="btnAdd"
                     class="bg-blue-100 hover:bg-blue-200 border border-blue-200 text-blue-700 font-bold px-6 py-2 text-sm rounded-lg shadow-sm transition ml-auto">
                     ADD
