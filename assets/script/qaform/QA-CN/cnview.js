@@ -99,8 +99,9 @@ $(document).ready(async function () {
             }
             console.log('xxxxxxxxxxx');
             const txtRemark = $('#txtRemark').val();
-
+            console.log('yyyyyyyyyyy');
             if (action == 'deleteApv') {
+                console.log('iffffffffff');
                 var cnformData = new FormData();
                 cnformData.append('NFRMNO', nfrmno);
                 cnformData.append('VORGNO', vorgno);
@@ -112,6 +113,7 @@ $(document).ready(async function () {
                 cnformData.append('APVNO', empno);
                 cnformData.append('REMARK', txtRemark);
             } else {
+                console.log('else');
                 action = action === 'returnrem' ? 'return' : action;
                 let targetInput = $('input[name="chkClass"]');
                 let inputType;
@@ -327,6 +329,7 @@ $(document).ready(async function () {
                         }
                     }
                 }
+                console.log('end else');
             }
             filterFormData(cnformData, { empty: true });
             logFormData(cnformData);
