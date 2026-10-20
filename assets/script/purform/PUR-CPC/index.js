@@ -10,7 +10,7 @@ import { modalConfirmRequest } from './modal/modal-comfirm';
 import { tableComparison } from './table/table-comparison';
 import { createComparison, getComparisonListByForm } from './data';
 import { showLoader } from '@amec/webasset/preloader';
-import { prepareFormData } from './function';
+import { finishProcess, prepareFormData } from './function';
 import { redirectWebflow } from '@amec/webasset/form';
 import { getFormByUrlParam } from '../PUR-PRA/function';
 import { getFormPriceApprove } from '../PUR-PRA/data';
@@ -105,6 +105,10 @@ $(document).on(
             }
             modalConfirmRequest.show(false);
             showMessage('Comparison created successfully.', 'success');
+            if (steps._isReturn) {
+                finishProcess();
+                return;
+            }
             await steps.instance.setStep(0);
             redirectWebflow();
         } catch (error) {

@@ -27,6 +27,8 @@ import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { redirectWebflow } from '@amec/webasset/form';
 import { doaction, getMode } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { getComparisonListByForm } from '../PUR-CPC/data';
+import { tableComparison } from '../PUR-CPC/table/table-comparison';
 
 let isReturn = false;
 $(async function () {
@@ -108,6 +110,53 @@ $(async function () {
         renderLoadError(error.message);
     } finally {
         showLoader({ show: false });
+    }
+});
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-20
+ * @description จัดการข้อความที่ส่งมาจาก new tab ผ่าน postMessage
+ * @param {Object} event ข้อมูลเหตุการณ์ที่ส่งมาจาก new tab (postMessage)
+ */
+window.addEventListener('message', async function (event) {
+    // ตรวจสอบ origin เพื่อความปลอดภัย
+    if (event.origin !== window.location.origin) return;
+
+    const { action, data } = event.data;
+
+    if (action === 'SUCCESS') {
+        const form = data.form;
+
+        const comparisonForm = await getComparisonListByForm(form);
+        if (!comparisonForm.status) {
+            throw new Error(comparisonForm.message);
+        }
+        const comparisonData = comparisonForm.data;
+
+        // ตั้งค่าฟิลด์อัตโนมัติด้วยข้อมูลจากการเปรียบเทียบ
+        setAutoField({
+            mode: 1,
+            trigger: false,
+            data: {
+                formComparison: form,
+                vendor: comparisonData.VVENDOR,
+                vendorName: comparisonData.VVENDOR_NAME,
+                planner: comparisonData.VPLANNER_CODE.includes(',')
+                    ? comparisonData.VPLANNER_CODE.split(',')
+                    : [comparisonData.VPLANNER_CODE],
+                totalPresent: comparisonData.NAMOUNT_PRESENT || 0,
+                totalNew: comparisonData.NAMOUNT_NEW || 0,
+                totalCost: comparisonData.NAMOUNT_DIFF || 0,
+                totalRatio: comparisonData.NRATIO || 0,
+            },
+        });
+
+        // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
+        await tableComparison.init({
+            formNo: form,
+            function: comparisonData.NMODE,
+        });
     }
 });
 

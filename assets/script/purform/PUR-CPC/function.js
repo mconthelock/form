@@ -23,3 +23,24 @@ export const prepareFormData = (details) => {
         ...tableComparison.total,
     };
 };
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-20
+ * @description ส่งข้อความไปยังหน้า opener เพื่อแจ้งความสำเร็จและปิดหน้าต่างปัจจุบัน
+ */
+export function finishProcess() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(
+            {
+                action: 'SUCCESS',
+                data: {
+                    form: steps.data.formNo,
+                },
+            },
+            window.location.origin,
+        );
+
+        window.close();
+    }
+}

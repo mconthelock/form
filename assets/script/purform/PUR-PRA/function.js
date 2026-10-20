@@ -101,7 +101,7 @@ export const setAutoField = ({
         const element = label.length ? label : autoField[key];
         autoField[key].prop('readonly', mode === 1);
         if (!isReturn) {
-            autoField[key].val(data?.[key] || '');
+            autoField[key].val(data?.[key] === 0 ? '0' : data?.[key] || '');
         }
         if (removeError) removeClassError(autoField[key]);
         if (trigger) autoField[key].trigger('blur');
