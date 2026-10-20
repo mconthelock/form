@@ -332,10 +332,12 @@ $(document).ready(async function () {
                 console.log('end else');
             }
             console.log('>>>>>>>');
+            console.log(cnformData);
+
             const formdata = filterFormData(cnformData, { empty: true });
             console.log('++++++++++');
             logFormData(formdata);
-            console.log();
+            console.log(formdata);
 
             console.log('LLLLLLLLLL');
             const status = await approve(cnformData);
