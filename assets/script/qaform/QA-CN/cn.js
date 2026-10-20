@@ -195,9 +195,9 @@ $(document).ready(async function () {
                     $('input[name="radobj"]:checked').val(),
                 );
 
-                filterFormData(cnformData, { empty: true });
+                const formdata = filterFormData(cnformData, { empty: true });
 
-                const status = await create(cnformData);
+                const status = await create(formdata);
                 if (!status.status) {
                     showMessage(status.message, 'warning');
                     return false;
