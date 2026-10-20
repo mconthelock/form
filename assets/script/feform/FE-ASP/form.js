@@ -101,6 +101,7 @@ export function renderPrevFile(prevData) {
         $zone.addClass('hidden').hide();
     }
 }
+
 export function initFormControls() {
     $('#ControlNoDrp')
         .off('change')
@@ -194,6 +195,11 @@ export function initFormControls() {
             toggleChangeBox();
         });
 
+    $(document)
+        .off('change', 'input[name="REVIEW_PERIOD"]')
+        .on('change', 'input[name="REVIEW_PERIOD"]', function () {
+            toggleConfirmationTable();
+        });
     toggleChangeBox();
 }
 
@@ -338,32 +344,83 @@ export function applyReviewPeriodRules() {
         .toUpperCase()
         .trim();
     const isManual = createMode === 'MANUAL';
+    const isAdmin = Boolean(window.IS_ADMIN || window.IS_SUPER_ADMIN);
+
+    const $radioYearly = $('#radio_yearly');
+    const $radioChanging = $('#radio_changing');
 
     if (isManual) {
-        $('#radio_changing').prop('checked', true).prop('disabled', false);
-        $('#radio_yearly').prop('checked', false).prop('disabled', true);
-        $('#radio_yearly')
-            .closest('label')
-            .addClass('opacity-40 cursor-not-allowed pointer-events-none')
-            .removeClass('cursor-pointer');
-        $('#radio_changing')
-            .closest('label')
-            .removeClass('opacity-40 cursor-not-allowed pointer-events-none')
-            .addClass('cursor-pointer');
+        if (isAdmin) {
+            // กรณีเป็น Admin ในโหมด Manual: เปิดให้คลิกเลือกได้ทั้ง 2 ตัวเลือก
+            $radioChanging.prop('disabled', false);
+            $radioYearly.prop('disabled', false);
+
+            $radioChanging
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+            $radioYearly
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+
+            // ถ้ายังไม่มีการเลือกค่า ให้ตั้ง Default เป็น CHANGING
+            if (!$('input[name="REVIEW_PERIOD"]:checked').val()) {
+                $radioChanging.prop('checked', true);
+            }
+        } else {
+            // พนักงานทั่วไปในโหมด Manual: บังคับเลือก CHANGING และล็อก YEARLY
+            $radioChanging.prop('checked', true).prop('disabled', false);
+            $radioYearly.prop('checked', false).prop('disabled', true);
+
+            $radioYearly
+                .closest('label')
+                .addClass('opacity-40 cursor-not-allowed pointer-events-none')
+                .removeClass('cursor-pointer');
+            $radioChanging
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+        }
     } else {
-        $('#radio_yearly').prop('checked', true).prop('disabled', false);
-        $('#radio_changing').prop('checked', false).prop('disabled', true);
-        $('#radio_changing')
+        // โหมด AUTO (Yearly Job): บังคับเลือก YEARLY เสมอ
+        $radioYearly.prop('checked', true).prop('disabled', false);
+        $radioChanging.prop('checked', false).prop('disabled', true);
+
+        $radioChanging
             .closest('label')
             .addClass('opacity-40 cursor-not-allowed pointer-events-none')
             .removeClass('cursor-pointer');
-        $('#radio_yearly')
+        $radioYearly
             .closest('label')
             .removeClass('opacity-40 cursor-not-allowed pointer-events-none')
             .addClass('cursor-pointer');
     }
 
+    // สั่ง Toggle ซ่อน/แสดงตาราง Confirmation ให้สอดคล้องกับค่าที่เลือก
+    toggleConfirmationTable();
+
     $('input[name="REVIEW_PERIOD"]:checked').trigger('change');
+}
+/**
+ * ซ่อน/แสดงตาราง Confirmation:
+ * แสดงเฉพาะกรณี YEARLY (Auto Job) เท่านั้น
+ */
+export function toggleConfirmationTable() {
+    const period = $('input[name="REVIEW_PERIOD"]:checked').val();
+    const $tableZone = $('#confirmation-table-zone');
+
+    if (period === 'YEARLY') {
+        $tableZone.removeClass('hidden').show();
+    } else {
+        $tableZone.addClass('hidden').hide();
+    }
 }
 
 export function populateSavedDetails(savedDetails = []) {
@@ -381,6 +438,71 @@ export function populateSavedDetails(savedDetails = []) {
         });
     }
 }
+
+// export function buildSavePayload(form, isDraft = false, empno = '') {
+//     const controlNo = $('#ControlNoDrp').val();
+//     if (!controlNo) {
+//         showMessage('กรุณาเลือก Control No.', 'warning');
+//         $('#ControlNoDrp').focus();
+//         return null;
+//     }
+
+//     const userReq = ($('#REQUEST_BY_EMPNO').val() || '').trim();
+//     if (!userReq || userReq.length !== 5) {
+//         showMessage(
+//             'รหัสผู้จัดทำ (Request By) ต้องมีความยาว 5 หลัก',
+//             'warning',
+//         );
+//         $('#REQUEST_BY_EMPNO').focus();
+//         return null;
+//     }
+
+//     const topicsData = [];
+//     $('#topics-tbody tr').each(function () {
+//         const topicId = $(this).data('topic-id');
+//         topicsData.push({
+//             TOPIC_ID: topicId,
+//             CONDITION_VAL:
+//                 $(`input[name="cond_${topicId}"]:checked`).val() || null,
+//             CHANGE_VAL:
+//                 $(`input[name="change_${topicId}"]:checked`).val() || null,
+//             DETAILS: $(this).find('.topic-detail-in').val() || '',
+//         });
+//     });
+
+//     const payload = new FormData();
+//     payload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val() || '');
+//     payload.append('CONTROL_NO', controlNo);
+//     payload.append('SDIVCODE', $('#SDIVCODEHid').val() || '');
+//     payload.append('SDEPCODE', $('#DeptDrp').val() || '');
+//     payload.append('SSECCODE', $('#SecDrp').val() || '00');
+//     payload.append(
+//         'REVIEW_PERIOD',
+//         $('input[name="REVIEW_PERIOD"]:checked').val(),
+//     );
+//     payload.append(
+//         'REVIEW_DETAILS',
+//         $('input[name="REVIEW_DETAILS"]:checked').val(),
+//     );
+//     payload.append('DETAIL_OF_CHANGE', $('#DetailChangeTxt').val() || '');
+//     payload.append(
+//         'EFFECT_STATUS',
+//         $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT',
+//     );
+//     payload.append('TOPICS_JSON', JSON.stringify(topicsData));
+//     payload.append('REMARK', $('#RemarkTxt').val() || '');
+//     payload.append('REQBY', userReq);
+//     payload.append('EMPNO', empno);
+//     payload.append('IS_DRAFT', isDraft ? '1' : '0');
+
+//     payload.append('NFRMNO', form.NFRMNO || '');
+//     payload.append('VORGNO', form.VORGNO || '');
+//     payload.append('CYEAR', form.CYEAR || '');
+//     payload.append('CYEAR2', form.CYEAR2 || '');
+//     payload.append('NRUNNO', form.NRUNNO || '');
+
+//     return payload;
+// }
 
 export function buildSavePayload(form, isDraft = false, empno = '') {
     const controlNo = $('#ControlNoDrp').val();
@@ -400,18 +522,24 @@ export function buildSavePayload(form, isDraft = false, empno = '') {
         return null;
     }
 
+    const reviewPeriod =
+        $('input[name="REVIEW_PERIOD"]:checked').val() || 'CHANGING';
+
+    // ดึงข้อมูลตาราง Confirmation เฉพาะกรณีที่เป็น YEARLY เท่านั้น
     const topicsData = [];
-    $('#topics-tbody tr').each(function () {
-        const topicId = $(this).data('topic-id');
-        topicsData.push({
-            TOPIC_ID: topicId,
-            CONDITION_VAL:
-                $(`input[name="cond_${topicId}"]:checked`).val() || null,
-            CHANGE_VAL:
-                $(`input[name="change_${topicId}"]:checked`).val() || null,
-            DETAILS: $(this).find('.topic-detail-in').val() || '',
+    if (reviewPeriod === 'YEARLY') {
+        $('#topics-tbody tr').each(function () {
+            const topicId = $(this).data('topic-id');
+            topicsData.push({
+                TOPIC_ID: topicId,
+                CONDITION_VAL:
+                    $(`input[name="cond_${topicId}"]:checked`).val() || null,
+                CHANGE_VAL:
+                    $(`input[name="change_${topicId}"]:checked`).val() || null,
+                DETAILS: $(this).find('.topic-detail-in').val() || '',
+            });
         });
-    });
+    }
 
     const payload = new FormData();
     payload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val() || '');
@@ -419,20 +547,23 @@ export function buildSavePayload(form, isDraft = false, empno = '') {
     payload.append('SDIVCODE', $('#SDIVCODEHid').val() || '');
     payload.append('SDEPCODE', $('#DeptDrp').val() || '');
     payload.append('SSECCODE', $('#SecDrp').val() || '00');
-    payload.append(
-        'REVIEW_PERIOD',
-        $('input[name="REVIEW_PERIOD"]:checked').val(),
-    );
+    payload.append('REVIEW_PERIOD', reviewPeriod);
     payload.append(
         'REVIEW_DETAILS',
-        $('input[name="REVIEW_DETAILS"]:checked').val(),
+        $('input[name="REVIEW_DETAILS"]:checked').val() || 'NO_CHANGE',
     );
     payload.append('DETAIL_OF_CHANGE', $('#DetailChangeTxt').val() || '');
     payload.append(
         'EFFECT_STATUS',
         $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT',
     );
-    payload.append('TOPICS_JSON', JSON.stringify(topicsData));
+
+    // ส่งค่า JSON เฉพาะเมื่อมีข้อมูลในตาราง
+    payload.append(
+        'TOPICS_JSON',
+        topicsData.length > 0 ? JSON.stringify(topicsData) : '',
+    );
+
     payload.append('REMARK', $('#RemarkTxt').val() || '');
     payload.append('REQBY', userReq);
     payload.append('EMPNO', empno);

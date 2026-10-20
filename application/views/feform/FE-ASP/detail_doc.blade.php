@@ -29,9 +29,29 @@
         </div>
 
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                CONTROL NUMBER <span class="text-rose-500">*</span>
-            </label>
+            <!-- ส่วนหัวเหนือ Dropdown: ใส่ Label พร้อมปุ่มจัดการทางขวา -->
+            <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    CONTROL NUMBER <span class="text-rose-500">*</span>
+                </label>
+
+                <div class="flex items-center gap-1.5">
+                    <!-- ปุ่ม Test ส่ง Email (แสดงเฉพาะ Admin / SuperAdmin) -->
+                    @if(!empty($isSuperAdmin) || !empty($isAdmin))
+                        <button type="button" id="btnTestSendEmail"
+                                class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-200/80 transition-colors shadow-2xs cursor-pointer">
+                            Send Email
+                        </button>
+
+                        <a href="{{ site_url('feform/FE-ASP/control_mst?empno=' . ($EMPNO ?? '')) }}" 
+                           target="_blank"
+                           class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100/80 px-2 py-0.5 rounded-md border border-emerald-200/80 transition-colors shadow-2xs">
+                            ⚙️ จัดการ Master Control No.
+                        </a>
+                    @endif
+                </div>
+            </div>
+
             <select id="ControlNoDrp" name="ControlNoDrp" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
                 <option value="">-- Choose Control No. --</option>
                 @if(!empty($controls))
@@ -187,27 +207,33 @@
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">REVIEW PERIOD</label>
             @php
                 $isManual = ($CREATE_MODE ?? 'MANUAL') === 'MANUAL';
+                $isAdminUser = !empty($isAdmin) || !empty($isSuperAdmin);
+                
+                // อนุญาตให้เลือก YEARLY ได้ถ้า: ไม่ใช่ Manual หรือเป็น Admin
+                $canSelectYearly = !$isManual || $isAdminUser;
+                // อนุญาตให้เลือก CHANGING ได้ถ้าเป็นโหมด Manual
+                $canSelectChanging = $isManual;
             @endphp
             <div class="flex gap-6 text-xs font-bold text-slate-700">
-                <!-- YEARLY REVIEW: ล็อกห้ามคลิกถ้าเป็น MANUAL -->
-                <label class="flex items-center gap-1.5 {{ $isManual ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
+                <!-- YEARLY REVIEW: อนุญาตถ้าเป็น AUTO หรือถ้าเป็น Admin ในโหมด Manual -->
+                <label class="flex items-center gap-1.5 {{ !$canSelectYearly ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
                     <input type="radio" 
-                           id="radio_yearly"
-                           name="REVIEW_PERIOD" 
-                           value="YEARLY" 
-                           {{ ($REVIEW_PERIOD ?? '') === 'YEARLY' ? 'checked' : '' }}
-                           {{ $isManual ? 'disabled' : '' }}> 
+                        id="radio_yearly"
+                        name="REVIEW_PERIOD" 
+                        value="YEARLY" 
+                        {{ ($REVIEW_PERIOD ?? '') === 'YEARLY' ? 'checked' : '' }}
+                        {{ !$canSelectYearly ? 'disabled' : '' }}> 
                     YEARLY REVIEW
                 </label>
 
-                <!-- REVIEW ON CHANGING: ล็อกห้ามคลิกถ้าเป็น AUTO -->
-                <label class="flex items-center gap-1.5 {{ !$isManual ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
+                <!-- REVIEW ON CHANGING: อนุญาตถ้าเป็น MANUAL -->
+                <label class="flex items-center gap-1.5 {{ !$canSelectChanging ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
                     <input type="radio" 
-                           id="radio_changing"
-                           name="REVIEW_PERIOD" 
-                           value="CHANGING" 
-                           {{ ($REVIEW_PERIOD ?? '') === 'CHANGING' ? 'checked' : '' }}
-                           {{ !$isManual ? 'disabled' : '' }}> 
+                        id="radio_changing"
+                        name="REVIEW_PERIOD" 
+                        value="CHANGING" 
+                        {{ ($REVIEW_PERIOD ?? '') === 'CHANGING' ? 'checked' : '' }}
+                        {{ !$canSelectChanging ? 'disabled' : '' }}> 
                     REVIEW ON CHANGING
                 </label>
             </div>
@@ -276,8 +302,8 @@
         </div>
     </div>
 
-    <!-- ส่วนที่ 4: ตาราง Confirmation สีเขียว -->
-    <div id="confirmation-table-zone" class="mt-6 pt-4 border-t border-slate-200/60">
+    <!-- ส่วนที่ 4: ตาราง Confirmation สีเขียว (แสดงเฉพาะโหมด YEARLY REVIEW) -->
+    <div id="confirmation-table-zone" class="mt-6 pt-4 border-t border-slate-200/60 {{ $isManual ? 'hidden' : '' }}" style="{{ $isManual ? 'display: none;' : '' }}">
         <h3 class="text-xs font-bold text-emerald-900 bg-emerald-100/70 px-3 py-2.5 rounded-t-xl border border-emerald-300">
             ASPECT AND RISK REVIEW CONFIRMATION - ISO14001
         </h3>
