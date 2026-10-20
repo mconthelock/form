@@ -332,7 +332,7 @@ $(document).ready(async function () {
                 console.log('end else');
             }
             console.log('>>>>>>>');
-            filterFormData(cnformData, { empty: true });
+            filterFormData(cnformData);
             console.log('++++++++++');
             logFormData(cnformData);
 
