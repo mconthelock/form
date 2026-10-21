@@ -44,6 +44,12 @@ export const steps = {
     },
     set priceApvForm(value) {
         this._priceApvForm = value;
+        if (value.PRA_NO) {
+            $('#detail-step-apv-no').removeClass('hidden');
+            $('#detail-step-apv-no .detail-text').text(value.PRA_NO);
+        } else {
+            $('#detail-step-apv-no').addClass('hidden');
+        }
     },
     get priceApvForm() {
         return this._priceApvForm;
@@ -101,6 +107,14 @@ export const steps = {
             .html(`<div class="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-amber-400 to-orange-500 text-white">
             <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10"></div>
             <div class="absolute -right-2 top-10 h-12 w-12 rounded-full bg-white/10"></div>
+            <div class="hidden flex flex-col items-center gap-2 px-8 py-6" id="detail-step-comp-no">
+                <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Price Comparison No.</p>
+                <p class="text-2xl font-extrabold drop-shadow-sm detail-text">${this.formNo}</p>
+            </div>
+            <div class="hidden flex flex-col items-center gap-2" id="detail-step-apv-no">
+                <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Price Approval No.</p>
+                <p class="text-2xl font-extrabold drop-shadow-sm detail-text">${this.priceApvForm}</p>
+            </div>
             <div class="flex gap-5">
                 <div class="relative flex flex-col items-center gap-2 px-8 py-6">
                     <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Mode</p>
@@ -125,6 +139,12 @@ export const steps = {
     },
     set formNo(value) {
         this._formNo = value;
+        if (value) {
+            $('#detail-step-comp-no').removeClass('hidden');
+            $('#detail-step-comp-no .detail-text').text(value);
+        } else {
+            $('#detail-step-comp-no').addClass('hidden');
+        }
     },
     get formNo() {
         return this._formNo;

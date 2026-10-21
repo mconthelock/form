@@ -42,7 +42,7 @@ $(async function () {
             steps.mode = 'draft';
             steps.compareMode = comparisonData.CMODE;
             steps.formNo = comparisonData.VFORMNO;
-            steps.priceApvForm = form;
+            steps.priceApvForm = { ...form, PRA_NO: data.LINK_FORM?.PNO };
             steps.function = comparisonData.NFUNCTIONS;
             steps.system = comparisonData.VSYSTEM;
             steps.vendor = comparisonData.VVENDOR;
