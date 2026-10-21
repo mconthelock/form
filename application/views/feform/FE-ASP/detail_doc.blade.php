@@ -12,7 +12,7 @@
 <div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6 shadow-xs">
     <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
         <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-            🌿 REVIEW TABLE OF ENVIRONMENTAL ASPECT EVALUATION AND ENVIRONMENTAL RISK (FE-ASP)
+            🌿 REVIEW TABLE OF ENVIRONMENTAL ASPECT EVALUATION AND ENVIRONMENTAL RISK (AMEC-AR)
         </h2>
         <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {{ ($CREATE_MODE ?? 'MANUAL') === 'AUTO' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
             Mode: {{ $CREATE_MODE ?? 'MANUAL' }}
@@ -302,63 +302,165 @@
         </div>
     </div>
 
-    <!-- ส่วนที่ 4: ตาราง Confirmation สีเขียว (แสดงเฉพาะโหมด YEARLY REVIEW) -->
+    <!-- ส่วนที่ 4: ตาราง Confirmation (แสดงเฉพาะโหมด YEARLY REVIEW) -->
     <div id="confirmation-table-zone" class="mt-6 pt-4 border-t border-slate-200/60 {{ $isManual ? 'hidden' : '' }}" style="{{ $isManual ? 'display: none;' : '' }}">
-        <h3 class="text-xs font-bold text-emerald-900 bg-emerald-100/70 px-3 py-2.5 rounded-t-xl border border-emerald-300">
-            ASPECT AND RISK REVIEW CONFIRMATION - ISO14001
-        </h3>
-        <div class="overflow-x-auto border border-t-0 border-emerald-300 rounded-b-xl">
-            <table class="w-full text-xs text-left" id="confirmation-topics-table">
-                <thead class="bg-emerald-50 font-bold text-emerald-950 border-b border-emerald-200">
-                    <tr>
-                        <th class="p-2.5 text-center w-12">No.</th>
-                        <th class="p-2.5">Review Topic</th>
-                        <th class="p-2.5 text-center w-28">Condition</th>
-                        <th class="p-2.5 text-center w-36">Change (Inc/Dec)</th>
-                        <th class="p-2.5 text-center w-24">No Change</th>
-                        <th class="p-2.5 w-52">Details</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-emerald-100 bg-white" id="topics-tbody">
-                    @if(!empty($topics))
-                        @foreach ($topics as $t)
-                            <tr data-topic-id="{{ $t['TOPIC_ID'] }}" class="hover:bg-slate-50/60 transition-colors">
-                                <td class="p-2.5 text-center font-bold text-slate-600">{{ $t['TOPIC_SEQ'] }}</td>
-                                <td class="p-2.5 font-medium text-slate-800">{{ $t['TOPIC_NAME'] }}</td>
-                                @if($t['TOPIC_GROUP'] !== 'AUDIT_COMPLAIN')
-                                    <td class="p-2.5 text-center">
-                                        <div class="inline-flex gap-2 font-medium">
-                                            <label><input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="N" checked> N</label>
-                                            <label><input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="A"> A</label>
-                                            <label><input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="E"> E</label>
-                                        </div>
-                                    </td>
-                                    <td class="p-2.5 text-center">
-                                        <div class="inline-flex gap-2 font-medium">
-                                            <label><input type="radio" name="change_{{ $t['TOPIC_ID'] }}" value="INCREASE"> Inc</label>
-                                            <label><input type="radio" name="change_{{ $t['TOPIC_ID'] }}" value="DECREASE"> Dec</label>
-                                        </div>
-                                    </td>
-                                    <td class="p-2.5 text-center">
-                                        <input type="radio" name="change_{{ $t['TOPIC_ID'] }}" value="NO_CHANGE" checked>
-                                    </td>
-                                @else
-                                    <td class="p-2.5 text-center" colspan="2">
-                                        <div class="inline-flex gap-3 font-medium">
-                                            <label><input type="radio" name="change_{{ $t['TOPIC_ID'] }}" value="FOUND"> Found</label>
-                                            <label><input type="radio" name="change_{{ $t['TOPIC_ID'] }}" value="NOT_FOUND" checked> Not Found</label>
-                                        </div>
-                                    </td>
-                                    <td class="p-2.5 text-center text-slate-400">-</td>
+        
+        <!-- ========================================================= -->
+        <!-- ตารางที่ 1: ASPECT AND RISK REVIEW CONFIRMATION (1 - 14)    -->
+        <!-- ========================================================= -->
+        <div class="mb-6 rounded-xl border border-emerald-300 overflow-hidden shadow-xs">
+            <div class="bg-emerald-100/80 px-4 py-2.5 border-b border-emerald-200 flex items-center justify-between">
+                <h3 class="text-xs font-bold text-emerald-950 uppercase tracking-wide flex items-center gap-2">
+                    🌿 1. ASPECT AND RISK REVIEW CONFIRMATION - ISO14001
+                </h3>
+                <span class="text-[11px] font-semibold text-emerald-800 bg-white/70 px-2 py-0.5 rounded-md border border-emerald-300">
+                    Topic 1 - 14
+                </span>
+            </div>
+            <div class="overflow-x-auto bg-white">
+                <table class="w-full text-xs text-left" id="aspect-topics-table">
+                    <thead class="bg-emerald-50/70 font-bold text-emerald-950 border-b border-emerald-200">
+                        <tr>
+                            <th class="p-2.5 text-center w-12">No.</th>
+                            <th class="p-2.5">Review Topic</th>
+                            <th class="p-2.5 text-center w-28">Condition</th>
+                            <th class="p-2.5 text-center w-36">Change-Increased</th>
+                            <th class="p-2.5 text-center w-36">Change-Decreased</th>
+                            <th class="p-2.5 text-center w-32">No Change</th>
+                            <th class="p-2.5 min-w-[200px]">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-emerald-100">
+                        @if(!empty($topics))
+                            @foreach ($topics as $t)
+                                @if(($t['TOPIC_GROUP'] ?? '') === 'ASPECT_REVIEW')
+                                    <tr data-topic-id="{{ $t['TOPIC_ID'] }}" data-group="ASPECT_REVIEW" class="hover:bg-slate-50/70 transition-colors">
+                                        <td class="p-2.5 text-center font-bold text-slate-600">{{ $t['TOPIC_SEQ'] }}</td>
+                                        <td class="p-2.5 font-medium text-slate-800">{{ $t['TOPIC_NAME'] }}</td>
+                                        
+                                        <!-- Condition: N / A / E -->
+                                        <td class="p-2.5 text-center">
+                                            <div class="inline-flex gap-2.5 font-medium">
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="N" checked class="text-emerald-600 focus:ring-emerald-500"> N
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="A" class="text-emerald-600 focus:ring-emerald-500"> A
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="cond_{{ $t['TOPIC_ID'] }}" value="E" class="text-emerald-600 focus:ring-emerald-500"> E
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Change-Increased (Y/N) -->
+                                        <td class="p-2.5 text-center">
+                                            <div class="inline-flex gap-2.5 font-medium">
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="inc_{{ $t['TOPIC_ID'] }}" value="Y" class="text-amber-600 focus:ring-amber-500"> 
+                                                    <span class="text-amber-800 font-bold">Y</span>
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="inc_{{ $t['TOPIC_ID'] }}" value="N" checked class="text-slate-500 focus:ring-slate-400"> N
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Change-Decreased (Y/N) -->
+                                        <td class="p-2.5 text-center">
+                                            <div class="inline-flex gap-2.5 font-medium">
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="dec_{{ $t['TOPIC_ID'] }}" value="Y" class="text-blue-600 focus:ring-blue-500"> 
+                                                    <span class="text-blue-800 font-bold">Y</span>
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="dec_{{ $t['TOPIC_ID'] }}" value="N" checked class="text-slate-500 focus:ring-slate-400"> N
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- No Change (Y/N อิสระ) -->
+                                        <td class="p-2.5 text-center">
+                                            <div class="inline-flex gap-2.5 font-medium">
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="nochange_{{ $t['TOPIC_ID'] }}" value="Y" class="text-slate-700 focus:ring-slate-500"> 
+                                                    <span class="text-slate-800 font-bold">Y</span>
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="nochange_{{ $t['TOPIC_ID'] }}" value="N" checked class="text-slate-500 focus:ring-slate-400"> N
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Details -->
+                                        <td class="p-2.5">
+                                            <input type="text" class="w-full h-8 px-2.5 border border-slate-200 rounded-lg text-xs topic-detail-in focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="-">
+                                        </td>
+                                    </tr>
                                 @endif
-                                <td class="p-2.5">
-                                    <input type="text" class="w-full h-8 px-2 border border-slate-200 rounded text-xs topic-detail-in" placeholder="-">
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
-                </tbody>
-            </table>
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- ========================================================= -->
+        <!-- ตารางที่ 2: AUDIT FINDINGS & COMPLAINTS (15 - 17)          -->
+        <!-- ========================================================= -->
+        <div class="rounded-xl border border-blue-300 overflow-hidden shadow-xs">
+            <div class="bg-blue-100/80 px-4 py-2.5 border-b border-blue-200 flex items-center justify-between">
+                <h3 class="text-xs font-bold text-blue-950 uppercase tracking-wide flex items-center gap-2">
+                    📋 2. AUDIT FINDINGS & COMPLAINTS
+                </h3>
+                <span class="text-[11px] font-semibold text-blue-800 bg-white/70 px-2 py-0.5 rounded-md border border-blue-300">
+                    Topic 15 - 17
+                </span>
+            </div>
+            <div class="overflow-x-auto bg-white">
+                <table class="w-full text-xs text-left" id="audit-topics-table">
+                    <thead class="bg-blue-50/70 font-bold text-blue-950 border-b border-blue-200">
+                        <tr>
+                            <th class="p-2.5 text-center w-12">No.</th>
+                            <th class="p-2.5">Review Topic</th>
+                            <th class="p-2.5 text-center w-56">Result</th>
+                            <th class="p-2.5 min-w-[200px]">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-blue-100">
+                        @if(!empty($topics))
+                            @foreach ($topics as $t)
+                                @if(($t['TOPIC_GROUP'] ?? '') === 'AUDIT_COMPLAIN')
+                                    <tr data-topic-id="{{ $t['TOPIC_ID'] }}" data-group="AUDIT_COMPLAIN" class="hover:bg-slate-50/70 transition-colors">
+                                        <td class="p-2.5 text-center font-bold text-slate-600">{{ $t['TOPIC_SEQ'] }}</td>
+                                        <td class="p-2.5 font-medium text-slate-800">{{ $t['TOPIC_NAME'] }}</td>
+                                        
+                                        <!-- Result: Found / Not Found -->
+                                        <td class="p-2.5 text-center">
+                                            <div class="inline-flex gap-4 font-medium">
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="result_{{ $t['TOPIC_ID'] }}" value="FOUND" class="text-rose-600 focus:ring-rose-500">
+                                                    <span class="text-rose-700 font-semibold">Found</span>
+                                                </label>
+                                                <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                    <input type="radio" name="result_{{ $t['TOPIC_ID'] }}" value="NOT_FOUND" checked class="text-emerald-600 focus:ring-emerald-500">
+                                                    <span class="text-emerald-700 font-semibold">Not Found</span>
+                                                </label>
+                                            </div>
+                                        </td>
+
+                                        <!-- Details -->
+                                        <td class="p-2.5">
+                                            <input type="text" class="w-full h-8 px-2.5 border border-slate-200 rounded-lg text-xs topic-detail-in focus:outline-none focus:ring-2 focus:ring-blue-500/20" placeholder="-">
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        @endif
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>

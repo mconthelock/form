@@ -6,6 +6,7 @@ class Fe_asp_model extends my_model
 {
     public $smmtBase;
     public $webflowBase;
+    public $CodeForm = 'AMEC-AR';
 
     public function __construct()
     {
@@ -394,25 +395,48 @@ class Fe_asp_model extends my_model
         }
 
         /**
-         * ตรวจสอบว่าในรอบปีเดียวกัน (CYEAR2) Control No. ของแผนกนั้น มีการสร้าง Yearly ไปแล้วหรือยัง
-         * ป้องกันการกด Trigger หรือ Cron ซ้ำซ้อน
+         * ตรวจสอบว่าในรอบปีเดียวกัน (CYEAR2 = '2026') Control No. ของแผนกนั้น มีการสร้าง Yearly ไปแล้วหรือยัง
          */
-        public function isYearlyDocExistInYear($controlNo, $depCode, $cYear2) {
-            $sql = "SELECT COUNT(*) AS CNT 
+        public function isYearlyDocExistInYear($controlNo, $depCode, $cYear) {
+            $cYear4 = strlen($cYear) === 4 ? $cYear : ('20' . $cYear);
+
+            $sql = "SELECT DOC_NO 
                     FROM SMARTMAT.FE_ASP_HEADER 
                     WHERE CONTROL_NO = ? 
-                    AND SDEPCODE = ? 
-                    AND CYEAR2 = ? 
-                    AND REVIEW_PERIOD = 'YEARLY'
-                    AND STATUS <> 'REJECT'";
-            
-            $row = $this->QuerySetBase($sql, $this->smmtBase, [
-                trim((string)$controlNo),
-                trim((string)$depCode),
-                trim((string)$cYear2)
+                      AND SDEPCODE = ?
+                      AND CYEAR2 = ? 
+                      AND REVIEW_PERIOD = 'YEARLY'
+                      AND STATUS NOT IN ('REJECT', 'CANCEL', '0')";
+
+            $res = $this->QuerySetBase($sql, $this->smmtBase, [
+                trim($controlNo),
+                trim($depCode),
+                (string)$cYear4
             ])->row_array();
 
-            return ((int)($row['CNT'] ?? 0)) > 0;
+            return !empty($res);
+        }
+        /**
+         * ตรวจสอบว่ามีเอกสาร Yearly ในรอบปีที่กำหนดหรือไม่
+         * คืนค่าข้อมูลเอกสาร (DOC_NO, STATUS) หากมีเอกสารที่ยังไม่ถูก Reject/Cancel
+         */
+        public function getExistingYearlyDoc($controlNo, $depCode, $cYear) {
+            $cYear4 = strlen($cYear) === 4 ? $cYear : ('20' . $cYear);
+
+            $sql = "SELECT DOC_NO, STATUS, SDEPCODE 
+                    FROM SMARTMAT.FE_ASP_HEADER 
+                    WHERE CONTROL_NO = ? 
+                      AND SDEPCODE = ?
+                      AND CYEAR2 = ? 
+                      AND REVIEW_PERIOD = 'YEARLY'
+                      AND STATUS NOT IN ('REJECT', 'CANCEL', '0')
+                    ORDER BY HEADER_ID DESC";
+
+            return $this->QuerySetBase($sql, $this->smmtBase, [
+                trim($controlNo),
+                trim($depCode),
+                (string)$cYear4
+            ])->row_array();
         }
     // =================================================================
 
@@ -600,31 +624,77 @@ class Fe_asp_model extends my_model
         }
 
         /**
-         * ดึงรายการ Master Control No. ทั้งหมดที่ Active เพื่อสร้างและตรวจเช็ค Yearly Review
-         * (ดึงแบบ DISTINCT และไม่คัดรายการที่ไม่มี RESP_EMPNO ออก)
+         * ดึงรายการ Control No. สำหรับทำ Yearly Review โดยยุบรวมไม่ให้ 1 Control No. สร้างซ้ำหลายแผนก
+         * (หาก 1 Control No. มีหลายแผนก จะเลือกแผนกที่มีการกำหนดผู้รับผิดชอบ RESP_EMPNO มาก่อน)
          */
-        public function getAllActiveControlsForYearly($targetControlNo = '') {
-            $sql = "SELECT DISTINCT 
-                        M.CONTROL_NO,
-                        M.CONTROL_NAME,
-                        M.SDIVCODE,
-                        M.SDEPCODE,
-                        NVL(M.SSECCODE, '00') AS SSECCODE,
-                        TRIM(M.RESP_EMPNO) AS RESP_EMPNO,
-                        EMP.SNAME AS RESP_NAME,
-                        EMP.SRECMAIL AS RESP_EMAIL
-                    FROM SMARTMAT.FE_ASP_CONTROL_MST M
-                    LEFT JOIN AMEC.AEMPLOYEE EMP 
-                        ON TRIM(M.RESP_EMPNO) = TRIM(EMP.SEMPNO)
-                    WHERE M.ACTIVE_FLAG = 'Y'";
+        public function getAllActiveControlsForYearly($targetControlNo = '', $cYear = '') {
+            if (empty($cYear)) {
+                $cYear = date('Y');
+            }
+            $cYear4 = strlen($cYear) === 4 ? $cYear : ('20' . $cYear);
 
-            $params = [];
+            $sql = "WITH FILTERED_CONTROLS AS (
+                        SELECT 
+                            M.CONTROL_NO,
+                            M.CONTROL_NAME,
+                            M.SDIVCODE,
+                            M.SDEPCODE,
+                            NVL(M.SSECCODE, '00') AS SSECCODE,
+                            TRIM(M.RESP_EMPNO) AS RESP_EMPNO,
+                            EMP.SNAME AS RESP_NAME,
+                            EMP.SRECMAIL AS RESP_EMAIL,
+                            -- นับจำนวนคนที่มีใน Control No. เดียวกัน
+                            COUNT(CASE WHEN M.RESP_EMPNO IS NOT NULL AND TRIM(M.RESP_EMPNO) <> '' THEN 1 END) OVER (PARTITION BY M.CONTROL_NO) AS HAS_PIC_COUNT,
+                            -- ลำดับแถวกรณีที่ไม่มีคนเลยทั้งกลุ่ม
+                            ROW_NUMBER() OVER (PARTITION BY M.CONTROL_NO ORDER BY M.SDEPCODE ASC, M.SSECCODE ASC) AS RN_NO_PIC
+                        FROM SMARTMAT.FE_ASP_CONTROL_MST M
+                        LEFT JOIN AMEC.AEMPLOYEE EMP 
+                            ON TRIM(M.RESP_EMPNO) = TRIM(EMP.SEMPNO)
+                        WHERE M.ACTIVE_FLAG = 'Y'
+                    )
+                    SELECT 
+                        F.CONTROL_NO,
+                        F.CONTROL_NAME,
+                        F.SDIVCODE,
+                        F.SDEPCODE,
+                        F.SSECCODE,
+                        F.RESP_EMPNO,
+                        F.RESP_NAME,
+                        F.RESP_EMAIL,
+                        NVL(HE.DOC_NO, '-') AS FORMNO,
+                        NVL(HE.STATUS, '-') AS DOC_STATUS
+                    FROM FILTERED_CONTROLS F
+                    LEFT JOIN 
+                    (
+                        SELECT 
+                            H.DOC_NO,
+                            H.CONTROL_NO,
+                            H.SDEPCODE AS DEP_CODE,
+                            NVL(H.SSECCODE, '00') AS SEC_CODE,
+                            H.STATUS
+                        FROM SMARTMAT.FE_ASP_HEADER H
+                        WHERE H.CYEAR2 = ?
+                        AND H.REVIEW_PERIOD = 'YEARLY'
+                        AND H.STATUS NOT IN ('REJECT', 'CANCEL', '0')
+                    ) HE
+                        ON HE.CONTROL_NO = F.CONTROL_NO
+                    AND HE.DEP_CODE = F.SDEPCODE
+                    AND HE.SEC_CODE = NVL(F.SSECCODE, '00')
+                    WHERE 
+                        -- เงื่อนไขที่ 1: ถ้ามีคน ให้หยิบเฉพาะแถวที่มี RESP_EMPNO เท่านั้น (แถวที่เป็น NULL ตัดทิ้ง)
+                        (F.HAS_PIC_COUNT > 0 AND F.RESP_EMPNO IS NOT NULL AND TRIM(F.RESP_EMPNO) <> '')
+                        OR 
+                        -- เงื่อนไขที่ 2: ถ้าไม่มีคนเลยสักแถว ให้หยิบมาแค่แถวแรกแถวเดียวเพื่อรายงานเตือน Admin
+                        (F.HAS_PIC_COUNT = 0 AND F.RN_NO_PIC = 1)";
+
+            $params = [(string)$cYear4];
+
             if (!empty($targetControlNo)) {
-                $sql .= " AND M.CONTROL_NO = ?";
+                $sql .= " AND F.CONTROL_NO = ?";
                 $params[] = trim($targetControlNo);
             }
 
-            $sql .= " ORDER BY M.CONTROL_NO ASC, M.SDEPCODE ASC";
+            $sql .= " ORDER BY F.CONTROL_NO ASC, F.SDEPCODE ASC";
 
             return $this->QuerySetBase($sql, $this->smmtBase, $params)->result_array();
         }
@@ -665,7 +735,7 @@ class Fe_asp_model extends my_model
         }
 
         /**
-         * ดึงรายชื่อ Email ของ Admin ประจำฟอร์ม FE-ASP
+         * ดึงรายชื่อ Email ของ Admin ประจำฟอร์ม 
          */
         public function getAdminEmails() {
             $sql = "SELECT DISTINCT
@@ -677,7 +747,7 @@ class Fe_asp_model extends my_model
                         ON TRIM(A.EMPNO) = TRIM(EMP.SEMPNO)
                     LEFT JOIN AMEC.AMECUSERALL USR 
                         ON TRIM(A.EMPNO) = TRIM(USR.SEMPNO)
-                    WHERE (A.FORM_CODE = 'FE-ASP' OR A.FORM_CODE = 'ALL')
+                    WHERE (A.FORM_CODE = '" . $this->CodeForm. "' OR A.FORM_CODE = 'ALL')
                     AND A.IS_ACTIVE = 1 
                     AND (EMP.SRECMAIL IS NOT NULL OR USR.SEMAIL IS NOT NULL)";
 

@@ -123,7 +123,7 @@ export function initFormControls() {
                 );
 
                 if (res && res.status) {
-                    // เฉพาะ Super Admin (13204) เท่านั้นที่อนุญาตให้เปลี่ยน Division/Department ตาม Control
+                    // 1. ถ้าเป็น Super Admin (13204) ให้ปรับ Division และโหลด Department List ใหม่
                     if (res.isSuperAdmin) {
                         $('#DivisionTxt').val(res.divName || '');
                         $('#SDIVCODEHid').val(res.divCode || '');
@@ -148,31 +148,35 @@ export function initFormControls() {
                                     `<option value="${d.SDEPCODE}" ${isSel}>${d.SDEPCODE} : ${deptName}</option>`,
                                 );
                             });
-                            if (res.targetDept) $dept.val(res.targetDept);
-                        }
-
-                        const $sec = $('#SecDrp').empty();
-                        if (res.sections && res.sections.length > 0) {
-                            res.sections.forEach((s) => {
-                                const isSel =
-                                    s.SSECCODE === res.targetSec
-                                        ? 'selected'
-                                        : '';
-                                const secName =
-                                    s.SEC_NAME || s.SSEC || s.SSECTION || '';
-                                $sec.append(
-                                    `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${secName}</option>`,
-                                );
-                            });
-                            $sec.val(res.targetSec);
-                        } else {
-                            $sec.append(
-                                '<option value="00">00 : No Section</option>',
-                            );
                         }
                     }
 
-                    // อัปเดตเฉพาะกล่อง Active Revision PDF
+                    // 2. Default Department ของ Control ตัวที่เลือกให้กับผู้ใช้ทุกคน
+                    if (res.targetDept) {
+                        $('#DeptDrp').val(res.targetDept);
+                    }
+
+                    // 3. Default Section ของ Control ตัวที่เลือก: เติมตัวเลือกและ Select ค่า targetSec ให้ผู้ใช้ทุกคน
+                    const $sec = $('#SecDrp').empty();
+                    if (res.sections && res.sections.length > 0) {
+                        res.sections.forEach((s) => {
+                            const isSel =
+                                s.SSECCODE === res.targetSec ? 'selected' : '';
+                            const secName =
+                                s.SEC_NAME || s.SSEC || s.SSECTION || '';
+                            $sec.append(
+                                `<option value="${s.SSECCODE}" ${isSel}>${s.SSECCODE} : ${secName}</option>`,
+                            );
+                        });
+                        $sec.val(res.targetSec);
+                    } else {
+                        $sec.append(
+                            '<option value="00">00 : No Section</option>',
+                        );
+                        $sec.val('00');
+                    }
+
+                    // 4. แสดงผลกล่อง Active Revision PDF ประจำ Control
                     renderPrevFile(res.prevFile);
                 }
             } catch (e) {
@@ -197,9 +201,50 @@ export function initFormControls() {
 
     $(document)
         .off('change', 'input[name="REVIEW_PERIOD"]')
-        .on('change', 'input[name="REVIEW_PERIOD"]', function () {
+        .on('change', function () {
             toggleConfirmationTable();
         });
+
+    // ------------------------------------------------------------------
+    // Radio Toggle Logic: ควบคุมความสัมพันธ์ระหว่าง Increased, Decreased และ No Change
+    // ------------------------------------------------------------------
+    // เมื่อเลือก Increased = Y
+    $(document).on('change', '.radio-change-inc', function () {
+        const topicId = $(this).closest('tr').data('topic-id');
+        if ($(this).val() === 'Y') {
+            $(`input[name="dec_${topicId}"][value="N"]`).prop('checked', true);
+            $(`input[name="nochange_${topicId}"]`).prop('checked', false);
+        } else {
+            // ถ้า Increased = N และ Decreased = N ด้วย ให้ติ๊ก No Change อัตโนมัติ
+            if ($(`input[name="dec_${topicId}"]:checked`).val() === 'N') {
+                $(`input[name="nochange_${topicId}"]`).prop('checked', true);
+            }
+        }
+    });
+
+    // เมื่อเลือก Decreased = Y
+    $(document).on('change', '.radio-change-dec', function () {
+        const topicId = $(this).closest('tr').data('topic-id');
+        if ($(this).val() === 'Y') {
+            $(`input[name="inc_${topicId}"][value="N"]`).prop('checked', true);
+            $(`input[name="nochange_${topicId}"]`).prop('checked', false);
+        } else {
+            // ถ้า Decreased = N และ Increased = N ด้วย ให้ติ๊ก No Change อัตโนมัติ
+            if ($(`input[name="inc_${topicId}"]:checked`).val() === 'N') {
+                $(`input[name="nochange_${topicId}"]`).prop('checked', true);
+            }
+        }
+    });
+
+    // เมื่อคลิกเลือก No Change
+    $(document).on('change', '.radio-no-change', function () {
+        const topicId = $(this).closest('tr').data('topic-id');
+        if ($(this).is(':checked')) {
+            $(`input[name="inc_${topicId}"][value="N"]`).prop('checked', true);
+            $(`input[name="dec_${topicId}"][value="N"]`).prop('checked', true);
+        }
+    });
+
     toggleChangeBox();
 }
 
@@ -423,87 +468,63 @@ export function toggleConfirmationTable() {
     }
 }
 
+/**
+ * โหลดค่าคำตอบที่บันทึกไว้ในฐานข้อมูลมาแสดงบนหน้าจอ
+ */
 export function populateSavedDetails(savedDetails = []) {
-    if (Array.isArray(savedDetails) && savedDetails.length > 0) {
-        savedDetails.forEach((d) => {
-            $(
-                `input[name="cond_${d.TOPIC_ID}"][value="${d.CONDITION_VAL}"]`,
-            ).prop('checked', true);
-            $(
-                `input[name="change_${d.TOPIC_ID}"][value="${d.CHANGE_VAL}"]`,
-            ).prop('checked', true);
-            $(`tr[data-topic-id="${d.TOPIC_ID}"] .topic-detail-in`).val(
-                d.DETAILS || '',
+    if (!Array.isArray(savedDetails) || savedDetails.length === 0) return;
+
+    savedDetails.forEach((d) => {
+        const topicId = d.TOPIC_ID;
+        const $row = $(`tr[data-topic-id="${topicId}"]`);
+        if (!$row.length) return;
+
+        const group = $row.data('group');
+
+        if (group === 'ASPECT_REVIEW') {
+            // 1. Condition (N, A, E)
+            if (d.CONDITION_VAL) {
+                $(
+                    `input[name="cond_${topicId}"][value="${d.CONDITION_VAL}"]`,
+                ).prop('checked', true);
+            }
+
+            // 2. Map ค่าเข้าฟิลด์ใหม่แยกอิสระ (INC_VAL, DEC_VAL, NO_CHANGE_VAL)
+            const incVal = (d.INC_VAL || 'N').toUpperCase().trim();
+            const decVal = (d.DEC_VAL || 'N').toUpperCase().trim();
+            const noChangeVal = (d.NO_CHANGE_VAL || 'N').toUpperCase().trim();
+
+            $(`input[name="inc_${topicId}"][value="${incVal}"]`).prop(
+                'checked',
+                true,
             );
-        });
-    }
+            $(`input[name="dec_${topicId}"][value="${decVal}"]`).prop(
+                'checked',
+                true,
+            );
+            $(`input[name="nochange_${topicId}"][value="${noChangeVal}"]`).prop(
+                'checked',
+                true,
+            );
+        } else if (group === 'AUDIT_COMPLAIN') {
+            // 3. Result (FOUND / NOT_FOUND) จากคอลัมน์ CHANGE_VAL
+            const resultVal = (d.CHANGE_VAL || 'NOT_FOUND')
+                .toUpperCase()
+                .trim();
+            $(`input[name="result_${topicId}"][value="${resultVal}"]`).prop(
+                'checked',
+                true,
+            );
+        }
+
+        // 4. รายละเอียด Details
+        $row.find('.topic-detail-in').val(d.DETAILS || '');
+    });
 }
 
-// export function buildSavePayload(form, isDraft = false, empno = '') {
-//     const controlNo = $('#ControlNoDrp').val();
-//     if (!controlNo) {
-//         showMessage('กรุณาเลือก Control No.', 'warning');
-//         $('#ControlNoDrp').focus();
-//         return null;
-//     }
-
-//     const userReq = ($('#REQUEST_BY_EMPNO').val() || '').trim();
-//     if (!userReq || userReq.length !== 5) {
-//         showMessage(
-//             'รหัสผู้จัดทำ (Request By) ต้องมีความยาว 5 หลัก',
-//             'warning',
-//         );
-//         $('#REQUEST_BY_EMPNO').focus();
-//         return null;
-//     }
-
-//     const topicsData = [];
-//     $('#topics-tbody tr').each(function () {
-//         const topicId = $(this).data('topic-id');
-//         topicsData.push({
-//             TOPIC_ID: topicId,
-//             CONDITION_VAL:
-//                 $(`input[name="cond_${topicId}"]:checked`).val() || null,
-//             CHANGE_VAL:
-//                 $(`input[name="change_${topicId}"]:checked`).val() || null,
-//             DETAILS: $(this).find('.topic-detail-in').val() || '',
-//         });
-//     });
-
-//     const payload = new FormData();
-//     payload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val() || '');
-//     payload.append('CONTROL_NO', controlNo);
-//     payload.append('SDIVCODE', $('#SDIVCODEHid').val() || '');
-//     payload.append('SDEPCODE', $('#DeptDrp').val() || '');
-//     payload.append('SSECCODE', $('#SecDrp').val() || '00');
-//     payload.append(
-//         'REVIEW_PERIOD',
-//         $('input[name="REVIEW_PERIOD"]:checked').val(),
-//     );
-//     payload.append(
-//         'REVIEW_DETAILS',
-//         $('input[name="REVIEW_DETAILS"]:checked').val(),
-//     );
-//     payload.append('DETAIL_OF_CHANGE', $('#DetailChangeTxt').val() || '');
-//     payload.append(
-//         'EFFECT_STATUS',
-//         $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT',
-//     );
-//     payload.append('TOPICS_JSON', JSON.stringify(topicsData));
-//     payload.append('REMARK', $('#RemarkTxt').val() || '');
-//     payload.append('REQBY', userReq);
-//     payload.append('EMPNO', empno);
-//     payload.append('IS_DRAFT', isDraft ? '1' : '0');
-
-//     payload.append('NFRMNO', form.NFRMNO || '');
-//     payload.append('VORGNO', form.VORGNO || '');
-//     payload.append('CYEAR', form.CYEAR || '');
-//     payload.append('CYEAR2', form.CYEAR2 || '');
-//     payload.append('NRUNNO', form.NRUNNO || '');
-
-//     return payload;
-// }
-
+/**
+ * รวบรวมข้อมูล Form Payload สำหรับบันทึกเอกสาร
+ */
 export function buildSavePayload(form, isDraft = false, empno = '') {
     const controlNo = $('#ControlNoDrp').val();
     if (!controlNo) {
@@ -525,19 +546,46 @@ export function buildSavePayload(form, isDraft = false, empno = '') {
     const reviewPeriod =
         $('input[name="REVIEW_PERIOD"]:checked').val() || 'CHANGING';
 
-    // ดึงข้อมูลตาราง Confirmation เฉพาะกรณีที่เป็น YEARLY เท่านั้น
     const topicsData = [];
     if (reviewPeriod === 'YEARLY') {
-        $('#topics-tbody tr').each(function () {
+        $('#confirmation-table-zone tr[data-topic-id]').each(function () {
             const topicId = $(this).data('topic-id');
-            topicsData.push({
-                TOPIC_ID: topicId,
-                CONDITION_VAL:
-                    $(`input[name="cond_${topicId}"]:checked`).val() || null,
-                CHANGE_VAL:
-                    $(`input[name="change_${topicId}"]:checked`).val() || null,
-                DETAILS: $(this).find('.topic-detail-in').val() || '',
-            });
+            const group = $(this).data('group');
+            const details = $(this).find('.topic-detail-in').val() || '';
+
+            if (group === 'ASPECT_REVIEW') {
+                const condVal =
+                    $(`input[name="cond_${topicId}"]:checked`).val() || 'N';
+                const incVal =
+                    $(`input[name="inc_${topicId}"]:checked`).val() || 'N';
+                const decVal =
+                    $(`input[name="dec_${topicId}"]:checked`).val() || 'N';
+                const noChangeVal =
+                    $(`input[name="nochange_${topicId}"]:checked`).val() || 'N';
+
+                topicsData.push({
+                    TOPIC_ID: topicId,
+                    CONDITION_VAL: condVal,
+                    CHANGE_VAL: null,
+                    INC_VAL: incVal,
+                    DEC_VAL: decVal,
+                    NO_CHANGE_VAL: noChangeVal,
+                    DETAILS: details,
+                });
+            } else if (group === 'AUDIT_COMPLAIN') {
+                const resultVal =
+                    $(`input[name="result_${topicId}"]:checked`).val() ||
+                    'NOT_FOUND';
+                topicsData.push({
+                    TOPIC_ID: topicId,
+                    CONDITION_VAL: null,
+                    CHANGE_VAL: resultVal, // บันทึก FOUND หรือ NOT_FOUND
+                    INC_VAL: 'N',
+                    DEC_VAL: 'N',
+                    NO_CHANGE_VAL: 'N',
+                    DETAILS: details,
+                });
+            }
         });
     }
 
@@ -557,13 +605,10 @@ export function buildSavePayload(form, isDraft = false, empno = '') {
         'EFFECT_STATUS',
         $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT',
     );
-
-    // ส่งค่า JSON เฉพาะเมื่อมีข้อมูลในตาราง
     payload.append(
         'TOPICS_JSON',
         topicsData.length > 0 ? JSON.stringify(topicsData) : '',
     );
-
     payload.append('REMARK', $('#RemarkTxt').val() || '');
     payload.append('REQBY', userReq);
     payload.append('EMPNO', empno);
