@@ -324,22 +324,45 @@ $(document).ready(function () {
     });
 
     // ----------------------------------------------------
-    // ⚡ ปุ่มสร้างเอกสาร Yearly Review (ราย Control No.)
+    //  ปุ่มสร้างเอกสาร Yearly Review (ราย Control No.)
     // ----------------------------------------------------
     $(document).on('click', '.btn-yearly-single', async function () {
         const rowIdx = $(this).data('row-index');
         const row = dataTableInstance.row(rowIdx).data();
         if (!row) return;
 
-        const isConfirm = await showConfirm({
-            title: 'ยืนยันสร้างเอกสาร Yearly Draft',
-            message: `ต้องการสร้างแบบร่างเอกสาร Yearly Review สำหรับ:\nControl: ${row.CONTROL_NO}\nแผนก: ${row.SDEPCODE}\nผู้จัดทำ (PIC): ${row.RESP_EMPNO} (${row.RESP_NAME || ''}) ใช่หรือไม่?`,
-            acceptText: 'สร้างเอกสาร',
-            cancelText: 'ยกเลิก',
-        });
-        if (!isConfirm) return;
-
         try {
+            await showLoader({ show: true });
+
+            // 1. ตรวจสอบก่อนว่าปีนี้มีเอกสารสร้างไว้แล้วหรือยัง
+            const checkRes = await $.getJSON(
+                `${host}feform/FE-ASP/control_mst/ajaxCheckSingleYearlyDoc?controlNo=${encodeURIComponent(row.CONTROL_NO)}&depCode=${encodeURIComponent(row.SDEPCODE)}`,
+            );
+
+            await showLoader({ show: false });
+
+            let confirmTitle = '⚡ ยืนยันสร้างเอกสาร Yearly Review';
+            let confirmMessage = `ต้องการสร้างแบบร่างเอกสาร Yearly Review ประจำปี สำหรับ:\n\n• Control No: ${row.CONTROL_NO}\n• แผนก: ${row.SDEPCODE}\n• ผู้จัดทำ (PIC): ${row.RESP_EMPNO} (${row.RESP_NAME || ''})`;
+            let acceptBtnText = 'สร้างเอกสาร';
+            let forceCreate = 0;
+
+            // 2. ถ้าพบเอกสารเดิมในปีปัจจุบันแล้ว ให้แจ้งเตือนพร้อมระบุ Doc No
+            if (checkRes && checkRes.status && checkRes.hasDoc) {
+                confirmTitle = '⚠️ พบเอกสาร Yearly เดิมในระบบแล้ว';
+                confirmMessage = `รายการนี้มีเอกสารประจำปี ${checkRes.year} อยู่แล้วในระบบ:\n\n📄 เลขที่เอกสาร: ${checkRes.docNo}\n📌 สถานะปัจจุบัน: ${checkRes.docStatus}\n\nคุณแน่ใจหรือไม่ว่าต้องการ "สร้างเอกสารใบใหม่ซ้ำ" เพิ่มเติม?`;
+                acceptBtnText = 'ยืนยันสร้างเพิ่ม';
+                forceCreate = 1;
+            }
+
+            const isConfirm = await showConfirm({
+                title: confirmTitle,
+                message: confirmMessage,
+                acceptText: acceptBtnText,
+                cancelText: 'ยกเลิก',
+            });
+            if (!isConfirm) return;
+
+            // 3. สั่งสร้างเอกสาร
             await showLoader({ show: true });
             const res = await $.ajax({
                 url: `${host}feform/FE-ASP/batch/manual_generate_yearly`,
@@ -348,6 +371,7 @@ $(document).ready(function () {
                     controlNo: row.CONTROL_NO,
                     empno: row.RESP_EMPNO,
                     admin_empno: adminEmpNo,
+                    forceCreate: forceCreate, // ส่งแฟล็กบอกว่าผู้ใช้ยืนยันสร้างเพิ่ม
                 },
                 dataType: 'json',
             });
@@ -376,7 +400,7 @@ $(document).ready(function () {
     });
 
     // ----------------------------------------------------
-    // ⚡ ปุ่มสร้างเอกสาร Yearly Review ทั้งหมด (ทุก Control No.)
+    // ปุ่มสร้างเอกสาร Yearly Review ทั้งหมด (ทุก Control No.)
     // ----------------------------------------------------
     $('#btnRunYearlyAll').on('click', async function () {
         const isConfirm = await showConfirm({

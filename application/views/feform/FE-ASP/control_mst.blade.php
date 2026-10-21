@@ -10,7 +10,7 @@
         <div>
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-100 text-emerald-800">ADMIN ONLY</span>
-                <h1 class="text-xl font-bold text-slate-800">⚙️ Master Control Number Configuration (FE-ASP)</h1>
+                <h1 class="text-xl font-bold text-slate-800">⚙️ Master Control Number Configuration</h1>
                 
                 <input type="hidden" id="EMPNOHid" value="{{ $empno ?? '' }}">
             </div>

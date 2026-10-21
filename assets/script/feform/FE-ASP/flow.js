@@ -117,7 +117,7 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     }
 
     // ปุ่มฟังก์ชันเฉพาะของ 13204
-    if (isSuperAdmin && !isAutoJob) {
+    if (isSuperAdmin) {
         $('#ManualStampBtn, #DeleteBtn').removeClass('hidden');
     }
 }

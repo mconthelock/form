@@ -2,8 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/batch/manual_generate_yearly?controlNo=AMEC-AR-MAR-001&empno=08189&admin_empno=13204
+// === http://localhost:8080/form/feform/FE-ASP/batch/manual_generate_yearly?controlNo=AMEC-AR-MAR-001&empno=08189&admin_empno=13204
 
-// http://localhost:8080/form/feform/FE-ASP/batch/manual_generate_yearly?controlNo=AMEC-AR-MAR-001&empno=08189&admin_empno=13204
 use GuzzleHttp\Client;
 require_once APPPATH . 'controllers/_form.php';
 require_once APPPATH . 'controllers/api/webform/form.php';
@@ -13,6 +13,8 @@ require_once APPPATH . 'controllers/_file.php';
 
 class Batch extends MY_Controller {
     use formApi, flow, formmst;
+
+    public $CodeForm = 'AMEC-AR';
 
     public function __construct() {
         parent::__construct();
@@ -38,25 +40,30 @@ class Batch extends MY_Controller {
      * Logic สร้างเอกสาร Yearly Review (Draft) พร้อมตรวจเช็คความครบถ้วนทุกรายการ
      */
     protected function generateYearlyDrafts($targetControlNo = '', $targetEmpNo = '', $checkDuplicate = true) {
-        // 1. ดึงข้อมูล Form Master FE-ASP
-        $formMst = $this->getFormMasterByVaname('FE-ASP');
+        // 1. ดึง Master Form จากตาราง FORMMST โดยตรง
+        $formMst  = $this->getFormMasterByVaname($this->CodeForm);
         $formData = $formMst['data'] ?? ($formMst[0] ?? null);
+
         if (empty($formData)) {
             $formRow = $this->load->database('DEFAULT', TRUE)
-                ->query("SELECT NNO, VORGNO, CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = 'FE-ASP'")
+                ->query("SELECT NNO, VORGNO, CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = ? AND (CSTATUS IS NULL OR CSTATUS <> '0')", [strtoupper(trim($this->CodeForm))])
                 ->row_array();
+
+            if (empty($formRow)) {
+                throw new Exception("ไม่พบการตั้งค่า Master Form สำหรับ {$this->CodeForm} ในตาราง FORMMST");
+            }
+
             $formData = [
-                'NNO'    => (int)($formRow['NNO'] ?? 1),
-                'VORGNO' => (string)($formRow['VORGNO'] ?? '051001'),
-                'CYEAR'  => (string)($formRow['CYEAR'] ?? date('Y')),
+                'NNO'    => (int)$formRow['NNO'],
+                'VORGNO' => (string)$formRow['VORGNO'],
+                'CYEAR'  => (string)$formRow['CYEAR'], // ดึง CYEAR ของ Master โดยตรง (เช่น '26') ห้ามทับด้วย date('Y')[cite: 4]
             ];
         }
 
-        // $currentYear2 = substr((string)$formData['CYEAR'], -2);
-        $currentYear2 = date('Y');
+        $currentYear4 = date('Y'); // '2026' สำหรับเทียบรอบปีจริง (CYEAR2)[cite: 3]
 
-        // 2. ดึงรายการ Control No. ทั้งหมดที่ Active (รวมรายการที่ยังไม่ได้ระบุพนักงานด้วย)
-        $controls = $this->MainModel->getAllActiveControlsForYearly($targetControlNo);
+        // 2. ดึงรายการ Control No. ทั้งหมดที่ Active
+        $controls = $this->MainModel->getAllActiveControlsForYearly($targetControlNo, $currentYear4);
         if (empty($controls)) {
             return [
                 'status'  => false,
@@ -75,6 +82,7 @@ class Batch extends MY_Controller {
             $dep    = $ctrl['SDEPCODE'];
             $div    = $ctrl['SDIVCODE'];
             $sec    = $ctrl['SSECCODE'] ?: '00';
+            $formNo = (!empty($ctrl['FORMNO']) && $ctrl['FORMNO'] !== '-') ? $ctrl['FORMNO'] : '-';
             $resp   = !empty($targetEmpNo) ? $targetEmpNo : $ctrl['RESP_EMPNO'];
 
             // เงื่อนไขที่ 1: ตรวจสอบรายการที่ยังไม่ได้กำหนดผู้รับผิดชอบ (RESP_EMPNO)
@@ -83,18 +91,32 @@ class Batch extends MY_Controller {
                     'control_no' => $cNo,
                     'dep_code'   => $dep,
                     'empno'      => '-',
-                    'reason'     => 'ยังไม่ได้กำหนดผู้รับผิดชอบ (RESP_EMPNO)'
+                    'reason'     => 'ยังไม่ได้กำหนดผู้รับผิดชอบ (RESP_EMPNO)',
+                    'FORMNO'     => $formNo
                 ];
                 continue;
             }
 
-            // เงื่อนไขที่ 2: ป้องกันการสร้างเอกสาร Yearly ซ้ำในปีเดียวกัน
-            if ($checkDuplicate && $this->MainModel->isYearlyDocExistInYear($cNo, $dep, $currentYear2)) {
+            // ตรวจสอบเอกสารเดิมที่มีอยู่แล้วในรอบปี (ระดับ Control No. + Department)
+            $existDoc = $this->MainModel->getExistingYearlyDoc($cNo, $dep, $currentYear4);
+            if ($checkDuplicate && !empty($existDoc)) {
+                $statusUpper = strtoupper(trim($existDoc['STATUS'] ?? ''));
+                $actualDocNo = !empty($existDoc['DOC_NO']) ? $existDoc['DOC_NO'] : $formNo;
+
+                if ($statusUpper === 'DRAFT') {
+                    $reason = "มีเอกสารค้างดำเนินการ (DRAFT)";
+                } elseif ($statusUpper === 'APPROVE' || $statusUpper === 'APPROVED') {
+                    $reason = "มีเอกสารดำเนินการเสร็จสิ้นแล้ว (APPROVED)";
+                } else {
+                    $reason = "มีเอกสาร Yearly ในรอบปี {$currentYear4} อยู่แล้ว (สถานะ: {$statusUpper})";
+                }
+
                 $skippedList[] = [
                     'control_no' => $cNo,
                     'dep_code'   => $dep,
                     'empno'      => $resp,
-                    'reason'     => "มีเอกสาร Yearly ในรอบปี {$currentYear2} อยู่แล้ว"
+                    'reason'     => $reason,
+                    'FORMNO'     => $actualDocNo
                 ];
                 continue;
             }
@@ -104,11 +126,11 @@ class Batch extends MY_Controller {
             $smmtDb->trans_begin();
 
             try {
-                // 3. สั่งสร้าง Form บน Flow ด้วยสถานะ DRAFT = 1
+                // 3. สั่งสร้าง Form บน Flow โดยส่ง Key Master จริง (NNO, VORGNO, CYEAR)
                 $flowData = [
                     'NFRMNO'  => $formData['NNO'],
                     'VORGNO'  => $formData['VORGNO'],
-                    'CYEAR'   => $formData['CYEAR'],
+                    'CYEAR'   => $formData['CYEAR'], // ส่งปีคงที่ของ Master ฟอร์ม[cite: 4]
                     'REQBY'   => $resp,
                     'INPUTBY' => $resp,
                     'REMARK'  => 'Yearly Review (Auto Generated)',
@@ -117,14 +139,15 @@ class Batch extends MY_Controller {
 
                 $rsf = $this->createForm($flowData);
                 if (!$rsf || empty($rsf['status'])) {
-                    throw new Exception("Webflow Error: " . ($rsf['message'] ?? 'Create Form Failed'));
+                    $errMsg = is_array($rsf) ? json_encode($rsf, JSON_UNESCAPED_UNICODE) : 'Create Form Failed';
+                    throw new Exception("Webflow Error: " . $errMsg);
                 }
 
-                $cyear2 = $rsf['data']['CYEAR2'];
-                $nrunno = $rsf['data']['NRUNNO'];
-                $docNo  = "FE-ASP-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+                $cyear2Return = $rsf['data']['CYEAR2'] ?? $currentYear4; // ปีเอกสาร (2026)[cite: 3]
+                $nrunno       = $rsf['data']['NRUNNO'];
+                $docNo        = $this->CodeForm ."-" . $cyear2Return . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
 
-                // 4. บันทึก Header ตาราง FE_ASP_HEADER ให้เป็น DRAFT และโหมด AUTO
+                // 4. บันทึก Header ตาราง FE_ASP_HEADER
                 $headerData = [
                     'DOC_NO'           => $docNo,
                     'CONTROL_NO'       => $cNo,
@@ -133,8 +156,8 @@ class Batch extends MY_Controller {
                     'SSECCODE'         => $sec,
                     'NFRMNO'           => $formData['NNO'],
                     'VORGNO'           => $formData['VORGNO'],
-                    'CYEAR'            => $formData['CYEAR'],
-                    'CYEAR2'           => $cyear2,
+                    'CYEAR'            => $formData['CYEAR'],      // CYEAR Master[cite: 3]
+                    'CYEAR2'           => $cyear2Return,           // CYEAR2 ปีที่สร้างจริง (2026)[cite: 3]
                     'NRUNNO'           => $nrunno,
                     'REQ_BY'           => $resp,
                     'INPUT_BY'         => $resp,
@@ -151,7 +174,6 @@ class Batch extends MY_Controller {
 
                 $headerId = $this->MainModel->insertHeader($headerData);
 
-                // ตรวจสอบ Transaction ก่อน Commit
                 if ($this->db->trans_status() === FALSE || $smmtDb->trans_status() === FALSE) {
                     throw new Exception('เกิดข้อผิดพลาดในการบันทึกข้อมูลลงฐานข้อมูล');
                 }
@@ -168,8 +190,9 @@ class Batch extends MY_Controller {
                     'nfrmno'     => $formData['NNO'],
                     'vorgno'     => $formData['VORGNO'],
                     'cyear'      => $formData['CYEAR'],
-                    'cyear2'     => $cyear2,
-                    'nrunno'     => $nrunno
+                    'cyear2'     => $cyear2Return,
+                    'nrunno'     => $nrunno,
+                    'FORMNO'     => $docNo
                 ];
 
                 $createdList[] = $itemData;
@@ -185,13 +208,14 @@ class Batch extends MY_Controller {
                     'control_no' => $cNo,
                     'dep_code'   => $dep,
                     'empno'      => $resp,
-                    'reason'     => $e->getMessage()
+                    'reason'     => $e->getMessage(),
+                    'FORMNO'     => $formNo
                 ];
             }
         }
 
         // 6. ส่ง Email สรุปภาพรวมความครบถ้วนให้ Admin เมื่อประมวลผลเสร็จสิ้น
-        $this->sendSummaryReportToAdmin($createdList, $skippedList, $currentYear2);
+        $this->sendSummaryReportToAdmin($createdList, $skippedList, $currentYear4);
 
         return [
             'status'  => true,
@@ -201,51 +225,134 @@ class Batch extends MY_Controller {
     }
 
     /**
-     * Manual Trigger รายตัว ผ่าน URL หรือ AJAX
+     * Endpoint สำหรับกดส่ง Email แจ้งเตือน Yearly ซ้ำ (รายตัว หรือ ทั้งหมด)
      */
-    public function manual_generate_yearly() {
+    public function resend_yearly_email() {
         $this->output->set_content_type('application/json');
 
-        $controlNo    = trim((string)$this->input->get_post('controlNo'));
-        $targetEmpNo  = trim((string)$this->input->get_post('empno'));
-        $currentAdmin = trim((string)($this->input->get_post('admin_empno') ?? ''));
+        $controlNo    = trim((string)$this->input->post('controlNo'));
+        $currentAdmin = trim((string)($this->input->post('admin_empno') ?? $this->input->post('empno')));
 
-        $isAdmin = ($currentAdmin === '13204') || (!empty($currentAdmin) && $this->MainModel->isFormAdmin('FE-ASP', $currentAdmin));
+        $isAdmin = ($currentAdmin === '13204') || (!empty($currentAdmin) && $this->MainModel->isFormAdmin($this->CodeForm, $currentAdmin));
         if (!$isAdmin) {
             return $this->output->set_output(json_encode([
                 'status'  => false,
-                'message' => 'Access Denied: เฉพาะ Admin เท่านั้นที่สามารถสั่งสร้างเอกสาร Yearly Review ได้'
-            ], JSON_UNESCAPED_UNICODE));
-        }
-
-        if (empty($controlNo)) {
-            return $this->output->set_output(json_encode([
-                'status'  => false,
-                'message' => 'กรุณาระบุ controlNo'
+                'message' => 'Access Denied: เฉพาะ Admin เท่านั้นที่สามารถสั่งส่ง Email ซ้ำได้'
             ], JSON_UNESCAPED_UNICODE));
         }
 
         try {
-            $result = $this->generateYearlyDrafts($controlNo, $targetEmpNo, false);
+            // ดึง Master Form เพื่ออ่านข้อมูลฟอร์ม
+            $formMst  = $this->getFormMasterByVaname($this->CodeForm);
+            $formData = $formMst['data'] ?? ($formMst[0] ?? null);
+            if (empty($formData)) {
+                $formRow = $this->load->database('DEFAULT', TRUE)
+                    ->query("SELECT NNO, VORGNO, CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = ? AND (CSTATUS IS NULL OR CSTATUS <> '0')", [strtoupper(trim($this->CodeForm))])
+                    ->row_array();
+                $formData = [
+                    'NNO'    => (int)($formRow['NNO'] ?? 1),
+                    'VORGNO' => (string)($formRow['VORGNO'] ?? '051001'),
+                    'CYEAR'  => (string)($formRow['CYEAR'] ?? '26'),
+                ];
+            }
 
-            if (!empty($result['created'])) {
-                $doc = $result['created'][0];
-                return $this->output->set_output(json_encode([
-                    'status'       => true,
-                    'message'      => 'สร้างแบบร่างเอกสาร Yearly สำเร็จ',
-                    'data'         => $doc,
-                    'redirect_url' => site_url("feform/FE-ASP/form/main?no={$doc['nfrmno']}&orgNo={$doc['vorgno']}&y={$doc['cyear']}&y2={$doc['cyear2']}&runNo={$doc['nrunno']}&empno={$currentAdmin}")
-                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-            } else {
+            $currentYear4 = date('Y'); // '2026' สำหรับเทียบ CYEAR2[cite: 3]
+
+            // 1. Query ค้นหาเอกสาร Yearly ที่ถูกสร้างไว้แล้วในรอบปีนี้
+            $smmtDb = $this->load->database('SMMT', TRUE);
+            $sql = "SELECT 
+                        H.DOC_NO,
+                        H.CONTROL_NO,
+                        H.SDEPCODE AS DEP_CODE,
+                        H.REQ_BY   AS EMPNO,
+                        H.NFRMNO,
+                        H.VORGNO,
+                        H.CYEAR,
+                        H.CYEAR2,
+                        H.NRUNNO
+                    FROM SMARTMAT.FE_ASP_HEADER H
+                    WHERE H.CYEAR2 = ?
+                      AND H.REVIEW_PERIOD = 'YEARLY'
+                      AND H.STATUS NOT IN ('REJECT', 'CANCEL', '0')";
+
+            $params = [(string)$currentYear4];
+            if (!empty($controlNo)) {
+                $sql .= " AND H.CONTROL_NO = ?";
+                $params[] = $controlNo;
+            }
+
+            $docs = $smmtDb->query($sql, $params)->result_array();
+
+            if (empty($docs)) {
                 return $this->output->set_output(json_encode([
                     'status'  => false,
-                    'message' => 'ไม่สามารถสร้างเอกสารได้: ' . ($result['skipped'][0]['reason'] ?? 'ไม่พบข้อมูล Master ที่ตรงกับเงื่อนไข')
+                    'message' => "ไม่พบเอกสาร Yearly Review ประจำปี {$currentYear4} ที่สามารถส่งอีเมลได้"
                 ], JSON_UNESCAPED_UNICODE));
             }
+
+            $sentSuccessList = [];
+            $skippedList     = [];
+
+            // 2. วนลูปส่ง Email แจ้งเตือนไปยัง PIC แต่ละเอกสาร
+            foreach ($docs as $d) {
+                $item = [
+                    'doc_no'     => $d['DOC_NO'],
+                    'control_no' => $d['CONTROL_NO'],
+                    'dep_code'   => $d['DEP_CODE'],
+                    'empno'      => $d['EMPNO'],
+                    'nfrmno'     => $d['NFRMNO'],
+                    'vorgno'     => $d['VORGNO'],
+                    'cyear'      => $d['CYEAR'],
+                    'cyear2'     => $d['CYEAR2'],
+                    'nrunno'     => $d['NRUNNO'],
+                    'FORMNO'     => $d['DOC_NO']
+                ];
+
+                if ($this->sendNotifyEmailToPic($item, $formData)) {
+                    $sentSuccessList[] = $item;
+                } else {
+                    $skippedList[] = [
+                        'control_no' => $d['CONTROL_NO'],
+                        'dep_code'   => $d['DEP_CODE'],
+                        'empno'      => $d['EMPNO'],
+                        'reason'     => 'คำสั่งส่งเมลแจ้งเตือนล้มเหลว หรือไม่พบข้อมูลอีเมลผู้รับ',
+                        'FORMNO'     => $d['DOC_NO']
+                    ];
+                }
+            }
+
+            // 3. รวบรวม Control No. ที่ Active แต่ยังไม่ได้สร้างเอกสาร หรือยังไม่กำหนด PIC
+            $allActiveControls  = $this->MainModel->getAllActiveControlsForYearly($controlNo, $currentYear4);
+            $existingControlNos = array_column($docs, 'CONTROL_NO');
+
+            foreach ($allActiveControls as $ctrl) {
+                if (!in_array($ctrl['CONTROL_NO'], $existingControlNos)) {
+                    $skippedList[] = [
+                        'control_no' => $ctrl['CONTROL_NO'],
+                        'dep_code'   => $ctrl['SDEPCODE'],
+                        'empno'      => !empty($ctrl['RESP_EMPNO']) ? $ctrl['RESP_EMPNO'] : '-',
+                        'reason'     => empty($ctrl['RESP_EMPNO']) 
+                            ? 'ยังไม่ได้กำหนดผู้รับผิดชอบ (RESP_EMPNO)' 
+                            : "ยังไม่ได้สร้างเอกสาร Yearly ในรอบปี {$currentYear4}",
+                        'FORMNO'     => $ctrl['FORMNO'] ?? '-'
+                    ];
+                }
+            }
+
+            // 4. ส่ง Email รายงานสรุปภาพรวมให้ Admin
+            $this->sendSummaryReportToAdmin($sentSuccessList, $skippedList, $currentYear4);
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => "ส่ง Email แจ้งเตือนซ้ำสำเร็จ (" . count($sentSuccessList) . "/" . count($docs) . " ฉบับ) พร้อมส่งรายงานสรุปให้ Admin เรียบร้อยแล้ว",
+                'created' => $sentSuccessList,
+                'skipped' => $skippedList
+            ], JSON_UNESCAPED_UNICODE));
+
         } catch (\Throwable $e) {
             return $this->output->set_output(json_encode([
                 'status'  => false,
-                'message' => $e->getMessage()
+                'message' => 'เกิดข้อผิดพลาดในการส่งอีเมลซ้ำ: ' . $e->getMessage()
             ], JSON_UNESCAPED_UNICODE));
         }
     }
@@ -255,12 +362,10 @@ class Batch extends MY_Controller {
      */
     public function run_yearly_cron() {
         $isCli = $this->input->is_cli_request();
-        // รองรับทั้ง GET และ POST สำหรับ empno หรือ admin_empno
         $empno = trim((string)($this->input->get_post('empno') ?? $this->input->get_post('admin_empno')));
 
-        // ตรวจสอบสิทธิ์ (CLI หรือ Admin 13204 หรือ Form Admin)
         if (!$isCli) {
-            $isAdmin = ($empno === '13204') || (!empty($empno) && $this->MainModel->isFormAdmin('FE-ASP', $empno));
+            $isAdmin = ($empno === '13204') || (!empty($empno) && $this->MainModel->isFormAdmin($this->CodeForm, $empno));
             if (!$isAdmin) {
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
                     'status'  => false,
@@ -293,16 +398,67 @@ class Batch extends MY_Controller {
     }
 
     /**
+     * Manual Trigger รายตัว ผ่าน URL หรือ AJAX
+     */
+    public function manual_generate_yearly() {
+        $this->output->set_content_type('application/json');
+
+        $controlNo    = trim((string)$this->input->get_post('controlNo'));
+        $targetEmpNo  = trim((string)$this->input->get_post('empno'));
+        $currentAdmin = trim((string)($this->input->get_post('admin_empno') ?? ''));
+        $forceCreate  = (int)($this->input->get_post('forceCreate') ?? 0);
+
+        $isAdmin = ($currentAdmin === '13204') || (!empty($currentAdmin) && $this->MainModel->isFormAdmin($this->CodeForm, $currentAdmin));
+        if (!$isAdmin) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Access Denied: เฉพาะ Admin เท่านั้นที่สามารถสั่งสร้างเอกสาร Yearly Review ได้'
+            ], JSON_UNESCAPED_UNICODE));
+        }
+
+        if (empty($controlNo)) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'กรุณาระบุ controlNo'
+            ], JSON_UNESCAPED_UNICODE));
+        }
+
+        try {
+            // หาก forceCreate = 1 จะตั้ง $checkDuplicate = false เพื่อข้ามการดักซ้ำ
+            $checkDuplicate = ($forceCreate === 1) ? false : true;
+
+            $result = $this->generateYearlyDrafts($controlNo, $targetEmpNo, $checkDuplicate);
+
+            if (!empty($result['created'])) {
+                $doc = $result['created'][0];
+                return $this->output->set_output(json_encode([
+                    'status'       => true,
+                    'message'      => 'สร้างแบบร่างเอกสาร Yearly สำเร็จ',
+                    'data'         => $doc,
+                    'redirect_url' => site_url("feform/FE-ASP/form/main?no={$doc['nfrmno']}&orgNo={$doc['vorgno']}&y={$doc['cyear']}&y2={$doc['cyear2']}&runNo={$doc['nrunno']}&empno={$currentAdmin}")
+                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            } else {
+                return $this->output->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'ไม่สามารถสร้างเอกสารได้: ' . ($result['skipped'][0]['reason'] ?? 'มีเอกสารในระบบอยู่แล้ว')
+                ], JSON_UNESCAPED_UNICODE));
+            }
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE));
+        }
+    }
+
+    /**
      * ส่ง Email แจ้งเตือน PIC ว่ามีแบบร่าง Yearly Review ถูกสร้างขึ้นแล้ว
      */
     protected function sendNotifyEmailToPic($item, $formData) {
         try {
             $user = $this->MainModel->getEmployeeEmail($item['empno']);
 
-            // ดักอ่านทั้ง SRECMAIL และ SEMAIL เผื่อกรณี Model คืนฟิลด์ใดฟิลด์หนึ่งมา
             $realEmail = $user['SRECMAIL'] ?? ($user['SEMAIL'] ?? '');
-            
-            // หากในระบบไม่พบอีเมลเลย ให้ใช้รหัสพนักงานประกอบ Domain เป็น fallback เพื่อไม่ให้ระบบหยุดชะงัก
             if (empty($realEmail)) {
                 $realEmail = $item['empno'] . '@mitsubishielevatorasia.co.th';
             }
@@ -312,17 +468,15 @@ class Batch extends MY_Controller {
             $cNo       = $item['control_no'];
             $dept      = $item['dep_code'];
 
-            // เช็คและเปลี่ยนอีเมลผู้รับหากเป็น Test Environment
             $toEmail   = $this->getTargetEmail($realEmail);
             $isTest    = $this->isTestEnvironment();
 
-            // สร้าง Link พาไปยังแบบร่างของฟอร์ม
             $curHost  = prep_url($_SERVER['HTTP_HOST'] ?? 'amecweb');
             $backPath = rawurlencode('/formtest/workflow/mineList.asp');
             $docUrl   = rtrim($curHost, '/') . "/form/feform/FE-ASP/form/main?no={$item['nfrmno']}&orgNo={$item['vorgno']}&y={$item['cyear']}&y2={$item['cyear2']}&runNo={$item['nrunno']}&empno={$item['empno']}&bp={$backPath}&menu=1";
 
             $prefixSubject = $isTest ? "[TEST ENV - ส่งจริงถึง: {$realEmail}] " : "";
-            $subject = "{$prefixSubject}[FE-ASP] แจ้งดำเนินการทบทวนเอกสารประจำปี (Yearly Review) - {$docNo}";
+            $subject = "{$prefixSubject}[" .  $this->CodeForm . "] แจ้งดำเนินการทบทวนเอกสารประจำปี (Yearly Review) - {$docNo}";
 
             $testNotice = $isTest 
                 ? "<div style='background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px;'>
@@ -333,12 +487,13 @@ class Batch extends MY_Controller {
             $body = "
                 <div style='font-family: Tahoma, sans-serif; font-size: 13px; line-height: 1.6; color: #333;'>
                     {$testNotice}
-                    <h3 style='color: #047857;'>🌿 แจ้งเตือนการจัดทำเอกสารประจำปี (FE-ASP Yearly Review)</h3>
+                    <h3 style='color: #047857;'>🌿 แจ้งเตือนการจัดทำเอกสารประจำปี (". $this->CodeForm ." Yearly Review)</h3>
                     <p>เรียนคุณ <b>{$empName} ({$item['empno']})</b>,</p>
                     <p>ระบบได้ทำการสร้างแบบร่าง (Draft) สำหรับการทบทวนความเสี่ยงและปัญหาสิ่งแวดล้อมประจำปี (ISO14001) เรียบร้อยแล้ว รายละเอียดดังนี้:</p>
                     <table style='border-collapse: collapse; margin: 15px 0; font-size: 13px;'>
                         <tr><td style='padding: 4px 8px; font-weight: bold;'>เลขที่เอกสาร:</td><td style='padding: 4px 8px; color: #047857;'><b>{$docNo}</b></td></tr>
                         <tr><td style='padding: 4px 8px; font-weight: bold;'>Control No.:</td><td style='padding: 4px 8px;'>{$cNo}</td></tr>
+                        <tr><td style='padding: 4px 8px; font-weight: bold;'>สังกัดแผนก:</td><td style='padding: 4px 8px;'>{$dept}</td></tr>
                         <tr><td style='padding: 4px 8px; font-weight: bold;'>สถานะปัจจุบัน:</td><td style='padding: 4px 8px;'><span style='background:#fef3c7; color:#92400e; padding: 2px 6px; border-radius: 4px;'>DRAFT (รอการทบทวน)</span></td></tr>
                     </table>
                     <p>กรุณาคลิกที่ลิงก์ด้านล่างเพื่อเข้าสู่ระบบ ดำเนินการประเมินตาราง Confirmation แนบไฟล์ฉบับทบทวน และส่งอนุมัติต่อไป:</p>
@@ -366,7 +521,7 @@ class Batch extends MY_Controller {
             return $this->mail->sendmail($dataM);
 
         } catch (\Throwable $e) {
-            log_message('error', 'FE-ASP Send Email Error: ' . $e->getMessage());
+            log_message('error', $this->CodeForm . ' Send Email Error: ' . $e->getMessage());
         }
         return false;
     }
@@ -380,22 +535,17 @@ class Batch extends MY_Controller {
             $adminEmails = [];
 
             if ($isTest) {
-                // หากเป็น Test ส่งเข้า siripapa คนเดียว
                 $adminEmails = ['siripapa@mitsubishielevatorasia.co.th'];
             } else {
                 $admins = $this->MainModel->getAdminEmails();
                 foreach ($admins as $adm) {
                     $m = $adm['SRECMAIL'] ?? ($adm['SEMAIL'] ?? '');
-                    if (!empty($m)) {
-                        $adminEmails[] = $m;
-                    }
+                    if (!empty($m)) $adminEmails[] = $m;
                 }
 
                 $super = $this->MainModel->getEmployeeEmail('13204');
                 $superMail = $super['SRECMAIL'] ?? ($super['SEMAIL'] ?? '');
-                if (!empty($superMail)) {
-                    $adminEmails[] = $superMail;
-                }
+                if (!empty($superMail)) $adminEmails[] = $superMail;
 
                 $adminEmails = array_unique(array_filter($adminEmails));
             }
@@ -406,7 +556,7 @@ class Batch extends MY_Controller {
             $totalSkipped = count($skippedList);
 
             $prefixSubject = $isTest ? "[TEST ENV] " : "";
-            $subject = "{$prefixSubject}[FE-ASP Admin Summary] สรุปผลการสร้างเอกสาร Yearly Review ประจำปี {$cYear2}";
+            $subject = "{$prefixSubject}[" . $this->CodeForm ." Admin Summary] สรุปผลการสร้างเอกสาร Yearly Review ประจำปี {$cYear2}";
 
             $testNotice = $isTest 
                 ? "<div style='background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px;'>
@@ -418,30 +568,40 @@ class Batch extends MY_Controller {
                 <div style='font-family: Tahoma, sans-serif; font-size: 13px; line-height: 1.6; color: #333;'>
                     {$testNotice}
                     <h3 style='color: #1e3a8a;'>📊 สรุปผลการสร้างเอกสาร Yearly Review ประจำปี {$cYear2}</h3>
-                    <p>รายงานผลการรัน Batch Auto Job ในระบบ FE-ASP มีรายละเอียดดังนี้:</p>
+                    <p>รายงานผลการรัน Batch Auto Job ในระบบ ". $this->CodeForm ." มีรายละเอียดดังนี้:</p>
                     <ul>
-                        <li><b>สร้างเอกสารร่างสำเร็จ:</b> <span style='color: #059669; font-weight: bold;'>{$totalCreated} ฉบับ</span></li>
-                        <li><b>ข้าม / ยังไม่ได้สร้าง:</b> <span style='color: #dc2626; font-weight: bold;'>{$totalSkipped} รายการ</span></li>
+                        <li><b>ส่ง Email สำเร็จ :</b> <span style='color: #059669; font-weight: bold;'>{$totalCreated} ฉบับ</span></li>
+                        <li><b>ยังไม่ได้สร้าง / อยู่ใน Process :</b> <span style='color: #dc2626; font-weight: bold;'>{$totalSkipped} รายการ</span></li>
                     </ul>
             ";
 
             if ($totalSkipped > 0) {
                 $body .= "
-                    <h4 style='color: #b91c1c; margin-top: 15px;'>⚠️ รายการที่ไม่ได้สร้าง (กรุณาตรวจสอบ):</h4>
+                    <h4 style='color: #b91c1c; margin-top: 15px;'>⚠️ รายการที่ไม่ได้สร้าง / มีเอกสารเดิมอยู่แล้ว (กรุณาตรวจสอบ):</h4>
                     <table border='1' cellpadding='6' cellspacing='0' style='border-collapse: collapse; font-size: 12px; width: 100%; border-color: #cbd5e1;'>
                         <tr style='background: #f1f5f9;'>
+                            <th style='width: 40px;'>No.</th>
                             <th>Control No.</th>
                             <th>แผนก</th>
                             <th>PIC (พนักงาน)</th>
                             <th>สาเหตุ</th>
+                            <th>Doc No</th>
                         </tr>";
+                $i = 0;
                 foreach ($skippedList as $sk) {
+                    $i++;
+                    $docDisplay = (!empty($sk['FORMNO']) && $sk['FORMNO'] !== '-') 
+                        ? "<b style='color: #047857;'>{$sk['FORMNO']}</b>" 
+                        : "<span style='color: #94a3b8;'>-</span>";
+
                     $body .= "
                         <tr>
+                            <td align='center'>{$i}</td>
                             <td>{$sk['control_no']}</td>
-                            <td>{$sk['dep_code']}</td>
+                            <td>" . ($sk['dep_code'] ?? '-') . "</td>
                             <td>{$sk['empno']}</td>
                             <td style='color: #dc2626;'>{$sk['reason']}</td>
+                            <td>{$docDisplay}</td>
                         </tr>";
                 }
                 $body .= "</table>";
@@ -466,23 +626,19 @@ class Batch extends MY_Controller {
             return $this->mail->sendmail($dataM);
 
         } catch (\Throwable $e) {
-            log_message('error', 'FE-ASP Admin Summary Email Error: ' . $e->getMessage());
+            log_message('error', $this->CodeForm .' Admin Summary Email Error: ' . $e->getMessage());
         }
         return false;
     }
 
     /**
      * ตรวจสอบว่าระบบกำลังรันอยู่บน Test Environment หรือไม่
-     * - หากรันผ่าน Command Line (CLI) ให้ถือว่าส่งตาม Base เสมอ (return false)
-     * - หากเรียกผ่าน Web Browser ให้เช็ค localhost หรือ amecwebtest ตามปกติ
      */
     protected function isTestEnvironment() {
-        // 1. ถ้าเป็นการรันผ่าน Command Line (CLI) เช่น Task Scheduler ให้ส่งตามจริงในฐานข้อมูลเสมอ
         if ($this->input->is_cli_request()) {
             return false;
         }
 
-        // 2. ถ้าเป็น Web Request ให้ตรวจเช็คว่าเข้าผ่าน localhost หรือ amecwebtest หรือไม่
         $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
         $baseUrl = strtolower(config_item('base_url') ?? '');
 
@@ -495,6 +651,7 @@ class Batch extends MY_Controller {
             strpos($baseUrl, 'amecwebtest') !== false
         );
     }
+
     /**
      * กำหนดอีเมลผู้รับ: หากเป็น Test ให้ส่งเข้าอีเมลทดสอบ
      */
@@ -510,7 +667,6 @@ class Batch extends MY_Controller {
         $this->output->set_content_type('application/json');
 
         try {
-            // รับค่าจาก Form ที่ส่งมาจาก JavaScript
             $nfrmno    = trim((string)$this->input->post('NFRMNO'));
             $vorgno    = trim((string)$this->input->post('VORGNO'));
             $cyear     = trim((string)$this->input->post('CYEAR'));
@@ -524,19 +680,16 @@ class Batch extends MY_Controller {
                 throw new Exception('ไม่พบค่า NRUNNO กรุณาบันทึกเอกสารร่างก่อนทำการทดสอบส่งอีเมล');
             }
 
-            // ถ้าไม่มี docNo ส่งมา ให้สร้างตามรูปแบบมาตรฐาน
             if (empty($docNo)) {
-                $docNo = "FE-ASP-{$cyear2}-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+                $docNo = $this->CodeForm."-{$cyear2}-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
             }
 
-            // ค้นหาข้อมูล Control เพื่อระบุ Department และ PIC
-            $ctrlInfo = !empty($controlNo) ? $this->MainModel->getActiveControlsForYearly($controlNo) : [];
+            $ctrlInfo = !empty($controlNo) ? $this->MainModel->getAllActiveControlsForYearly($controlNo, $cyear2) : [];
             $targetCtrl = !empty($ctrlInfo) ? $ctrlInfo[0] : null;
 
             $dept = $targetCtrl['SDEPCODE'] ?? $vorgno;
             $resp = !empty($targetCtrl['RESP_EMPNO']) ? $targetCtrl['RESP_EMPNO'] : $empNo;
 
-            // โครงสร้าง $item จากฟอร์มจริง
             $item = [
                 'doc_no'     => $docNo,
                 'control_no' => $controlNo ?: ($targetCtrl['CONTROL_NO'] ?? '-'),
@@ -551,11 +704,10 @@ class Batch extends MY_Controller {
 
             $formData = [
                 'NNO'    => $nfrmno,
-                'VORGNO' => $vorgno,
+                'VORGNO' => $vorgno ?: '051001',
                 'CYEAR'  => $cyear
             ];
 
-            // ส่ง Email ตาม Template จริง
             $isSent = $this->sendNotifyEmailToPic($item, $formData);
 
             if ($isSent) {
@@ -572,136 +724,6 @@ class Batch extends MY_Controller {
             return $this->output->set_output(json_encode([
                 'status'  => false,
                 'message' => 'เกิดข้อผิดพลาดในการทดสอบส่ง Email: ' . $e->getMessage()
-            ], JSON_UNESCAPED_UNICODE));
-        }
-    }
-
-    /**
-     * Endpoint สำหรับกดส่ง Email แจ้งเตือน Yearly ซ้ำ (รายตัว หรือ ทั้งหมด)
-     */
-    public function resend_yearly_email() {
-        $this->output->set_content_type('application/json');
-
-        $controlNo    = trim((string)$this->input->post('controlNo'));
-        $currentAdmin = trim((string)($this->input->post('admin_empno') ?? $this->input->post('empno')));
-
-        $isAdmin = ($currentAdmin === '13204') || (!empty($currentAdmin) && $this->MainModel->isFormAdmin('FE-ASP', $currentAdmin));
-        if (!$isAdmin) {
-            return $this->output->set_output(json_encode([
-                'status'  => false,
-                'message' => 'Access Denied: เฉพาะ Admin เท่านั้นที่สามารถสั่งส่ง Email ซ้ำได้'
-            ], JSON_UNESCAPED_UNICODE));
-        }
-
-        try {
-            // ดึง Master Form FE-ASP เพื่ออ่านข้อมูลฟอร์ม
-            $formMst  = $this->getFormMasterByVaname('FE-ASP');
-            $formData = $formMst['data'] ?? ($formMst[0] ?? null);
-            if (empty($formData)) {
-                $formRow = $this->load->database('DEFAULT', TRUE)
-                    ->query("SELECT NNO, VORGNO, CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = 'FE-ASP'")
-                    ->row_array();
-                $formData = [
-                    'NNO'    => (int)($formRow['NNO'] ?? 1),
-                    'VORGNO' => (string)($formRow['VORGNO'] ?? '051001'),
-                    'CYEAR'  => (string)($formRow['CYEAR'] ?? date('Y')),
-                ];
-            }
-
-            $currentYear2 = date('Y');
-
-            // 1. Query ค้นหาเอกสาร Yearly ที่ถูกสร้างไว้แล้วในรอบปีนี้
-            $smmtDb = $this->load->database('SMMT', TRUE);
-            $sql = "SELECT 
-                        H.DOC_NO,
-                        H.CONTROL_NO,
-                        H.SDEPCODE AS DEP_CODE,
-                        H.REQ_BY   AS EMPNO,
-                        H.NFRMNO,
-                        H.VORGNO,
-                        H.CYEAR,
-                        H.CYEAR2,
-                        H.NRUNNO
-                    FROM SMARTMAT.FE_ASP_HEADER H
-                    WHERE H.CYEAR2 = ?
-                      AND H.REVIEW_PERIOD = 'YEARLY'
-                      AND H.STATUS NOT IN ('REJECT', 'CANCEL', '0')";
-
-            $params = [$currentYear2];
-            if (!empty($controlNo)) {
-                $sql .= " AND H.CONTROL_NO = ?";
-                $params[] = $controlNo;
-            }
-
-            $docs = $smmtDb->query($sql, $params)->result_array();
-
-            if (empty($docs)) {
-                return $this->output->set_output(json_encode([
-                    'status'  => false,
-                    'message' => "ไม่พบเอกสาร Yearly Review ประจำปี {$currentYear2} ที่สามารถส่งอีเมลได้"
-                ], JSON_UNESCAPED_UNICODE));
-            }
-
-            $sentSuccessList = [];
-            $skippedList     = [];
-
-            // 2. วนลูปส่ง Email แจ้งเตือนไปยัง PIC แต่ละเอกสาร
-            foreach ($docs as $d) {
-                $item = [
-                    'doc_no'     => $d['DOC_NO'],
-                    'control_no' => $d['CONTROL_NO'],
-                    'dep_code'   => $d['DEP_CODE'],
-                    'empno'      => $d['EMPNO'],
-                    'nfrmno'     => $d['NFRMNO'],
-                    'vorgno'     => $d['VORGNO'],
-                    'cyear'      => $d['CYEAR'],
-                    'cyear2'     => $d['CYEAR2'],
-                    'nrunno'     => $d['NRUNNO']
-                ];
-
-                if ($this->sendNotifyEmailToPic($item, $formData)) {
-                    $sentSuccessList[] = $item;
-                } else {
-                    $skippedList[] = [
-                        'control_no' => $d['CONTROL_NO'],
-                        'dep_code'   => $d['DEP_CODE'],
-                        'empno'      => $d['EMPNO'],
-                        'reason'     => 'คำสั่งส่งเมลแจ้งเตือนล้มเหลว หรือไม่พบข้อมูลอีเมลผู้รับ'
-                    ];
-                }
-            }
-
-            // 3. รวบรวม Control No. ที่ Active แต่ยังไม่ได้สร้างเอกสาร หรือยังไม่กำหนด PIC
-            $allActiveControls  = $this->MainModel->getAllActiveControlsForYearly($controlNo);
-            $existingControlNos = array_column($docs, 'CONTROL_NO');
-
-            foreach ($allActiveControls as $ctrl) {
-                if (!in_array($ctrl['CONTROL_NO'], $existingControlNos)) {
-                    $skippedList[] = [
-                        'control_no' => $ctrl['CONTROL_NO'],
-                        'dep_code'   => $ctrl['SDEPCODE'],
-                        'empno'      => !empty($ctrl['RESP_EMPNO']) ? $ctrl['RESP_EMPNO'] : '-',
-                        'reason'     => empty($ctrl['RESP_EMPNO']) 
-                            ? 'ยังไม่ได้กำหนดผู้รับผิดชอบ (RESP_EMPNO)' 
-                            : "ยังไม่ได้สร้างเอกสาร Yearly ในรอบปี {$currentYear2}"
-                    ];
-                }
-            }
-
-            // 4. ส่ง Email รายงานสรุปภาพรวมให้ Admin
-            $this->sendSummaryReportToAdmin($sentSuccessList, $skippedList, $currentYear2);
-
-            return $this->output->set_output(json_encode([
-                'status'  => true,
-                'message' => "ส่ง Email แจ้งเตือนซ้ำสำเร็จ (" . count($sentSuccessList) . "/" . count($docs) . " ฉบับ) พร้อมส่งรายงานสรุปให้ Admin เรียบร้อยแล้ว",
-                'created' => $sentSuccessList,
-                'skipped' => $skippedList
-            ], JSON_UNESCAPED_UNICODE));
-
-        } catch (\Throwable $e) {
-            return $this->output->set_output(json_encode([
-                'status'  => false,
-                'message' => 'เกิดข้อผิดพลาดในการส่งอีเมลซ้ำ: ' . $e->getMessage()
             ], JSON_UNESCAPED_UNICODE));
         }
     }

@@ -3,10 +3,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Control_mst extends MY_Controller {
 
+    public $CodeForm = 'AMEC-AR';
     public function __construct() {
         parent::__construct();
         
         // 1. ป้องกันปัญหา Database Instance เป็น null
+        
         $this->load->database();
         if (!isset($this->smmt)) {
             $this->smmt = $this->load->database('SMMT', TRUE);
@@ -30,7 +32,7 @@ class Control_mst extends MY_Controller {
     public function index() {
         $empNo = trim((string)($this->input->get('empno') ?? ''));
         
-        $isAdmin = ($empNo === '13204') || (!empty($empNo) && $this->MainModel->isFormAdmin('FE-ASP', $empNo));
+        $isAdmin = ($empNo === '13204') || (!empty($empNo) && $this->MainModel->isFormAdmin($this->CodeForm, $empNo));
 
         // ดักสิทธิ์: เฉพาะ Admin เท่านั้น
         if (!$isAdmin) {
@@ -170,7 +172,7 @@ class Control_mst extends MY_Controller {
             $cYear2 = trim((string)$this->input->get('year'));
             if (empty($cYear2)) {
                 $formRow = $this->load->database('DEFAULT', TRUE)
-                    ->query("SELECT CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = 'FE-ASP'")
+                    ->query("SELECT CYEAR FROM FORMMST WHERE UPPER(TRIM(VANAME)) = '". $this->CodeForm ."'")
                     ->row_array();
                 $cYear2 = $formRow['CYEAR'] ?? date('Y');
             }
@@ -200,6 +202,37 @@ class Control_mst extends MY_Controller {
                 'isComplete'   => ($created === $totalActive),
                 'missing'      => $missing,
                 'noPic'        => $noPic
+            ], JSON_UNESCAPED_UNICODE));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ], JSON_UNESCAPED_UNICODE));
+        }
+    }
+
+    /**
+     * AJAX เช็คว่า Control No. ของแผนกนั้น มีเอกสาร Yearly ในรอบปีปัจจุบันหรือยัง
+     */
+    public function ajaxCheckSingleYearlyDoc() {
+        $this->output->set_content_type('application/json');
+        try {
+            $controlNo = trim((string)$this->input->get('controlNo'));
+            $depCode   = trim((string)$this->input->get('depCode'));
+            $currentYear4 = date('Y'); // '2026'
+
+            if (empty($controlNo) || empty($depCode)) {
+                throw new Exception('ข้อมูลไม่ครบถ้วน');
+            }
+
+            $existDoc = $this->MainModel->getExistingYearlyDoc($controlNo, $depCode, $currentYear4);
+
+            return $this->output->set_output(json_encode([
+                'status'   => true,
+                'hasDoc'   => !empty($existDoc),
+                'year'     => $currentYear4,
+                'docNo'    => $existDoc['DOC_NO'] ?? null,
+                'docStatus'=> $existDoc['STATUS'] ?? null
             ], JSON_UNESCAPED_UNICODE));
         } catch (\Throwable $e) {
             return $this->output->set_output(json_encode([
