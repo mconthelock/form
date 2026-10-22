@@ -20,9 +20,6 @@
 @endsection
 
 @section('contents')
-{{-- <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
-    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div> --}}
-{{-- <div class="hidden apv-data" empno="{{$empno}}"></div> --}}
 <div class="min-h-[calc(100vh-3rem)] p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
 
     <div class="grid grid-cols-[auto_1fr] gap-5">

@@ -26,7 +26,31 @@
             </div>
         </div>
         <div class="flex flex-col gap-5 p-6">
-            <table id="table" class="table table-zebra table-sm"></table>
+            <form id="form-search" class="flex flex-col gap-5 border rounded-xl p-4">
+                <div class="flex flex-grow flex-wrap gap-5">
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Requester</legend>
+                        <input type="text" class="input w-64" name="VREQNO" placeholder="22013">
+                    </fieldset>
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Planner</legend>
+                        <input type="text" class="input w-64" name="VPLANNER_CODE" placeholder="G">
+                    </fieldset>
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Status</legend>
+                        <select class="select w-64" name="VSTATUS" placeholder="Select status">
+                        </select>
+                    </fieldset>
+                    <fieldset class="fieldset">
+                        <legend class="fieldset-legend">Vendor code</legend>
+                        <input type="text" class="input w-64" name="VVENDOR" placeholder="10003">
+                    </fieldset>
+                </div>
+                <button id="search" class="btn btn-primary w-24 self-center">Search</button>
+            </form>
+            <div class="flex flex-col gap-5 border rounded-xl p-4">
+                <table id="table" class="table table-zebra table-sm"></table>
+            </div>
         </div>
     </div>
 
