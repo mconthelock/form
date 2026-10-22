@@ -311,6 +311,20 @@ async function sendActionEmail(form, action, remark) {
         );
     }
 
+    const recipients = [to];
+    if (dimStep) {
+        const requesterCode = detail?.VREQNO || detail?.REQBY;
+        if (!requesterCode) throw new Error('Requester not found');
+
+        const requester = await getEmployee(requesterCode);
+        const requesterEmail = String(requester?.SRECMAIL || '').trim();
+        if (!requesterEmail) throw new Error('Requester email not found');
+
+        if (requesterEmail.toLowerCase() !== to.toLowerCase()) {
+            recipients.push(requesterEmail);
+        }
+    }
+
     const formNo =
         detail.FORMNO ||
         detail.VFORMNO ||
@@ -322,11 +336,11 @@ async function sendActionEmail(form, action, remark) {
     }[action];
 
     const result = await sendmail({
-        to: dimStep ? to : to,
+        to: dimStep ? recipients : to,
         subject: `FIN-NPO ${formNo} ${dimStep ? 'Pending Controller Approval' : status}`,
-        html: `<p>Dear ${escapeHtml(recipient.SNAME || (dimStep ? 'Controller' : 'Requester'))},</p>
+        html: `<p>Dear ${dimStep ? 'Controller and Requester' : escapeHtml(recipient.SNAME || 'Requester')},</p>
             <p>Form No: ${escapeHtml(formNo)}</p>
-            <p>${dimStep ? 'DIM has approved this FIN-NPO form. Please review and process it as Controller.' : `Your FIN-NPO form has been ${status.toLowerCase()} at the current workflow step.`}</p>
+            <p>${dimStep ? 'DIM has approved this FIN-NPO form. The form is pending review by Job Controller.' : `Your FIN-NPO form has been ${status.toLowerCase()} at the current workflow step.`}</p>
             ${remark ? `<p>Remark: ${escapeHtml(remark)}</p>` : ''}
             <p>Please check the form for details.</p>
             <p>Best Regards,</p>`,
