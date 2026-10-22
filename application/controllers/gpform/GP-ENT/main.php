@@ -736,7 +736,13 @@ class Main extends MY_Controller {
         ];
         $this->updateFlow([
             'condition' => $condition,
-            'VAPVNO'    => $approver
+            'VAPVNO'    => $approver,
+            'VREALAPV'  => null,
+            'CAPVSTNO'  => 0,
+            'DAPVDATE'  => null,
+            'CAPVTIME'  => null,
+            'VREMOTE'   => null,
+            'CSTEPST'   => 1
         ]);
         // $this->updateFlowApv("", $approver, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "19");
     }

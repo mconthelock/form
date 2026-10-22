@@ -1,3 +1,4 @@
+import { showMessage } from '@amec/webasset/utils';
 import {
     attachTypeManager,
     districtEnManager,
@@ -68,4 +69,72 @@ export function resetformid(id) {
     $container.find('#COUNTRY_SELECT').prop('disabled', true);
     $container.find('.field-local').addClass('hidden');
     $container.find('.field-oversea').removeClass('hidden');
+}
+
+export function toggleAttachSection(type, show) {
+    let selector = '';
+
+    // กำหนดเงื่อนไขเลือก Class หรือ ID ของกล่องแต่ละประเภท
+    switch (type) {
+        case 'cer':
+            selector = '#file-cer'; // หรืออ้างอิงถึง div หุ้ม
+            break;
+        case 'bank':
+            selector = '#file-bank';
+            break;
+        case 'changeaddr':
+            selector = '#file-changeaddr';
+            break;
+        case 'other':
+            selector = '#file-other';
+            break;
+    }
+
+    // ตัวอย่างการใช้ร่วมกับ jQuery ในการสลับการแสดงผล
+    if (show) {
+        $(selector).closest('.flex.flex-col.gap-2').show();
+    } else {
+        $(selector).closest('.flex.flex-col.gap-2').hide();
+    }
+}
+
+export function checkAttFile() {
+    const REQTYPE = $('input[name="REQTYPE_SHOW"]:checked').val();
+    const hasCer =
+        $('#file-cer')[0].files.length > 0 ||
+        $('#file-type-11').find('a').length > 0;
+    const hasAddr =
+        $('#file-changeaddr')[0].files.length > 0 ||
+        $('#file-type-15').find('a').length > 0;
+    const hasOther =
+        $('#file-other')[0].files.length > 0 ||
+        $('#file-type-2').find('a').length > 0;
+    console.log(REQTYPE);
+    console.log(hasCer);
+    console.log($('#file-cer')[0].files.length);
+    console.log($('#file-type-11').find('a').length);
+    if (REQTYPE && REQTYPE == 'A') {
+        if (!hasCer) {
+            showMessage(
+                'Please Attached Company Certificate / Vat Register / Company Profile',
+                'warning',
+            );
+            return false;
+        }
+    } else if (REQTYPE && REQTYPE == 'U') {
+        if (!hasAddr && !hasOther) {
+            showMessage('Please Attached file', 'warning');
+            return false;
+        }
+    } else {
+        if (!hasOther) {
+            showMessage('Please Attached file', 'warning');
+            return false;
+        }
+    }
+    if (hasOther && !$('#ATTACH_OTHER').val()) {
+        showMessage('Please input Other', 'warning');
+        return false;
+    }
+    return true;
 }

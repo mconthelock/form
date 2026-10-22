@@ -1,0 +1,43 @@
+@extends('gpform/GP-TPH/create')
+
+@section('styles')
+	@parent
+	<style>
+		#tphForm input:disabled,
+		#tphForm textarea:disabled {
+			color: #0f172a;
+			-webkit-text-fill-color: #0f172a;
+			opacity: 1;
+		}
+		#long-term-valid-until .tph-hint {
+			display: none;
+		}
+		#applicant-visitor-section table {
+			min-width: 848px;
+		}
+		#applicant-visitor-section table col:last-child,
+		#applicant-visitor-section [data-action-column] {
+			display: none;
+		}
+		#tphForm .tph-choice:has(input[name="REQUEST_TYPE"]):not(:has(input[name="REQUEST_TYPE"]:checked)),
+		#tphForm label:has(input[name="REQUEST_SUB_TYPE"]:not(:checked)) {
+			display: none;
+		}
+	</style>
+@endsection
+
+@section('contents')
+	<div id="gp-tph-form-data"
+		data-nfrmno="{{ $NFRMNO }}"
+		data-vorgno="{{ $VORGNO }}"
+		data-cyear="{{ $CYEAR }}"
+		data-cyear2="{{ $CYEAR2 }}"
+		data-nrunno="{{ $NRUNNO }}"
+		data-empno="{{ $EMPNO }}"
+		hidden></div>
+	@parent
+@endsection
+
+@section('scripts')
+    <script src="{{ $_ENV['APP_JS'] }}/gpTPHShow.js?ver={{ $GLOBALS['version'] }}"></script>
+@endsection

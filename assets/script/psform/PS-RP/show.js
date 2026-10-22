@@ -80,20 +80,6 @@ $(async function () {
           { data: "PRODUCTION", title: "Production" },
           { data: "ISSUETO", title: "Shop" },
           { data: "REMARK", title: "Remark", className: "text-nowrap" },
-          // {
-          //   data: "REMARK",
-          //   title: "Remark",
-          //   width: "500px",
-          //   render: function (data) {
-          //     return `
-          //     <textarea
-          //       class="textarea textarea-bordered textarea-md w-full min-w-[500px] min-h-20"
-          //       placeholder="WHI's reason to revise/return...."
-          //       name="REMARKTABLE" readonly
-          //     >${data || ""}</textarea>
-          //   `;
-          //   },
-          // },
         ],
       },
       {
@@ -128,6 +114,13 @@ $(async function () {
             id: "#CONTROLLER",
             data: controller,
           });
+          // Default รหัส 92128 พร้อมแสดงชื่อ
+          const defaultController = controller.find(
+            (user) => user.value === "92128",
+          );
+          if (defaultController) {
+            $("#CONTROLLER").val(defaultController.value).trigger("change");
+          }
           $("#controller-section").removeClass("hidden");
         }
         action = webflowSubmit({
@@ -211,7 +204,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
                 <p>Please Re-check data again.</p>
                 <p>Best Regards,</p>`,
         });
-      }else if (action === "reject") {
+      } else if (action === "reject") {
         await sendmail({
           to: Userreq.SRECMAIL,
           cc: "viyada@MitsubishiElevatorAsia.co.th",
