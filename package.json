@@ -43,7 +43,8 @@
     "select2": "^4.1.0-rc.0",
     "socket.io-client": "^4.8.1",
     "sortablejs": "^1.15.6",
-    "sweetalert2": "^11.6.13"
+    "sweetalert2": "^11.6.13",
+    "xlsx-populate": "^1.21.0"
   },
   "scripts": {
     "build:css": "tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css --minify",
