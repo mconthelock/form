@@ -44,7 +44,7 @@ export const steps = {
     },
     set priceApvForm(value) {
         this._priceApvForm = value;
-        if (value.PRA_NO) {
+        if (value?.PRA_NO) {
             $('#detail-step-apv-no').removeClass('hidden');
             $('#detail-step-apv-no .detail-text').text(value.PRA_NO);
         } else {

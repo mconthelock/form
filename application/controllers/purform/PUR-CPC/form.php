@@ -13,4 +13,8 @@ class form extends MY_Controller{
     public function view(){
         $this->views('purform/PUR-CPC/view');
     }
+
+    public function lists(){
+        $this->views('purform/PUR-CPC/lists');
+    }
 }

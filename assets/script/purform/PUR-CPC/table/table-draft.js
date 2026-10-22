@@ -65,15 +65,15 @@ export const tableDraft = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init(data, id = '#table-draft') {
+    async init(data, id = '#table-draft', radio = true) {
         await this.destroy();
         this.id = id;
         this.preload();
-        await this.createTable(data);
+        await this.createTable(data, radio);
         this.skeleton.remove();
         this.bindEvents();
     },
-    async createTable(data) {
+    async createTable(data, radio = true) {
         this.instance = await createTable(
             {
                 data: data,
@@ -84,7 +84,7 @@ export const tableDraft = {
                 id: this.tableId,
                 join: true,
                 columnSelect: {
-                    status: true,
+                    status: radio,
                     type: 'radio',
                 },
                 domScroll: {
@@ -130,7 +130,7 @@ export const tableDraft = {
         {
             title: 'No.',
             data: null,
-            className: 'sticky-column',
+            // className: 'sticky-column',
             render: function (data, type, row, meta) {
                 if (Array.isArray(meta.row)) {
                     return meta.row[0] + 1;
@@ -142,6 +142,12 @@ export const tableDraft = {
             title: 'Price Comparison no.',
             data: 'VFORMNO',
             className: 'sticky-column',
+            render: function (data, type, row, meta) {
+                if (type === 'display') {
+                    return `<a href="${process.env.APP_ENV}/purform/PUR-CPC/form/view?y2=${row.CYEAR2}&runNo=${row.NRUNNO}" target="_blank" class="link link-primary">${data}</a>`;
+                }
+                return data;
+            },
         },
         {
             title: 'Input by',

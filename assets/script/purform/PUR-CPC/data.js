@@ -155,3 +155,38 @@ export async function getComparisonListByForm(form) {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-21
+ * @description ดึงข้อมูลรายการ price comparison
+ * @param {object} data
+ * @param {string} [data.VREQNO] e.g. 22013
+ * @param {number} [data.NSTATUS] e.g. 0
+ * @param {string} [data.VFORM] e.g. 'PRO-CPC26-000001'
+ * @param {string} [data.CYEAR2] e.g. '2026'
+ * @param {number} [data.NRUNNO] e.g. 6
+ * @returns
+ */
+export async function getListComparison(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc/lists`,
+        method: 'POST',
+        data: data,
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-21
+ * @description ดึงข้อมูลลิงก์ตาม key
+ * @param {object} data
+ * @returns
+ */
+export async function getLink(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/key-link`,
+        method: 'POST',
+        data: data,
+    });
+}
