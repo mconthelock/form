@@ -7,14 +7,6 @@ class form extends MY_Controller{
     }
 
     public function main(){
-<<<<<<< HEAD
         $this->views('purform/PUR-PRA/form');
-=======
-        if (isset($_GET['runNo']) && $_GET['runNo'] !== '') {
-            $this->views('purform/PUR-PRA/view');
-        } else{
-            $this->views('purform/PUR-PRA/form');
-        }
->>>>>>> 63e38705 (feat(price-apv): add PUR-PRA module with form handling, data fetching, and validation logic)
     }
 }
