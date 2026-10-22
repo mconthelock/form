@@ -99,8 +99,9 @@ $(document).ready(async function () {
             }
             console.log('xxxxxxxxxxx');
             const txtRemark = $('#txtRemark').val();
-
+            console.log('yyyyyyyyyyy');
             if (action == 'deleteApv') {
+                console.log('iffffffffff');
                 var cnformData = new FormData();
                 cnformData.append('NFRMNO', nfrmno);
                 cnformData.append('VORGNO', vorgno);
@@ -112,6 +113,7 @@ $(document).ready(async function () {
                 cnformData.append('APVNO', empno);
                 cnformData.append('REMARK', txtRemark);
             } else {
+                console.log('else');
                 action = action === 'returnrem' ? 'return' : action;
                 let targetInput = $('input[name="chkClass"]');
                 let inputType;
@@ -327,11 +329,19 @@ $(document).ready(async function () {
                         }
                     }
                 }
+                console.log('end else');
             }
-            filterFormData(cnformData, { empty: true });
-            // logFormData(cnformData);
+            console.log('>>>>>>>');
+            console.log(cnformData);
 
+            const formdata = filterFormData(cnformData, { empty: true });
+            console.log('++++++++++');
+            logFormData(formdata);
+            console.log(formdata);
+
+            console.log('LLLLLLLLLL');
             const status = await approve(cnformData);
+            //logFormData(status);
             if (!status.status) {
                 showMessage(status.message, 'warning');
                 return false;
@@ -1011,6 +1021,7 @@ export async function approve(form) {
         url: `${process.env.APP_API}/qaform/qa-cn/approve`,
         method: 'PATCH',
         data: form,
+        timeout: 600000,
     });
 }
 //function opendwg(dwg , rev) {
