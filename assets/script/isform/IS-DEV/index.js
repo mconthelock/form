@@ -745,6 +745,7 @@ function setBenefit(formData) {
         if ($(row).find('.subtotal-cost').val() > 0) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
 =======
             formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
@@ -752,6 +753,9 @@ function setBenefit(formData) {
 =======
             formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
 >>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
+=======
+            formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
+>>>>>>> d5d58390 (fix: revert duncan3dc/blade version to ^4.6 and update PHP platform version to 7.2.15; correct benefit type key in form data)
             formData.append(
                 `benefit[${i}][BENEFIT_CURRENT]`,
                 $(row).find('.present-cost').val() || 0,

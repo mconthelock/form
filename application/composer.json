@@ -1,6 +1,7 @@
 {
     "require": {
 <<<<<<< HEAD
+<<<<<<< HEAD
         "vlucas/phpdotenv": "^5.5",
         "duncan3dc/blade": "^4.6",
         "phpmailer/phpmailer": "^6.9",
@@ -9,6 +10,9 @@
 =======
         "duncan3dc/blade": "^4.17",
 >>>>>>> 4765fc75 (fix: update Blade Engine)
+=======
+        "duncan3dc/blade": "^4.6",
+>>>>>>> d5d58390 (fix: revert duncan3dc/blade version to ^4.6 and update PHP platform version to 7.2.15; correct benefit type key in form data)
         "fpdf/fpdf": "^1.86",
         "guzzlehttp/guzzle": "^6.5",
         "phpmailer/phpmailer": "^6.9",
@@ -21,7 +25,7 @@
     },
     "config": {
         "platform": {
-            "php": "7.3.15"
+            "php": "7.2.15"
         },
         "audit": {
             "block-insecure": false
