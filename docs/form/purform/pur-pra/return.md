@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # คู่มือการแก้ไขฟอร์ม Price Approval ที่ถูก Return (PRO-PRA)
+=======
+# คู่มือการแก้ไขฟอร์ม Price Approval ที่ถูก Return (PUR-PRA)
+>>>>>>> 934b5416 (Refactor code structure and remove redundant sections for improved readability and maintainability)
 
 เมื่อผู้อนุมัติส่งฟอร์มกลับมา (Return) ผู้ขอหรือผู้กรอกฟอร์มสามารถตรวจสอบและแก้ไขข้อมูลเดิมได้ ระบบจะโหลดข้อมูล Price Approval, เหตุผล และไฟล์แนบเดิมกลับมาให้แก้ไข
 
