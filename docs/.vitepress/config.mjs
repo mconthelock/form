@@ -171,6 +171,14 @@ export default defineConfig({
                                 text: 'Create Form',
                                 link: '/form/purform/pur-pra/create',
                             },
+                            {
+                                text: 'View',
+                                link: '/form/purform/pur-pra/view',
+                            },
+                            {
+                                text: 'Return',
+                                link: '/form/purform/pur-pra/return',
+                            },
                         ],
                     },
                 ],
