@@ -12,12 +12,37 @@
             -moz-appearance: textfield;
             /* สำหรับ Firefox */
         }
+
+        /* ลบกรอบและปรับพื้นหลังของ Select2 ให้กลืนกับ Tailwind */
+        .select2-container--default .select2-selection--single {
+            border: none !important;
+            border-radius: 0 !important;
+            background-color: transparent !important;
+
+            /* 👇 ปรับความสูงตรงนี้ ลองเปลี่ยนเป็น 34px หรือ 36px ให้พอดีกับช่องอื่น */
+            height: 36px !important;
+            min-height: 36px !important;
+
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: none !important;
+        }
+
+        /* จัดข้อความให้อยู่กึ่งกลางพอดี */
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            padding-left: 0.75rem !important;
+            color: #0f172a !important;
+            font-size: 0.875rem !important;
+            line-height: normal !important;
+            /* เพิ่มบรรทัดนี้เพื่อไม่ให้ข้อความดันกล่อง */
+        }
     </style>
 @endsection
 @section('contents')
     <div class="hidden form-info" nfrmno="{{ $NFRMNO }}" vorgno="{{ $VORGNO }}" cyear="{{ $CYEAR }}"
         mode="{{ $mode }}" cyear2="{{ $mode != 1 ? $CYEAR2 : '' }}" nrunno="{{ $mode != 1 ? $NRUNNO : '' }}"
         return="{{ $return ?? '' }}"></div>
+    <div class="hidden apv-data" empno="{{ $empno }}"></div>
     <form id="frmmain">
         <div class="max-w-7xl mx-auto space-y-6">
             <!-- Header -->
@@ -50,15 +75,27 @@
                             <input name = "REQBY" type="text" value="{{ $empno }}" maxlength="5"
                                 class="w-2/3 border-0 bg-white py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none">
                         </div>
+                        <!-- Section -->
+                        <div
+                            class="flex rounded-md shadow-sm border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
+                            <label
+                                class="flex shrink-0 items-center justify-center w-1/3 bg-slate-50 text-slate-600 font-medium text-sm border-r border-slate-300 px-3 text-center">
+                                Section
+                            </label>
+                            <select name="TSORGNO" id="TSORGNO"
+                                class="w-2/3 border-0 bg-gray-50 py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none disabled:text-gray-400">
+                                <option value="">---------</option>
+                            </select>
+                        </div>
 
                         <!-- Production (JUN) -->
                         <div
                             class="flex rounded-md shadow-sm border border-slate-300 focus-within:ring-2 focus-within:ring-blue-500 overflow-hidden">
                             <label
                                 class="flex items-center justify-center w-1/3 bg-slate-50 text-slate-600 font-medium text-sm border-r border-slate-300 px-3">
-                                Production (JUN)
+                                Production (JUNG)
                             </label>
-                            <input type="text" name="jun" id="jun"
+                            <input type="text" name="jung" id="jung"
                                 class="w-2/3 border-0 bg-white py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none">
                         </div>
 

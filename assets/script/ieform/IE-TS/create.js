@@ -1,6 +1,7 @@
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { createTable } from '@amec/webasset/dataTable';
 import {
+    getAllAttr,
     showConfirm,
     showErrorMessage,
     showMessage,
@@ -9,8 +10,13 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
 import 'flatpickr/dist/plugins/monthSelect/style.css';
-import { getTsAdjustData } from './data';
+import { create, getOrgMfg, getTsAdjustData } from './data';
 import { showLoader } from '@amec/webasset/preloader';
+import select2 from 'select2';
+import { setSelect2 } from '@amec/webasset/select2';
+import { getUser } from '@amec/webasset/api/amec';
+
+select2();
 
 let tsTableInstance = null;
 
@@ -204,22 +210,39 @@ async function updateOrCreateTable(rawData) {
         tsTableInstance = await createTable(tableOption, setupOpt);
     }
 }
-
-function packDataForSave() {
+function packDataForSave(actionValue) {
     if (!tsTableInstance) {
         showMessage('Not have Data', 'warning');
-        return;
+        return [];
     }
 
     const dataToSave = [];
+
+    // ตัวแปรสำหรับพักข้อมูล
     let currentParentData = {};
+    let tempChildren = []; // กระเป๋าสำรองเก็บ Child ทุกตัวของ Parent ปัจจุบัน
+    let hasChanges = false; // แฟล็กเช็คว่าในกลุ่ม Parent ปัจจุบันมี Child เปลี่ยนแปลงไหม
+
+    // ฟังก์ชันช่วยสำหรับเทข้อมูลจากกระเป๋าสำรองลงตะกร้าจริง
+    const flushBuffer = () => {
+        // ถ้ามี Child อย่างน้อย 1 ตัวที่มีการเปลี่ยนแปลง ให้เอา Child ทุกตัวที่พักไว้เข้า dataToSave
+        if (hasChanges && tempChildren.length > 0) {
+            dataToSave.push(...tempChildren);
+        }
+        // รีเซ็ตกระเป๋าและสถานะ เพื่อเตรียมรับ Parent กรุ๊ปต่อไป
+        tempChildren = [];
+        hasChanges = false;
+    };
 
     tsTableInstance.rows().every(function () {
         const data = this.data();
         const node = this.node();
 
         if (data[15] === 'parent') {
-            // 💡 แก้เป็น 15
+            // 1. ก่อนจะเริ่ม Parent ใหม่ ต้องเคลียร์ข้อมูล Parent เก่าที่พักไว้ก่อน
+            flushBuffer();
+
+            // 2. เก็บข้อมูล Parent ใหม่
             currentParentData = {
                 partName: data[1],
                 item: data[2],
@@ -227,7 +250,6 @@ function packDataForSave() {
                 qty: data[4],
             };
         } else if (data[15] === 'child') {
-            // 💡 แก้เป็น 15
             let tpAfter =
                 $(node).find('td:eq(9) input').val() ||
                 $(node).find('td:eq(9)').text().trim() ||
@@ -236,32 +258,98 @@ function packDataForSave() {
                 $(node).find('td:eq(10) input').val() ||
                 $(node).find('td:eq(10)').text().trim() ||
                 data[10];
-            if (data[6] != tpAfter || data[7] != tcAfter) {
-                const rowData = {
-                    partName: currentParentData.partName,
-                    item: currentParentData.item,
-                    dwg: currentParentData.dwg,
-                    qty: currentParentData.qty,
-                    process: data[5],
-                    tpBefore: data[6],
-                    tcBefore: data[7],
-                    tpAfter: tpAfter,
-                    tcAfter: tcAfter,
-                };
 
-                dataToSave.push(rowData);
+            // เช็คว่า Child "ตัวนี้" มีการเปลี่ยนแปลงหรือไม่
+            if (data[6] != tpAfter || data[7] != tcAfter) {
+                hasChanges = true; // พบการเปลี่ยนแปลง เปลี่ยนสถานะเป็น true
             }
+
+            // เก็บ Child "ทุกตัว" (ไม่ว่าจะเปลี่ยนหรือไม่เปลี่ยน) ลงกระเป๋าสำรองไว้ก่อน
+            const rowData = {
+                PRTNAME: currentParentData.partName,
+                ITMNO: currentParentData.item,
+                DWGNO: currentParentData.dwg,
+                QTY: Number(currentParentData.qty),
+                PROCESS: data[5],
+                CUR_TP: Number(data[6]),
+                CUR_TC: Number(data[7]),
+                AF_TP: Number(tpAfter),
+                AF_TC: Number(tcAfter),
+            };
+            tempChildren.push(rowData);
         }
     });
 
-    console.log('Data to save:', dataToSave);
+    // 💡 สำคัญมาก: เมื่อวนลูปจบทุกบรรทัดแล้ว ต้องเรียกเคลียร์ข้อมูล Parent กลุ่มสุดท้ายด้วย
+    flushBuffer();
+
+    console.log('Final Data to save:', dataToSave);
     return dataToSave;
 }
+// function packDataForSave() {
+//     if (!tsTableInstance) {
+//         showMessage('Not have Data', 'warning');
+//         return;
+//     }
+
+//     const dataToSave = [];
+//     let currentParentData = {};
+
+//     tsTableInstance.rows().every(function () {
+//         const data = this.data();
+//         const node = this.node();
+
+//         if (data[15] === 'parent') {
+//             // 💡 แก้เป็น 15
+//             currentParentData = {
+//                 partName: data[1],
+//                 item: data[2],
+//                 dwg: data[3],
+//                 qty: data[4],
+//             };
+//         } else if (data[15] === 'child') {
+//             // 💡 แก้เป็น 15
+//             let tpAfter =
+//                 $(node).find('td:eq(9) input').val() ||
+//                 $(node).find('td:eq(9)').text().trim() ||
+//                 data[9];
+//             let tcAfter =
+//                 $(node).find('td:eq(10) input').val() ||
+//                 $(node).find('td:eq(10)').text().trim() ||
+//                 data[10];
+//             if (data[6] != tpAfter || data[7] != tcAfter) {
+//                 const rowData = {
+//                     partName: currentParentData.partName,
+//                     item: currentParentData.item,
+//                     dwg: currentParentData.dwg,
+//                     qty: currentParentData.qty,
+//                     process: data[5],
+//                     tpBefore: data[6],
+//                     tcBefore: data[7],
+//                     tpAfter: tpAfter,
+//                     tcAfter: tcAfter,
+//                 };
+
+//                 dataToSave.push(rowData);
+//             }
+//         }
+//     });
+
+//     console.log('Data to save:', dataToSave);
+//     return dataToSave;
+// }
 
 $(document).ready(async function () {
-    flatpickr('#jun', {
+    const empno = $('.apv-data').attr('empno');
+    const info = await getUser(empno);
+    const orgmfg = await getOrgMfg();
+    const orgmfgdata = orgmfg.map((t) => ({
+        value: t.VORGNO,
+        text: t.VNAME,
+    }));
+    flatpickr('#jung', {
         dateFormat: 'm/Y',
-        defaultDate: $('#jun').val() || 'today',
+        defaultDate: $('#jung').val() || 'today',
         minDate: 'today',
         plugins: [
             new monthSelectPlugin({
@@ -272,6 +360,16 @@ $(document).ready(async function () {
         ],
     });
     await initMyTable();
+    await setSelect2({
+        id: '#TSORGNO',
+        data: orgmfgdata,
+        size: 'sm',
+        placeholder: '-- Select --',
+        search: true,
+        clear: true,
+        emptyValue: true,
+    });
+    $(`#TSORGNO`).val(info.SSECCODE).trigger('change');
 });
 
 const generateMockData = () => {
@@ -382,16 +480,36 @@ async function initMyTable() {
 
 $(document).on('click', '.btnact', async function () {
     const act = $(this).val();
-    console.log(act);
+    const formInfo = await getAllAttr('.form-info');
+    //console.log(act);
     const dwgData = await packDataForSave();
-    console.log(dwgData);
+    //console.log(dwgData);
+    const payload = {
+        ACTION: act,
+        NFRMNO: formInfo.nfrmno,
+        VORGNO: formInfo.vorgno,
+        CYEAR: formInfo.cyear,
+        CYEAR2: formInfo.cyear2,
+        NRUNNO: formInfo.nrunno,
+        JUNG: $('input[name="jung"]').val(),
+        TSORGNO: $('#TSORGNO').val(),
+        INPUTBY: $('input[name="INPUTBY"]').val(),
+        REQBY: $('input[name="REQBY"]').val(),
+        MODE: Number(formInfo.mode) ?? null,
+        EMPNO: $('.apv-data').attr('empno'),
+        RETURN: formInfo.return ?? null,
+        DWGLIST: dwgData,
+    };
+    console.log(payload);
+    const res = await create(payload);
+    console.log('after create');
 });
 
 $(document).on('click', '#btnAdd', async function () {
     console.log('ADD');
     try {
         showLoader({ show: true });
-        let rawMonth = $('#jun').val();
+        let rawMonth = $('#jung').val();
         let month = rawMonth ? rawMonth.replace('/', '') : '';
 
         let baseDwg = $('#dwgNo').val().trim();

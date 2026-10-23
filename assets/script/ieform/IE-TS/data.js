@@ -11,3 +11,18 @@ export async function getTsAdjustData(con) {
         data: con,
     });
 }
+
+export async function create(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/ieform/ie-ts/create`,
+        method: 'POST',
+        data: form,
+    });
+}
+
+export async function getOrgMfg() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/ieform/ie-ts/orgmfg`,
+        method: 'GET',
+    });
+}
