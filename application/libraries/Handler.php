@@ -61,6 +61,10 @@ class Handler{
      */
     private function _error_handler(){
         function errorHandler($severity, $message, $filepath, $line){
+            // Vendored illuminate 5.8 emits dozens of PHP 8 deprecations; they are not actionable here.
+            if ($severity & (E_DEPRECATED | E_USER_DEPRECATED)) {
+                return true;
+            }
             $ci =& get_instance();
             $_error =& load_class('Exceptions', 'core');
             $_error->log_exception($severity, $message, $filepath, $line);

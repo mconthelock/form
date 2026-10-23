@@ -17,6 +17,8 @@ import {
     totalInvestment,
     createFormIsDev,
 } from './data.js';
+    createFormIsDev,
+} from './data.js';
 select2();
 
 $(document).ready(async function () {
@@ -34,7 +36,11 @@ $(document).ready(async function () {
     await setSelect2();
     await setDatePicker({
         altInput: true,
+        altInput: true,
         mode: 'month',
+        //dateFormat: 'Y-M',
+        altFormat: 'Y-M',
+        dateFormat: 'Y-m-01',
         //dateFormat: 'Y-M',
         altFormat: 'Y-M',
         dateFormat: 'Y-m-01',
@@ -43,6 +49,7 @@ $(document).ready(async function () {
     $('.flatpickr-input').removeClass('input');
 });
 
+//General input number formatting
 //General input number formatting
 $(document).on('keyup', '.input-number', function (e) {
     let value = $(this).val();
@@ -53,6 +60,7 @@ $(document).on('keyup', '.input-number', function (e) {
     $(this).val(value);
 });
 
+//Requester Information
 //Requester Information
 $(document).on('change', '#req-by-input', async function (e) {
     e.preventDefault();
@@ -83,8 +91,22 @@ $(document).on('click', '#change-req-employee', async function (e) {
     $('#req-by-input').focus();
 });
 
+$(document).on('click', '#change-req-employee', async function (e) {
+    e.preventDefault();
+    $('#req-by-input').removeClass('hidden');
+    $('#req-by-info').addClass('hidden');
+    $('#req-by-input').focus();
+});
+
 $(document).on('click', '.request-type', async function (e) {
     const val = $(this).val();
+    if (val >= '3') {
+        $('.form-roi').addClass('hidden');
+        $('.form-roi input').val('');
+        $('.form-roi select').val('');
+    } else {
+        $('.form-roi').removeClass('hidden');
+    }
     if (val >= '3') {
         $('.form-roi').addClass('hidden');
         $('.form-roi input').val('');
@@ -327,6 +349,24 @@ $(document).on('click', '#confirm-form', async function (e) {
 });
 
 async function verifyForm(form) {
+    // const formValid = await verifyForm(form);
+    // if (!formValid) {
+    //     return;
+    // }
+    // //Verify ROI form
+    // if ($('.request-type:checked').val() < 3) {
+    //     const roiValid = await verifyROI(form);
+    //     if (!roiValid) {
+    //         return;
+    //     }
+    // }
+
+    const formdata = await formData();
+    await createFormIsDev(formdata);
+    //const files = $('#form-is-dev input[type="file"]');
+});
+
+async function verifyForm(form) {
     let check = true;
     $(form)
         .find('.req-1')
@@ -340,7 +380,9 @@ async function verifyForm(form) {
     if (!check) {
         await showMessage(
             `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
+            `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
         );
+        return false;
         return false;
     }
 
@@ -352,12 +394,37 @@ async function verifyForm(form) {
             .addClass('text-red-500');
         await showMessage(
             `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
+            `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
         );
         return false;
     }
     return true;
 }
+        return false;
+    }
+    return true;
+}
 
+async function verifyROI(form) {
+    //Verify form with ROI
+    let check2 = true;
+    if ($('#req-objective').val() == 8) {
+        $('#req-objective-other').addClass('req-2');
+    } else {
+        $('#req-objective-other').removeClass('req-2');
+        $('#req-objective-other').removeClass('border-red-500');
+    }
+    $(form)
+        .find('.req-2')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            $(this).closest('label.input').removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                $(this).closest('label.input').addClass('border-red-500');
+                check2 = false;
+            }
+        });
 async function verifyROI(form) {
     //Verify form with ROI
     let check2 = true;
@@ -385,6 +452,12 @@ async function verifyROI(form) {
         );
         return check2;
     }
+    if (!check2) {
+        await showMessage(
+            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+        );
+        return check2;
+    }
 
     //Check detail must have at least 100 characters
     if ($('#current-workflow-count').html() < 1) {
@@ -397,7 +470,29 @@ async function verifyROI(form) {
         );
         return false;
     }
+    //Check detail must have at least 100 characters
+    if ($('#current-workflow-count').html() < 1) {
+        $('#current-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
 
+    //Check detail must have at least 100 characters
+    if ($('#expected-workflow-count').html() < 1) {
+        $('#expected-workflow-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return false;
+    }
     //Check detail must have at least 100 characters
     if ($('#expected-workflow-count').html() < 1) {
         $('#expected-workflow-count')

@@ -1,15 +1,15 @@
 {
     "require": {
-        "vlucas/phpdotenv": "^5.5",
-        "coolpraz/php-blade": "^0.1.0",
-        "phpmailer/phpmailer": "^6.9",
-        "guzzlehttp/guzzle": "^6.5",
-        "tecnickcom/tcpdf": "^6.10",
+        "duncan3dc/blade": "^4.6",
         "fpdf/fpdf": "^1.86",
-        "setasign/fpdi-protection": "^2.1",
+        "guzzlehttp/guzzle": "^6.5",
+        "phpmailer/phpmailer": "^6.9",
+        "phpoffice/phpspreadsheet": "1.12",
         "setasign/fpdi": "^2.6",
+        "setasign/fpdi-protection": "^2.1",
         "setasign/fpdi-tcpdf": "^2.3",
-        "phpoffice/phpspreadsheet": "1.12"
+        "tecnickcom/tcpdf": "^6.10",
+        "vlucas/phpdotenv": "^5.5"
     },
     "config": {
         "platform": {

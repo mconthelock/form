@@ -1,6 +1,7 @@
 <?php
     defined('BASEPATH') OR exit('No direct script access allowed');
-    use Coolpraz\PhpBlade\PhpBlade;
+    //use Coolpraz\PhpBlade\PhpBlade;
+    use duncan3dc\Laravel\BladeInstance;
     class MY_Controller extends CI_Controller {
         protected $views = APPPATH . 'views';
         protected $cache = APPPATH . 'cache';
@@ -15,16 +16,17 @@
             }else{
                 $this->callback = 'https://' . $_SERVER['HTTP_HOST'].'/form/authen/index/6/';
             }
-            //$this->callback = 'https://' . $_SERVER['HTTP_HOST'].'/itadmin';
-            //$this->session_expire();
-            $this->blade = new PhpBlade($this->views, $this->cache);
-            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
+
+            //$this->blade = new PhpBlade($this->views, $this->cache);
+            $this->blade = new BladeInstance($this->views, $this->cache);
             $this->load->database();
             $this->load->library('mail');
+            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
         }
 
         public function views($view_name, $data = array()){
-            echo $this->blade->view()->make($view_name, $data);
+            //echo $this->blade->view()->make($view_name, $data);
+            echo $this->blade->render($view_name, $data);
         }
 
         public function session_expire(){

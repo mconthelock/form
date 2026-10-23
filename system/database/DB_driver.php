@@ -146,6 +146,27 @@ abstract class CI_DB_driver {
 	public $port			= NULL;
 
 	/**
+	 * Compress flag (declared to avoid dynamic property deprecation on PHP 8.2+)
+	 *
+	 * @var	bool
+	 */
+	public $compress		= FALSE;
+
+	/**
+	 * Strict ON flag (declared to avoid dynamic property deprecation)
+	 *
+	 * @var	bool
+	 */
+	public $stricton		= FALSE;
+
+	/**
+	 * Failover configuration (declared to avoid dynamic property deprecation)
+	 *
+	 * @var	array
+	 */
+	public $failover		= array();
+
+	/**
 	 * Persistent connection flag
 	 *
 	 * @var	bool
