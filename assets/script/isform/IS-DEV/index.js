@@ -15,13 +15,16 @@ import {
     totalBenefit,
     totalLabor,
     totalInvestment,
+    getFormIsDev,
     createFormIsDev,
-} from './data.js';
-    createFormIsDev,
+    updateFormIsDev,
 } from './data.js';
 select2();
 
 $(document).ready(async function () {
+    const mode = $('#MODE').val();
+    const nrunno = intVal($('#NRUNNO').val());
+
     await setRequester();
     const objectiveMst = await getObjectiveMst();
     const objectiveSelect = $('#req-objective');
@@ -31,25 +34,24 @@ $(document).ready(async function () {
         );
     });
 
-    $('#add-row-labor').trigger('click');
-    $('#add-row-investment').trigger('click');
     await setSelect2();
     await setDatePicker({
         altInput: true,
-        altInput: true,
         mode: 'month',
-        //dateFormat: 'Y-M',
-        altFormat: 'Y-M',
-        dateFormat: 'Y-m-01',
-        //dateFormat: 'Y-M',
         altFormat: 'Y-M',
         dateFormat: 'Y-m-01',
         minDate: dayjs().format('YYYY-MM'),
     });
     $('.flatpickr-input').removeClass('input');
+
+    if (mode == '2' || nrunno > 0) {
+        await initEditForm();
+    } else {
+        await addLaborRow();
+        await addInvestmentRow();
+    }
 });
 
-//General input number formatting
 //General input number formatting
 $(document).on('keyup', '.input-number', function (e) {
     let value = $(this).val();
@@ -60,7 +62,6 @@ $(document).on('keyup', '.input-number', function (e) {
     $(this).val(value);
 });
 
-//Requester Information
 //Requester Information
 $(document).on('change', '#req-by-input', async function (e) {
     e.preventDefault();
@@ -81,14 +82,7 @@ $(document).on('change', '#req-by-input', async function (e) {
             (users.SSEC ? ` - ${users.SSEC}` : ''),
     );
     $('#req-by-info').removeClass('hidden');
-    $(this).val('').addClass('hidden');
-});
-
-$(document).on('click', '#change-req-employee', async function (e) {
-    e.preventDefault();
-    $('#req-by-input').removeClass('hidden');
-    $('#req-by-info').addClass('hidden');
-    $('#req-by-input').focus();
+    $(this).val(users.SEMPNO).addClass('hidden');
 });
 
 $(document).on('click', '#change-req-employee', async function (e) {
@@ -107,12 +101,13 @@ $(document).on('click', '.request-type', async function (e) {
     } else {
         $('.form-roi').removeClass('hidden');
     }
-    if (val >= '3') {
-        $('.form-roi').addClass('hidden');
-        $('.form-roi input').val('');
-        $('.form-roi select').val('');
+});
+
+$(document).on('change', '#req-objective', function () {
+    if ($(this).val() == '8') {
+        $('#req-objective-other').prop('readonly', false);
     } else {
-        $('.form-roi').removeClass('hidden');
+        $('#req-objective-other').prop('readonly', true).val('');
     }
 });
 
@@ -139,7 +134,7 @@ $(document).on('click', '#add-file', async function (e) {
     e.preventDefault();
     const wrap = $('.file-input-wrap');
     const newInput = $(
-        '<input type="file" class="file-input file-input-sm w-full" />',
+        '<input type="file" class="file-input file-input-sm w-full attachments" name="attachments[]" />',
     );
     wrap.append(newInput);
 });
@@ -155,8 +150,7 @@ $(document).on('change', '.input-benefit', async function (e) {
 });
 
 // Labor Table
-$(document).on('click', '#add-row-labor', async function (e) {
-    e.preventDefault();
+async function addLaborRow(data = null) {
     const positionMst = await getPositionMst();
     let positionSelect = `<select class="select select-bordered select-sm w-full select-position">
         <option value="">Select Position</option>
@@ -195,6 +189,27 @@ $(document).on('click', '#add-row-labor', async function (e) {
         </tr>`,
     );
     table.append(newRow);
+
+    if (data) {
+        const pos = data.POSITION ?? '';
+        const cost = intVal(data.COST) || 0;
+        const present = intVal(data.HOURS_PRESENT) || 0;
+        const after = intVal(data.HOURS_AFTER) || 0;
+        const totalTime = present - after;
+        const totalLaborCost = totalTime * cost;
+
+        newRow.find('.select-position').val(pos);
+        newRow.find('.labor-cost').val(cost);
+        newRow.find('.labor-present').val(present);
+        newRow.find('.labor-future').val(after);
+        newRow.find('.labor-time').val(totalTime);
+        newRow.find('.labor-total').val(showDigits(totalLaborCost));
+    }
+}
+
+$(document).on('click', '#add-row-labor', async function (e) {
+    e.preventDefault();
+    await addLaborRow();
 });
 
 $(document).on('click', '#not-improve-manpower', async function (e) {
@@ -204,7 +219,7 @@ $(document).on('click', '#not-improve-manpower', async function (e) {
         $('#add-row-labor').prop('disabled', true);
     } else {
         $('#add-row-labor').prop('disabled', false);
-        $('#add-row-labor').trigger('click');
+        await addLaborRow();
     }
     await totalLabor();
     await totalBenefit();
@@ -253,8 +268,7 @@ $(document).on('change', '#req-roi-years', async function (e) {
 });
 
 // Investment Table
-$(document).on('click', '#add-row-investment', async function (e) {
-    e.preventDefault();
+async function addInvestmentRow(data = null) {
     const deviceMst = await getDeviceMst();
     let deviceSelect = `<select class="select select-bordered select-sm w-full select-device">
         <option value="">Select Device</option>
@@ -276,6 +290,24 @@ $(document).on('click', '#add-row-investment', async function (e) {
         </tr>
     `);
     table.append(newRow);
+
+    if (data) {
+        const deviceCode = data.DEVICE ?? data.DNO ?? '';
+        const qty = intVal(data.QTY) || 1;
+        const matchedDevice = deviceMst.find((d) => d.DNO == deviceCode);
+        const price =
+            intVal(data.PRICE ?? data.STANDARD_COST ?? matchedDevice?.STANDARD_COST) || 0;
+
+        newRow.find('.select-device').val(deviceCode);
+        newRow.find('.device-qty').val(qty);
+        newRow.find('.device-cost').val(showDigits(price));
+        newRow.find('.device-total').val(showDigits(qty * price));
+    }
+}
+
+$(document).on('click', '#add-row-investment', async function (e) {
+    e.preventDefault();
+    await addInvestmentRow();
 });
 
 $(document).on('click', '#not-improve-investment', async function (e) {
@@ -285,13 +317,13 @@ $(document).on('click', '#not-improve-investment', async function (e) {
         $('#add-row-investment').prop('disabled', true);
     } else {
         $('#add-row-investment').prop('disabled', false);
-        $('#add-row-investment').trigger('click');
+        await addInvestmentRow();
     }
     await totalInvestment();
     await totalBenefit();
 });
 
-$(document).on('click', '.select-device', async function (e) {
+$(document).on('click change', '.select-device', async function (e) {
     const row = $(this).closest('tr');
     const deviceCode = $(this).val();
     const deviceMst = await getDeviceMst();
@@ -326,44 +358,208 @@ $(document).on('click', '.remove-row-investment', async function (e) {
     await totalBenefit();
 });
 
-//Save Form
+async function initEditForm() {
+    const data = await getFormIsDev({
+        NFRMNO: $('#NFRMNO').val(),
+        VORGNO: $('#VORGNO').val(),
+        CYEAR: $('#CYEAR').val(),
+        CYEAR2: $('#CYEAR2').val(),
+        NRUNNO: $('#NRUNNO').val(),
+        EMPNO: $('#EMPNO').val(),
+    });
+
+    if (!data || !data[0]) {
+        await addLaborRow();
+        await addInvestmentRow();
+        return;
+    }
+
+    const res = data[0];
+
+    // Requester Info
+    const reqBy =
+        res.REQBY || res.REQ_PIC || res.form?.VREQNO || $('#EMPNO').val();
+    if (reqBy) {
+        $('#req-by-input').val(reqBy);
+        const reqUser = await displayEmpInfo(reqBy);
+        if (reqUser) {
+            $('#req-by-img')
+                .find('img')
+                .attr('src', reqUser.image)
+                .removeClass('hidden');
+            $('#req-by-name').html(reqUser.SNAME);
+            $('#req-by-id').html(reqUser.SEMPNO);
+            $('#req-by-organization').html(
+                `${reqUser.SDIV}` +
+                    (reqUser.SDEPT ? ` - ${reqUser.SDEPT}` : '') +
+                    (reqUser.SSEC ? ` - ${reqUser.SSEC}` : ''),
+            );
+            $('#req-by-info').removeClass('hidden');
+            $('#req-by-info').find('.skeleton').addClass('hidden');
+        }
+    }
+
+    // Input By Info
+    const inputBy =
+        res.INPUTBY || res.INPUT_BY || res.form?.VINPUTER || $('#EMPNO').val();
+    if (inputBy) {
+        const inputUser = await displayEmpInfo(inputBy);
+        if (inputUser) {
+            $('#input-by-img')
+                .find('img')
+                .attr('src', inputUser.image)
+                .removeClass('hidden');
+            $('#input-by-name').html(inputUser.SNAME);
+            $('#input-by-id').html(inputUser.SEMPNO);
+            $('#input-by-organization').html(
+                `${inputUser.SDIV}` +
+                    (inputUser.SDEPT ? ` - ${inputUser.SDEPT}` : '') +
+                    (inputUser.SSEC ? ` - ${inputUser.SSEC}` : ''),
+            );
+            $('#input-by-info').find('.skeleton').addClass('hidden');
+        }
+    }
+
+    if (res.CATEGORY !== undefined) {
+        $('[data-map="CATEGORY"]').val(res.CATEGORY);
+    }
+    if (res.PLANYEAR !== undefined) {
+        $('[data-map="PLANYEAR"]').val(res.PLANYEAR);
+    }
+
+    // Request Type
+    const jobType =
+        res.JOBTYPE ?? res.REQUEST_TYPE ?? res.category?.CATEGORY_ID;
+    if (jobType !== undefined && jobType !== null && jobType !== '') {
+        const radio = $(`.request-type[value="${jobType}"]`);
+        if (radio.length) {
+            radio.prop('checked', true);
+            if (String(jobType) >= '3') {
+                $('.form-roi').addClass('hidden');
+            } else {
+                $('.form-roi').removeClass('hidden');
+            }
+        }
+    }
+
+    // Text & Select Fields
+    $('[data-map="SYSTEMNAME"]').val(res.SYSTEMNAME ?? '');
+    $('[data-map="TITLE"]').val(res.TITLE ?? '');
+    $('[data-map="PURPOSE"]')
+        .val(res.PURPOSE ?? '')
+        .trigger('keyup');
+
+    if (res.OBJECTIVE !== undefined && res.OBJECTIVE !== null) {
+        $('#req-objective').val(String(res.OBJECTIVE)).trigger('change');
+        if (String(res.OBJECTIVE) === '8') {
+            $('#req-objective-other').prop('readonly', false);
+        }
+    }
+    if (res.OBJECTIVE_OTHER !== undefined && res.OBJECTIVE_OTHER !== null) {
+        $('#req-objective-other').val(res.OBJECTIVE_OTHER);
+    }
+    if (res.ROI_RETURN !== undefined && res.ROI_RETURN !== null) {
+        $('#req-roi-years').val(res.ROI_RETURN);
+    }
+    if (res.SPEC_CONFIRM_PLAN) {
+        const planDate = dayjs(res.SPEC_CONFIRM_PLAN).isValid()
+            ? dayjs(res.SPEC_CONFIRM_PLAN).format('YYYY-MM-01')
+            : res.SPEC_CONFIRM_PLAN;
+        const dateInput = $('[data-map="SPEC_CONFIRM_PLAN"]')[0];
+        if (dateInput && dateInput._flatpickr) {
+            dateInput._flatpickr.setDate(planDate, true);
+        } else {
+            $('[data-map="SPEC_CONFIRM_PLAN"]').val(planDate);
+        }
+    }
+
+    $('[data-map="CURRENT_WORKFLOW"]')
+        .val(res.CURRENT_WORKFLOW ?? '')
+        .trigger('keyup');
+    $('[data-map="EXPECTED_WORKFLOW"]')
+        .val(res.EXPECTED_WORKFLOW ?? '')
+        .trigger('keyup');
+
+    // Benefit Table
+    const benefits = res.benefit || res.benefits || [];
+    if (Array.isArray(benefits) && benefits.length > 0) {
+        const rows = $('#table-benefit tbody tr');
+        benefits.forEach((b) => {
+            const idx = intVal(b.BENEFIT_TYPE ?? b.BENEFIT);
+            const row = rows.eq(idx);
+            if (row.length && idx !== 3) {
+                const present = intVal(b.BENEFIT_CURRENT) || 0;
+                const after = intVal(b.BENEFIT_AFTER) || 0;
+                row.find('.present-cost').val(present);
+                row.find('.future-cost').val(after);
+                row.find('.subtotal-cost').val(showDigits(present - after, 2));
+            }
+        });
+    }
+
+    // Labor Table
+    const manhours = res.manhours || res.manhour || res.labor || [];
+    $('#table-labor tbody').empty();
+    if (Array.isArray(manhours) && manhours.length > 0) {
+        for (const m of manhours) {
+            await addLaborRow(m);
+        }
+    } else {
+        await addLaborRow();
+    }
+
+    // Investment Table
+    const invests = res.invest || res.investments || res.investment || [];
+    $('#table-investment tbody').empty();
+    if (Array.isArray(invests) && invests.length > 0) {
+        for (const inv of invests) {
+            await addInvestmentRow(inv);
+        }
+    } else {
+        await addInvestmentRow();
+    }
+
+    await totalLabor();
+    await totalInvestment();
+    await totalBenefit();
+}
+
+//Save Draft Form
+$(document).on('click', '#save-draft-form', async function (e) {
+    e.preventDefault();
+    $('#STATUS').val('0');
+    const formdata = await formData();
+    if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
+        await updateFormIsDev(formdata);
+    } else {
+        await createFormIsDev(formdata);
+    }
+});
+
+//Confirm Form
 $(document).on('click', '#confirm-form', async function (e) {
     e.preventDefault();
     const form = $('#form-is-dev')[0];
     //Verify form
-    // const formValid = await verifyForm(form);
-    // if (!formValid) {
-    //     return;
-    // }
-    // //Verify ROI form
-    // if ($('.request-type:checked').val() < 3) {
-    //     const roiValid = await verifyROI(form);
-    //     if (!roiValid) {
-    //         return;
-    //     }
-    // }
+    const formValid = await verifyForm(form);
+    if (!formValid) {
+        return;
+    }
+    //Verify ROI form
+    if ($('.request-type:checked').val() < 3) {
+        const roiValid = await verifyROI(form);
+        if (!roiValid) {
+            return;
+        }
+    }
 
+    $('#STATUS').val('1');
     const formdata = await formData();
-    await createFormIsDev(formdata);
-    //const files = $('#form-is-dev input[type="file"]');
-});
-
-async function verifyForm(form) {
-    // const formValid = await verifyForm(form);
-    // if (!formValid) {
-    //     return;
-    // }
-    // //Verify ROI form
-    // if ($('.request-type:checked').val() < 3) {
-    //     const roiValid = await verifyROI(form);
-    //     if (!roiValid) {
-    //         return;
-    //     }
-    // }
-
-    const formdata = await formData();
-    await createFormIsDev(formdata);
-    //const files = $('#form-is-dev input[type="file"]');
+    if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
+        await updateFormIsDev(formdata);
+    } else {
+        await createFormIsDev(formdata);
+    }
 });
 
 async function verifyForm(form) {
@@ -380,9 +576,7 @@ async function verifyForm(form) {
     if (!check) {
         await showMessage(
             `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
-            `กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.`,
         );
-        return false;
         return false;
     }
 
@@ -394,12 +588,7 @@ async function verifyForm(form) {
             .addClass('text-red-500');
         await showMessage(
             `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
-            `กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.`,
         );
-        return false;
-    }
-    return true;
-}
         return false;
     }
     return true;
@@ -407,7 +596,7 @@ async function verifyForm(form) {
 
 async function verifyROI(form) {
     //Verify form with ROI
-    let check2 = true;
+    let check = true;
     if ($('#req-objective').val() == 8) {
         $('#req-objective-other').addClass('req-2');
     } else {
@@ -422,41 +611,15 @@ async function verifyROI(form) {
             if (!$(this).val()) {
                 $(this).addClass('border-red-500');
                 $(this).closest('label.input').addClass('border-red-500');
-                check2 = false;
-            }
-        });
-async function verifyROI(form) {
-    //Verify form with ROI
-    let check2 = true;
-    if ($('#req-objective').val() == 8) {
-        $('#req-objective-other').addClass('req-2');
-    } else {
-        $('#req-objective-other').removeClass('req-2');
-        $('#req-objective-other').removeClass('border-red-500');
-    }
-    $(form)
-        .find('.req-2')
-        .map(function () {
-            $(this).removeClass('border-red-500');
-            $(this).closest('label.input').removeClass('border-red-500');
-            if (!$(this).val()) {
-                $(this).addClass('border-red-500');
-                $(this).closest('label.input').addClass('border-red-500');
-                check2 = false;
+                check = false;
             }
         });
 
-    if (!check2) {
+    if (!check) {
         await showMessage(
             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
         );
-        return check2;
-    }
-    if (!check2) {
-        await showMessage(
-            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
-        );
-        return check2;
+        return check;
     }
 
     //Check detail must have at least 100 characters
@@ -470,29 +633,7 @@ async function verifyROI(form) {
         );
         return false;
     }
-    //Check detail must have at least 100 characters
-    if ($('#current-workflow-count').html() < 1) {
-        $('#current-workflow-count')
-            .closest('.fieldset')
-            .find('textarea')
-            .addClass('text-red-500');
-        await showMessage(
-            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-        );
-        return false;
-    }
 
-    //Check detail must have at least 100 characters
-    if ($('#expected-workflow-count').html() < 1) {
-        $('#expected-workflow-count')
-            .closest('.fieldset')
-            .find('textarea')
-            .addClass('text-red-500');
-        await showMessage(
-            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
-        );
-        return false;
-    }
     //Check detail must have at least 100 characters
     if ($('#expected-workflow-count').html() < 1) {
         $('#expected-workflow-count')
@@ -524,8 +665,15 @@ async function formData() {
                 formData.append(map, $(this).val());
             }
         });
+    if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
+        formData.append('CYEAR2', $('#CYEAR2').val());
+        formData.append('NRUNNO', $('#NRUNNO').val());
+    }
     formData.append('JOBTYPE', $('.request-type:checked').val());
-    const requestor = $('#req-by-input').val();
+    const requestor =
+        $('#req-by-input').val() ||
+        $('#req-by-id').text().trim() ||
+        $('#EMPNO').val();
     const user = await displayEmpInfo(requestor);
     const org =
         user.SSECCODE != '00'
@@ -608,4 +756,14 @@ function setInvestmentCost(formData) {
             i++;
         }
     }
+}
+
+function setAttachments(formData) {
+    $('.attachments').each(function () {
+        if (this.files && this.files.length > 0) {
+            for (const file of this.files) {
+                formData.append('files[]', file);
+            }
+        }
+    });
 }

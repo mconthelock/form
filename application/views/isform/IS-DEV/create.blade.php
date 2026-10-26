@@ -2,12 +2,15 @@
 
 @section('contents')
     <form action="" id="form-is-dev">
+        <input type="text" class="hidden" id="MODE" value="{{ $mode ?? 1 }}" />
         <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
-        <input type="text" class="hidden" value="1" data-map="STATUS" />
+        <input type="text" class="hidden" id="STATUS" value="1" data-map="STATUS" />
         <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
         <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
+        <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR2 ?? '' }}" />
+        <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO ?? 0 }}" />
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
             data-map="INPUTBY" />
 
@@ -139,7 +142,7 @@
                     </div>
                     <p class="label">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
                     <div class="flex flex-col gap-2 items-center file-input-wrap">
-                        <input type="file" class="file-input file-input-sm w-full" name="attachments[]" />
+                        <input type="file" class="file-input file-input-sm w-full attachments" name="attachments[]" />
                     </div>
                 </fieldset>
             </fieldset>
@@ -230,6 +233,9 @@
             </div>
 
             <div class="flex gap-3 mt-3 ">
+                <button class="btn btn-primary btn-outline" id="save-draft-form"><i
+                        class="fi fi-tr-circle-ellipsis-vertical"></i>Save
+                    Draft</button>
                 <button class="btn btn-primary" id="confirm-form"><i class="fi fi-tr-multiple"></i>Confirm</button>
             </div>
         </section>

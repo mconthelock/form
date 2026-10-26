@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@rspack/cli": "^1.7.1",
     "@rspack/core": "^1.7.1",
     "@tailwindcss/cli": "^4.1.1",
@@ -12,7 +13,7 @@
     "vitepress": "^2.0.0-alpha.12"
   },
   "dependencies": {
-    "@amec/webasset": "git+https://webhub.mitsubishielevatorasia.co.th/wsd/webasset.git",
+    "@amec/webasset": "git+https://github.com/sutthipongjab/webasset.git",
     "@fancyapps/ui": "^5.0.36",
     "@flaticon/flaticon-uicons": "^3.3.1",
     "@fontsource/kanit": "^5.1.0",
@@ -57,6 +58,7 @@
     "update:webasset": "npm update @amec/webasset",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "test:e2e": "playwright test"
   }
 }

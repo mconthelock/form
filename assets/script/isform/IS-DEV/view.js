@@ -24,13 +24,45 @@ async function initForm() {
     });
 
     console.log(data);
+    if (!data || !data[0]) return;
+
+    const row = data[0];
+    const status = row.STATUS !== undefined ? String(row.STATUS).trim() : null;
+    const cst =
+        row.form?.CST !== undefined
+            ? String(row.form.CST).trim()
+            : row.CST !== undefined
+              ? String(row.CST).trim()
+              : null;
+    const isDraft =
+        status === '0' ||
+        String(status).toLowerCase() === 'draft' ||
+        cst === '0';
+    const inputBy = String(
+        row.INPUTBY ?? row.INPUT_BY ?? row.form?.VINPUTER ?? row.VINPUTER ?? '',
+    ).trim();
+    const empNo = String($('#EMPNO').val() ?? '').trim();
+
+    if (
+        isDraft &&
+        empNo !== '' &&
+        empNo === inputBy &&
+        window.location.pathname.includes('/main')
+    ) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('mode') !== '2') {
+            url.searchParams.set('mode', '2');
+            window.location.replace(url.href);
+            return;
+        }
+    }
 
     const res = {
-        ...data[0],
+        ...row,
         OBJECTIVE_TXT:
-            data[0].OBJECTIVE == '8'
-                ? `${data[0].objective.OBJ_NAME}: ${data[0].OBJECTIVE_OTHER}`
-                : data[0].objective.OBJ_NAME,
+            row.OBJECTIVE == '8'
+                ? `${row.objective?.OBJ_NAME ?? ''}: ${row.OBJECTIVE_OTHER ?? ''}`
+                : row.objective?.OBJ_NAME,
     };
 
     const element = $('#form-data').find('.map-data');

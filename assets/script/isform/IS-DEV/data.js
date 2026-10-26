@@ -205,3 +205,22 @@ export async function createFormIsDev(data) {
         });
     });
 }
+
+export async function updateFormIsDev(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/form/is/is-dev/update`,
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
+}

@@ -3,6 +3,7 @@
 .env.development
 .env.production
 .env.backup
+.continue/
 /node_modules
 assets/dist
 application/cache
@@ -15,3 +16,9 @@ backup
 
 package-lock.json
 application/composer.lock
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

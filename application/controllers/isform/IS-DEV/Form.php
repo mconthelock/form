@@ -15,6 +15,40 @@ class Form extends MY_Controller{
         $this->formname = 'DEV';
     }
 
+    private function getFormIsDev($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP']."/form/is/is-dev/search", [
+                'json' => [
+                    'NFRMNO' => $condition['NFRMNO'],
+                    'VORGNO' => $condition['VORGNO'],
+                    'CYEAR'  => $condition['CYEAR'],
+                    'CYEAR2' => $condition['CYEAR2'],
+                    'NRUNNO' => $condition['NRUNNO'],
+                    'EMPNO'  => $condition['EMPNO'],
+                ]
+            ]);
+            return json_decode($response->getBody(), true);
+        }catch(Exception $e){
+            return [];
+        }
+    }
+
+    private function isDraftEditable($form, $empno){
+        if (empty($form) || empty($empno)) return false;
+        $row = isset($form[0]) ? $form[0] : $form;
+        if (!is_array($row)) return false;
+
+        $status = isset($row['STATUS']) ? trim((string)$row['STATUS']) : null;
+        $cst = isset($row['form']['CST'])
+            ? trim((string)$row['form']['CST'])
+            : (isset($row['CST']) ? trim((string)$row['CST']) : null);
+
+        $isDraft = ($status === '0' || strtolower((string)$status) === 'draft' || $cst === '0');
+        $inputBy = $row['INPUTBY'] ?? ($row['INPUT_BY'] ?? ($row['form']['VINPUTER'] ?? ($row['VINPUTER'] ?? '')));
+
+        return $isDraft && trim((string)$empno) === trim((string)$inputBy);
+    }
+
     public function main(){
         $data = $this->setFormProp($this->formname);
         $data['CATEGORY'] = 2;
@@ -23,6 +57,13 @@ class Form extends MY_Controller{
 
         $data['mode'] = 1;
         if(isset($data["NRUNNO"]) && $data["NRUNNO"] != 0) {
+            $form = $this->getFormIsDev($data);
+            $forceEditMode = empty($form) && isset($_GET['mode']) && (string)$_GET['mode'] === '2';
+            if ($this->isDraftEditable($form, $data['EMPNO']) || $forceEditMode) {
+                $data['mode'] = 2;
+                $this->views("isform/IS-DEV/create", $data);
+                return;
+            }
             $this->views("isform/IS-DEV/show", $data);
         }else{
             //Create mode
