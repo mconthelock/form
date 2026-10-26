@@ -661,8 +661,10 @@ async function formData() {
         .find('input, textarea, select')
         .each(function () {
             const map = $(this).data('map');
+            const val = $(this).val();
             if (map) {
-                formData.append(map, $(this).val());
+                if (map === 'SPEC_CONFIRM_PLAN' && !val) return;
+                formData.append(map, val);
             }
         });
     if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
@@ -684,9 +686,10 @@ async function formData() {
     formData.append('REQ_ORG', org);
     formData.append('REQ_PIC', requestor);
     formData.append('REQ_DATE', dayjs().format('YYYY-MM-DD'));
-    if ($('.total-benefit').val() > 0) setBenefit(formData);
-    if ($('.total-labor').val() > 0) setLabor(formData);
-    if ($('.total-investment-cost').val() > 0) setInvestmentCost(formData);
+    if (intVal($('.total-benefit').val()) > 0) setBenefit(formData);
+    if (intVal($('.total-labor').val()) > 0) setLabor(formData);
+    if (intVal($('#total-investment-cost').val()) > 0)
+        setInvestmentCost(formData);
     if ($('.attachments').length > 0) setAttachments(formData);
     return formData;
 }
@@ -695,15 +698,15 @@ function setBenefit(formData) {
     const rows = $('#table-benefit').find('tbody tr');
     let i = 0;
     for (const row of rows) {
-        if ($(row).find('.subtotal-cost').val() > 0) {
-            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
+        if (intVal($(row).find('.subtotal-cost').val()) > 0) {
+            formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
             formData.append(
                 `benefit[${i}][BENEFIT_CURRENT]`,
-                $(row).find('.present-cost').val() || 0,
+                intVal($(row).find('.present-cost').val()) || 0,
             );
             formData.append(
                 `benefit[${i}][BENEFIT_AFTER]`,
-                $(row).find('.future-cost').val() || 0,
+                intVal($(row).find('.future-cost').val()) || 0,
             );
             i++;
         }
@@ -714,22 +717,22 @@ function setLabor(formData) {
     const rows = $('#table-labor').find('tbody tr');
     let i = 0;
     for (const row of rows) {
-        if ($(row).find('.labor-total').val() > 0) {
+        if (intVal($(row).find('.labor-total').val()) > 0) {
             formData.append(
                 `manhours[${i}][POSITION]`,
                 $(row).find('td:eq(0) select').val(),
             );
             formData.append(
                 `manhours[${i}][COST]`,
-                $(row).find('td:eq(1) input').val() || 0,
+                intVal($(row).find('td:eq(1) input').val()) || 0,
             );
             formData.append(
                 `manhours[${i}][HOURS_PRESENT]`,
-                $(row).find('td:eq(2) input').val() || 0,
+                intVal($(row).find('td:eq(2) input').val()) || 0,
             );
             formData.append(
                 `manhours[${i}][HOURS_AFTER]`,
-                $(row).find('td:eq(3) input').val() || 0,
+                intVal($(row).find('td:eq(3) input').val()) || 0,
             );
             i++;
         }
@@ -740,18 +743,18 @@ function setInvestmentCost(formData) {
     const rows = $('#table-investment').find('tbody tr');
     let i = 0;
     for (const row of rows) {
-        if ($(row).find('.device-total').val() > 0) {
+        if (intVal($(row).find('.device-total').val()) > 0) {
             formData.append(
                 `invest[${i}][DEVICE]`,
                 $(row).find('td:eq(0) select').val(),
             );
             formData.append(
                 `invest[${i}][QTY]`,
-                $(row).find('td:eq(1) input').val() || 0,
+                intVal($(row).find('td:eq(1) input').val()) || 0,
             );
             formData.append(
                 `invest[${i}][PRICE]`,
-                $(row).find('td:eq(2) input').val() || 0,
+                intVal($(row).find('td:eq(2) input').val()) || 0,
             );
             i++;
         }
