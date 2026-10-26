@@ -281,6 +281,10 @@ pipeline {
                         --exclude='Jenkinsfile' \
                         --exclude='application/cache' \
                         --exclude='application/logs' \
+                        --exclude='tests' \
+                        --exclude='playwright.config.js' \
+                        --exclude='test-results' \
+                        --exclude='playwright-report' \
                         --exclude='*@tmp' \
                         ./ ${TARGET_DIR}/
 
