@@ -598,3 +598,277 @@ test.describe('IS-DEV Form Controller (application/controllers/isform/IS-DEV/For
     });
 });
 
+test.describe('Real API Integration: Create IS-DEV Form with Realistic Data', () => {
+    test('should fill realistic requisition data and submit to the real /form/is/is-dev/create API', async ({
+        page,
+    }) => {
+        await page.goto(`${BASE_URL}/isform/IS-DEV/form/main?empno=24008`);
+
+        await expect(page.locator('#form-is-dev')).toBeVisible();
+
+        // Wait for requester info and master data selects to load from real API
+        await expect(page.locator('#req-by-id')).toHaveText('24008', {
+            timeout: 15000,
+        });
+        await expect
+            .poll(
+                async () =>
+                    await page.locator('#req-objective option').count(),
+                { timeout: 15000 },
+            )
+            .toBeGreaterThan(1);
+        await expect
+            .poll(
+                async () =>
+                    await page
+                        .locator(
+                            '#table-labor tbody tr:first-child .select-position option',
+                        )
+                        .count(),
+                { timeout: 15000 },
+            )
+            .toBeGreaterThan(1);
+        await expect
+            .poll(
+                async () =>
+                    await page
+                        .locator(
+                            '#table-investment tbody tr:first-child .select-device option',
+                        )
+                        .count(),
+                { timeout: 15000 },
+            )
+            .toBeGreaterThan(1);
+
+        // 1. Request Detail
+        // Select Windows Application
+        await page.locator('input[name="system_name"]').nth(1).check();
+        // Select Request Type 1: New Program/Additional Request
+        await page.locator('input.request-type[value="1"]').check();
+
+        await page
+            .locator('input[name="program_name"]')
+            .fill('AMEC Smart Purchase Requisition & Budget Control (e-PR)');
+        await page
+            .locator('input[name="title"]')
+            .fill(
+                'พัฒนาระบบขออนุมัติใบขอซื้อและตรวจสอบงบประมาณออนไลน์แบบ Real-time บนระบบ Webflow',
+            );
+
+        const realisticDetail =
+            'โครงการพัฒนาระบบใบขอซื้อออนไลน์ (e-PR) เพื่อทดแทนการเดินเอกสารกระดาษและไฟล์ Excel แบบเดิม โดยระบบจะเชื่อมต่อข้อมูลรหัสสินค้า ผู้ขาย และงบประมาณรายแผนกจากฐานข้อมูลกลางอัตโนมัติ ช่วยลดความผิดพลาดในการกรอกข้อมูลซ้ำซ้อน ลดระยะเวลาการรออนุมัติของผู้บริหาร และสามารถติดตามสถานะใบขอซื้อแบบ Real-time ได้ทุกขั้นตอน';
+        const detailTextarea = page.locator('textarea[name="detail"]');
+        await detailTextarea.fill(realisticDetail);
+        await detailTextarea.dispatchEvent('keyup');
+
+        // Attach a realistic specification document
+        await page
+            .locator('.file-input-wrap input[type="file"]')
+            .first()
+            .setInputFiles({
+                name: 'e-PR-System-Flow-Specification.pdf',
+                mimeType: 'application/pdf',
+                buffer: Buffer.from(
+                    '%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF',
+                ),
+            });
+
+        // 2. Expected Outcome (ROI)
+        // Select the first valid Objective option (not empty and not 8 unless only 8 exists)
+        await page.evaluate(() => {
+            const select = document.querySelector('#req-objective');
+            const options = Array.from(select.options)
+                .map((el) => el.value)
+                .filter((v) => v !== '');
+            const chosen = options.find((v) => v !== '8') || options[0] || '1';
+            select.value = chosen;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        await page.locator('#req-roi-years').fill('2');
+        await page.locator('#req-roi-years').dispatchEvent('change');
+
+        // Set Preferred Requirement Gathering Period to next month
+        await page.evaluate(() => {
+            const el = document.querySelector('[data-map="SPEC_CONFIRM_PLAN"]');
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            const ym = `${nextMonth.getFullYear()}-${String(
+                nextMonth.getMonth() + 1,
+            ).padStart(2, '0')}-01`;
+            if (el && el._flatpickr) {
+                el._flatpickr.setDate(ym, true);
+            } else if (el) {
+                el.value = ym;
+            }
+        });
+
+        const currentWorkflowText =
+            'ปัจจุบันพนักงานแต่ละแผนกต้องจัดทำใบขอซื้อในโปรแกรม Excel พิมพ์เป็นเอกสารกระดาษเพื่อเดินแฟ้มขออนุมัติจากหัวหน้างานและผู้จัดการตามลำดับชั้น จากนั้นส่งเอกสารให้แผนกจัดซื้อตรวจสอบงบประมาณและคีย์ข้อมูลเข้าระบบอีกครั้ง ทำให้เกิดความล่าช้า เอกสารสูญหาย และตรวจสอบสถานะย้อนหลังได้ยาก';
+        const currentWf = page.locator('[data-map="CURRENT_WORKFLOW"]');
+        await currentWf.fill(currentWorkflowText);
+        await currentWf.dispatchEvent('keyup');
+
+        const expectedWorkflowText =
+            'ผู้ขอซื้อสามารถสร้างใบขอซื้อผ่านระบบ Webflow ได้โดยตรง ระบบจะดึงข้อมูลผู้ขายและตรวจสอบวงเงินงบประมาณคงเหลืออัตโนมัติ จากนั้นส่งแจ้งเตือนไปยังผู้อนุมัติผ่านอีเมลและระบบ Webflow ทันที เมื่ออนุมัติครบตามสายบังคับบัญชา ข้อมูลจะถูกส่งต่อไปยังแผนกจัดซื้อโดยไม่ต้องพิมพ์กระดาษหรือคีย์ข้อมูลซ้ำ';
+        const expectedWf = page.locator('[data-map="EXPECTED_WORKFLOW"]');
+        await expectedWf.fill(expectedWorkflowText);
+        await expectedWf.dispatchEvent('keyup');
+
+        // 3. Benefit Table
+        const benefitRows = page.locator('#table-benefit tbody tr');
+        // Row 0: Running Cost (150 KB -> 30 KB = 120 KB)
+        await benefitRows.nth(0).locator('.present-cost').fill('150');
+        await benefitRows.nth(0).locator('.present-cost').dispatchEvent('change');
+        await benefitRows.nth(0).locator('.future-cost').fill('30');
+        await benefitRows.nth(0).locator('.future-cost').dispatchEvent('change');
+
+        // Row 2: Lost (Material/Order) (80 KB -> 20 KB = 60 KB)
+        await benefitRows.nth(2).locator('.present-cost').fill('80');
+        await benefitRows.nth(2).locator('.present-cost').dispatchEvent('change');
+        await benefitRows.nth(2).locator('.future-cost').fill('20');
+        await benefitRows.nth(2).locator('.future-cost').dispatchEvent('change');
+
+        // Row 5: Preparing Cost (45 KB -> 10 KB = 35 KB)
+        await benefitRows.nth(5).locator('.present-cost').fill('45');
+        await benefitRows.nth(5).locator('.present-cost').dispatchEvent('change');
+        await benefitRows.nth(5).locator('.future-cost').fill('10');
+        await benefitRows.nth(5).locator('.future-cost').dispatchEvent('change');
+
+        // 4. Efficiency Gains (Labor Table)
+        const laborRow0 = page.locator('#table-labor tbody tr').first();
+        const firstPosVal = await laborRow0
+            .locator('.select-position option:not([value=""])')
+            .first()
+            .getAttribute('value');
+        if (firstPosVal) {
+            await laborRow0.locator('.select-position').selectOption(firstPosVal);
+            await laborRow0.locator('.select-position').dispatchEvent('change');
+        }
+        await laborRow0.locator('.labor-present').fill('480');
+        await laborRow0.locator('.labor-present').dispatchEvent('change');
+        await laborRow0.locator('.labor-future').fill('120');
+        await laborRow0.locator('.labor-future').dispatchEvent('change');
+
+        // 5. Investment in Equipment Table
+        const investRow0 = page.locator('#table-investment tbody tr').first();
+        const firstDeviceVal = await investRow0
+            .locator('.select-device option:not([value=""])')
+            .first()
+            .getAttribute('value');
+        if (firstDeviceVal) {
+            await investRow0
+                .locator('.select-device')
+                .selectOption(firstDeviceVal);
+            await investRow0.locator('.select-device').click();
+            await investRow0.locator('.select-device').dispatchEvent('change');
+        }
+        await investRow0.locator('.device-qty').fill('1');
+        await investRow0.locator('.device-qty').dispatchEvent('change');
+
+        // 6. Submit to real API
+        const createResponsePromise = page.waitForResponse((res) =>
+            res.url().includes('/form/is/is-dev/create'),
+        );
+        await page.locator('#confirm-form').click();
+        const response = await createResponsePromise;
+        const responseBody = await response.text();
+        console.log(
+            'Real createFormIsDev response:',
+            response.status(),
+            responseBody,
+        );
+
+        const msg = `API responded with ${response.status()}: ${responseBody}`;
+        expect(response.ok(), msg).toBeTruthy();
+    });
+
+    test('should fill realistic requisition data and Save Draft to the real /form/is/is-dev/create API', async ({
+        page,
+    }) => {
+        await page.goto(`${BASE_URL}/isform/IS-DEV/form/main?empno=24008`);
+
+        await expect(page.locator('#form-is-dev')).toBeVisible();
+        await expect(page.locator('#req-by-id')).toHaveText('24008', {
+            timeout: 15000,
+        });
+        await expect
+            .poll(
+                async () =>
+                    await page.locator('#req-objective option').count(),
+                { timeout: 15000 },
+            )
+            .toBeGreaterThan(1);
+
+        await page
+            .locator('input[name="program_name"]')
+            .fill('AMEC Warehouse Barcode & Inventory Tracking');
+        await page
+            .locator('input[name="title"]')
+            .fill(
+                'ระบบสแกน QR Code รับ-จ่ายพัสดุในคลังสินค้าเชื่อมต่อระบบ AS400 อัตโนมัติ (Draft)',
+            );
+
+        const detailTextarea = page.locator('textarea[name="detail"]');
+        await detailTextarea.fill(
+            'ร่างโครงการพัฒนาระบบสแกน QR Code สำหรับการรับเข้าและเบิกจ่ายวัตถุดิบในคลังสินค้า เพื่อลดการคีย์ข้อมูลลงใบบันทึกกระดาษและอัปเดตยอดคงคลังเข้าสู่ระบบ AS400 แบบอัตโนมัติ ช่วยเพิ่มความแม่นยำของข้อมูลสต็อกสินค้าและลดเวลาในการตรวจนับสินค้าประจำเดือน',
+        );
+        await detailTextarea.dispatchEvent('keyup');
+
+        // Fill realistic Expected Outcome (ROI) fields for the draft as well
+        await page.evaluate(() => {
+            const select = document.querySelector('#req-objective');
+            const options = Array.from(select.options)
+                .map((el) => el.value)
+                .filter((v) => v !== '');
+            const chosen = options.find((v) => v !== '8') || options[0] || '1';
+            select.value = chosen;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        await page.locator('#req-roi-years').fill('3');
+        await page.locator('#req-roi-years').dispatchEvent('change');
+
+        await page.evaluate(() => {
+            const el = document.querySelector('[data-map="SPEC_CONFIRM_PLAN"]');
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 2);
+            const ym = `${nextMonth.getFullYear()}-${String(
+                nextMonth.getMonth() + 1,
+            ).padStart(2, '0')}-01`;
+            if (el && el._flatpickr) {
+                el._flatpickr.setDate(ym, true);
+            } else if (el) {
+                el.value = ym;
+            }
+        });
+
+        const currentWf = page.locator('[data-map="CURRENT_WORKFLOW"]');
+        await currentWf.fill(
+            'พนักงานคลังสินค้าต้องจดบันทึกยอดรับ-จ่ายลงในแบบฟอร์มกระดาษและนำมาคีย์เข้าระบบ AS400 ช่วงท้ายกะ ทำให้ยอดสต็อกไม่อัปเดตแบบ Real-time และเกิดความคลาดเคลื่อนจากการคีย์ข้อมูลผิดพลาด',
+        );
+        await currentWf.dispatchEvent('keyup');
+
+        const expectedWf = page.locator('[data-map="EXPECTED_WORKFLOW"]');
+        await expectedWf.fill(
+            'พนักงานคลังสินค้าสแกน QR Code บนป้าย Tag พัสดุผ่านอุปกรณ์ Handheld หรือสมาร์ทโฟน ข้อมูลการรับ-จ่ายจะถูกตรวจสอบและส่งไปตัดสต็อกในระบบ AS400 ทันที พร้อมสรุปรายงานความเคลื่อนไหวอัตโนมัติ',
+        );
+        await expectedWf.dispatchEvent('keyup');
+
+        const createResponsePromise = page.waitForResponse((res) =>
+            res.url().includes('/form/is/is-dev/create'),
+        );
+        await page.locator('#save-draft-form').click();
+        const response = await createResponsePromise;
+        const responseBody = await response.text();
+        console.log(
+            'Real saveDraftFormIsDev response:',
+            response.status(),
+            responseBody,
+        );
+
+        const msg = `API responded with ${response.status()}: ${responseBody}`;
+        expect(response.ok(), msg).toBeTruthy();
+    });
+});
+
