@@ -148,9 +148,7 @@
             <ul id="file-list" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
             <p class="mt-3 text-xs text-slate-400">แนบเอกสารเกี่ยวกับ JIG เพื่อใช้อ้างอิงในการตรวจสอบ</p>
         </section>
-        @if ($pageMode !== 'create')
-            @include('ieform/IE-JIG/checkpoint_fields')
-        @endif
+        @include('ieform/IE-JIG/checkpoint_fields')
         <section id="ng-detail" hidden class="mt-5 rounded-2xl border border-red-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="ng-heading">
             <h2 id="ng-heading" class="mb-5 font-bold text-red-700">NG Detail</h2>
             <fieldset id="ng-fields" disabled class="space-y-4">
@@ -205,7 +203,7 @@
             </fieldset>
         </section>
         @if ($pageMode === 'create')
-            @include('ieform/IE-JIG/checkpoint_fields')
+        <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>
         @endif
     </form>
     <section id="jig-approval" hidden class="mt-6">
