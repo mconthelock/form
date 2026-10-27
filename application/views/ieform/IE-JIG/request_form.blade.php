@@ -181,7 +181,7 @@
         <section id="jig-recheck" hidden class="mb-5 mt-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 class="mb-4 font-bold text-slate-900">Corrective Action NG and Recheck</h2>
             <fieldset id="recheck-fields" disabled class="space-y-4">
-                <label class="block text-xs font-semibold text-slate-700">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
+                <label class="block text-xs font-semibold text-slate-700 md:w-1/2">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
                     <input name="actual_finnish_date" placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white text-sm" required>
                 </label>
                 <label class="block text-xs font-semibold text-slate-700">สรุปการดำเนินงาน <span class="text-red-600">*</span>

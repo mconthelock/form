@@ -11,13 +11,13 @@ export function initializeRecheck(form) {
     const date = form.elements.namedItem('actual_finnish_date');
     const summary = form.elements.namedItem('summary_detail');
     const groups = ['BEFORE', 'AFTER'];
-    let key, stored = [], nextSeq = 1, hasNg = false, deleting = false, saving = false;
+    let key, stored = [], nextSeq = 1, hasNg = false, hasRecheckData = false, deleting = false, saving = false;
     const incoming = { BEFORE: [], AFTER: [] };
     setDatePicker({ element: '[name="actual_finnish_date"]', dateFormat: 'Y-m-d',
         altInput: true, altFormat: 'd/m/Y', disableMobile: true });
     function setNg(value) {
         hasNg = value;
-        section.hidden = !editable || !value;
+        section.hidden = !value || (!editable && !hasRecheckData);
         fields.disabled = !editable || !value;
         section.querySelectorAll('[data-recheck-upload]').forEach(el => { el.hidden = !editable; });
     }
@@ -98,6 +98,7 @@ export function initializeRecheck(form) {
             key = formKey;
             stored = (snapshot.FILES || []).filter(f => groups.includes(f.FILE_GROUP));
             nextSeq = Math.max(0, ...(snapshot.FILES || []).map(f => Number(f.FILE_SEQ))) + 1;
+            hasRecheckData = Boolean(snapshot.NG?.ACTUAL_FINNISH_DATE);
             date._flatpickr?.setDate(calendarDate(snapshot.NG?.ACTUAL_FINNISH_DATE), false, 'Y-m-d');
             summary.value = snapshot.NG?.SUMMARY_DETAIL || '';
             setNg(Boolean(snapshot.NG)); render();
