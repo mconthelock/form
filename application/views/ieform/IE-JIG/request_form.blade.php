@@ -91,6 +91,31 @@
     color: #dc2626 !important;
     -webkit-text-fill-color: #dc2626;
 }
+#jig-page #jig-recheck {
+    border-color: #93c5fd;
+    background-color: #f8fbff;
+}
+#jig-page #jig-recheck h2,
+#jig-page #jig-recheck h3,
+#jig-page #jig-recheck label {
+    color: #1e3a8a;
+}
+#jig-page #jig-recheck input,
+#jig-page #jig-recheck textarea {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8;
+    border-color: #93c5fd !important;
+    font-weight: 600;
+    opacity: 1;
+}
+#jig-page #jig-recheck input:disabled,
+#jig-page #jig-recheck textarea:disabled {
+    background-color: #eff6ff !important;
+}
+#jig-page #jig-recheck .text-red-600 {
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626;
+}
 </style>
 @endsection
 @section('contents')
@@ -196,7 +221,7 @@
                             <span class="text-xs text-slate-500">สูงสุด 5 ไฟล์ต่อช่อง ไฟล์ละไม่เกิน 10 MB</span>
                             <input type="file" data-recheck-input="{{ $group }}" accept=".jpg,.jpeg,.png" multiple class="file-input file-input-sm w-full">
                         </label>
-                        <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm"></ul>
+                        <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
                     </div>
                     @endforeach
                 </div>
