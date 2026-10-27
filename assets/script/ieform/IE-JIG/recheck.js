@@ -27,14 +27,17 @@ export function initializeRecheck(form) {
             list.replaceChildren();
             for (const file of stored.filter(f => f.FILE_GROUP === group)) {
                 const li = document.createElement('li');
-                li.className = 'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2';
+                li.className = 'flex items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-blue-900';
                 const link = document.createElement('a');
-                link.textContent = file.FILE_NAME; link.href = jigFileUrl(key, file);
+                const size = Number(file.FILE_SIZE);
+                link.textContent = file.FILE_NAME + (Number.isFinite(size) ? ` (${(size / 1024 / 1024).toFixed(2)} MB)` : '');
+                link.href = jigFileUrl(key, file);
                 link.target = '_blank'; link.rel = 'noopener noreferrer';
+                link.className = 'min-w-0 break-all font-semibold text-indigo-700 underline underline-offset-2';
                 li.append(link);
                 if (editable) {
                     const remove = document.createElement('button'); remove.type = 'button';
-                    remove.className = 'btn btn-ghost btn-xs'; remove.textContent = 'ลบ';
+                    remove.className = 'btn btn-ghost btn-xs shrink-0'; remove.textContent = 'ลบ';
                     remove.onclick = async () => {
                         if (saving || deleting || fields.matches(':disabled')) return;
                         const result = await Swal.fire({ icon: 'warning', title: 'ยืนยันลบไฟล์?', text: file.FILE_NAME,
@@ -56,10 +59,12 @@ export function initializeRecheck(form) {
                 list.append(li);
             }
             incoming[group].forEach(file => {
-                const li = document.createElement('li'); li.className = 'flex justify-between gap-3 px-3 py-2';
-                const label = document.createElement('span'); label.textContent = file.name;
+                const li = document.createElement('li'); li.className = 'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-slate-600';
+                const label = document.createElement('span');
+                label.className = 'min-w-0 break-all';
+                label.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
                 const remove = document.createElement('button'); remove.type = 'button';
-                remove.className = 'btn btn-ghost btn-xs'; remove.textContent = 'ลบ';
+                remove.className = 'btn btn-ghost btn-xs shrink-0'; remove.textContent = 'ลบ';
                 remove.onclick = () => { if (saving || fields.matches(':disabled')) return; incoming[group] = incoming[group].filter(f => f !== file); render(); };
                 li.append(label, remove); list.append(li);
             });
