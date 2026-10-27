@@ -21,6 +21,7 @@ import {
     setContent,
     setFormData,
     handleReqFile,
+    tourOptions,
 } from './function';
 import { setForm } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
@@ -29,6 +30,7 @@ import { doaction, getMode } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { getComparisonListByForm } from '../PUR-CPC/data';
 import { tableComparison } from '../PUR-CPC/table/table-comparison';
+import { Tour } from '@amec/webasset/tour';
 
 let isReturn = false;
 $(async function () {
@@ -45,7 +47,7 @@ $(async function () {
                 EMPNO: empno,
             });
         }
-        console.log('mode', formMode);
+        // console.log('mode', formMode);
         switch (+formMode) {
             case 1:
                 if (!(await checkPlanner(empno))) {
@@ -63,10 +65,16 @@ $(async function () {
                         draft: true,
                     }),
                 );
+                await Tour.create({
+                    key: 'PRICEAPV',
+                    user: empno,
+                    options: tourOptions,
+                });
+
                 break;
             case 2:
                 isReturn = await setReturn();
-                console.log('isReturn', isReturn);
+                // console.log('isReturn', isReturn);
                 if (!isReturn) {
                     await setView();
                     // สร้างปุ่ม สำหรับ request form
@@ -111,6 +119,15 @@ $(async function () {
     } finally {
         showLoader({ show: false });
     }
+});
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-27
+ * @description เริ่มทัวร์แนะนำการใช้งานฟอร์มตาม key 'PRICEAPV' เมื่อคลิกปุ่ม
+ */
+$(document).on('click', '#start-tour', function () {
+    Tour.startTour('PRICEAPV');
 });
 
 /**

@@ -6,6 +6,9 @@
             <div class="flex items-center gap-2">
                 <i class="fi fi-sr-memo-circle-check text-lg text-slate-600"></i>
                 <h2 class="text-base font-bold text-slate-800">Price Approval System</h2>
+                <button type="button" class="btn btn-circle ml-auto tooltip-html" id="start-tour" data-html="Help">
+                    <i class="fi fi-sr-messages-question text-lg "></i>
+                </button> 
             </div>
         </div>
 
@@ -28,7 +31,7 @@
             </div>
 
             {{-- Section 1: ข้อมูลเอกสาร --}}
-            <section class="rounded-xl border border-slate-200">
+            <section id="document-info-section" class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">1</span>
                     <h3 class="font-semibold text-slate-700">ข้อมูลเอกสาร</h3>
@@ -81,7 +84,7 @@
             </section>
 
             {{-- Section 2: รายละเอียดสินค้า --}}
-            <section class="rounded-xl border border-slate-200">
+            <section id="product-info-section" class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">2</span>
                     <h3 class="font-semibold text-slate-700">รายละเอียดสินค้า (New Item)</h3>
@@ -145,7 +148,7 @@
             </section>
 
             {{-- Section 3: ราคา --}}
-            <section class="rounded-xl border border-slate-200">
+            <section id="pricing-section" class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">3</span>
                     <h3 class="font-semibold text-slate-700">ข้อมูลราคา</h3>
@@ -234,7 +237,7 @@
             </section>
 
             {{-- Section 4: เหตุผลการเปลี่ยนแปลง --}}
-            <section class="rounded-xl border border-slate-200">
+            <section id="change-reason-section" class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">4</span>
                     <h3 class="font-semibold text-slate-700">เหตุผลการเปลี่ยนแปลง (Reason Change - update)</h3>
@@ -281,7 +284,7 @@
             </section>
 
             {{-- Section 5: ไฟล์แนบ --}}
-            <section class="rounded-xl border border-slate-200">
+            <section id="attachment-section" class="rounded-xl border border-slate-200">
                 <header class="flex items-center gap-2 px-4 py-3 border-b border-slate-200 bg-slate-50 rounded-t-xl">
                     <span class="badge badge-neutral badge-sm">5</span>
                     <h3 class="font-semibold text-slate-700">ไฟล์แนบ (Attach file)
