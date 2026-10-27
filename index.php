@@ -67,10 +67,12 @@
  * Different environments will require different levels of error reporting.
  * By default development will show errors but testing and live will hide them.
  */
-switch (ENVIRONMENT)
+ switch (ENVIRONMENT)
 {
 	case 'development':
-		error_reporting(-1);
+		// Legacy vendor libraries (illuminate, etc.) emit many PHP 8.x deprecations
+        // error_reporting(-1);
+		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 		ini_set('display_errors', 1);
 	break;
 
@@ -92,6 +94,7 @@ switch (ENVIRONMENT)
 		echo 'The application environment is not set correctly.';
 		exit(1); // EXIT_ERROR
 }
+
 
 /*
  *---------------------------------------------------------------
