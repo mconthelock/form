@@ -1,4 +1,3 @@
-import { webflowSubmit } from '@amec/webasset/components/form';
 import { createTable } from '@amec/webasset/dataTable';
 import {
     getAllAttr,
@@ -10,14 +9,15 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
 import 'flatpickr/dist/plugins/monthSelect/style.css';
-import { create, getOrgMfg, getTsAdjustData } from './data';
+import { create, getData, getOrgMfg, getTsAdjustData, update } from './data';
 import { showLoader } from '@amec/webasset/preloader';
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
 import { getUser } from '@amec/webasset/api/amec';
+import { redirectWebflow } from '@amec/webasset/form';
 
 select2();
-
+let form = {};
 let tsTableInstance = null;
 
 // 💡 สร้าง HTML ปุ่มลบเตรียมไว้ (ไอคอนถังขยะ)
@@ -40,18 +40,27 @@ const transformDataForTable = (apiData, startIndex = 0) => {
 
         let currentTP = 0;
         let currentTC = 0;
+        let afterTP = 0;
+        let afterTC = 0;
 
-        // 1. คำนวณยอดรวมของ Process ทั้งหมดก่อน
         if (item.PROCESS && Array.isArray(item.PROCESS)) {
             item.PROCESS.forEach((process) => {
                 currentTP += process.F02R04 || 0;
                 currentTC += process.F02R05 || 0;
+
+                // 💡 รวมยอด After โดยเช็คว่ามีค่าส่งมาหรือไม่
+                afterTP +=
+                    process.AF_TP !== undefined
+                        ? process.AF_TP
+                        : process.F02R04 || 0;
+                afterTC +=
+                    process.AF_TC !== undefined
+                        ? process.AF_TC
+                        : process.F02R05 || 0;
             });
         }
 
         const currentTS = currentTP + qty * currentTC;
-        const afterTP = currentTP;
-        const afterTC = currentTC;
         const afterTS = afterTP + qty * afterTC;
         const totalReq = afterTS - currentTS;
 
@@ -81,10 +90,13 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                 const pTP = process.F02R04 || 0;
                 const pTC = process.F02R05 || 0;
 
+                const pAfterTP =
+                    process.AF_TP !== undefined ? process.AF_TP : pTP;
+                const pAfterTC =
+                    process.AF_TC !== undefined ? process.AF_TC : pTC;
+
                 // คำนวณค่าเริ่มต้น
                 const pTS = pTP + qty * pTC;
-                const pAfterTP = pTP;
-                const pAfterTC = pTC;
                 const pAfterTS = pAfterTP + qty * pAfterTC;
                 const pTotalReq = pAfterTS - pTS;
 
@@ -286,60 +298,21 @@ function packDataForSave(actionValue) {
     console.log('Final Data to save:', dataToSave);
     return dataToSave;
 }
-// function packDataForSave() {
-//     if (!tsTableInstance) {
-//         showMessage('Not have Data', 'warning');
-//         return;
-//     }
-
-//     const dataToSave = [];
-//     let currentParentData = {};
-
-//     tsTableInstance.rows().every(function () {
-//         const data = this.data();
-//         const node = this.node();
-
-//         if (data[15] === 'parent') {
-//             // 💡 แก้เป็น 15
-//             currentParentData = {
-//                 partName: data[1],
-//                 item: data[2],
-//                 dwg: data[3],
-//                 qty: data[4],
-//             };
-//         } else if (data[15] === 'child') {
-//             // 💡 แก้เป็น 15
-//             let tpAfter =
-//                 $(node).find('td:eq(9) input').val() ||
-//                 $(node).find('td:eq(9)').text().trim() ||
-//                 data[9];
-//             let tcAfter =
-//                 $(node).find('td:eq(10) input').val() ||
-//                 $(node).find('td:eq(10)').text().trim() ||
-//                 data[10];
-//             if (data[6] != tpAfter || data[7] != tcAfter) {
-//                 const rowData = {
-//                     partName: currentParentData.partName,
-//                     item: currentParentData.item,
-//                     dwg: currentParentData.dwg,
-//                     qty: currentParentData.qty,
-//                     process: data[5],
-//                     tpBefore: data[6],
-//                     tcBefore: data[7],
-//                     tpAfter: tpAfter,
-//                     tcAfter: tcAfter,
-//                 };
-
-//                 dataToSave.push(rowData);
-//             }
-//         }
-//     });
-
-//     console.log('Data to save:', dataToSave);
-//     return dataToSave;
-// }
 
 $(document).ready(async function () {
+    const formInfo = await getAllAttr('.form-info');
+
+    form = {
+        NFRMNO: formInfo.nfrmno,
+        VORGNO: formInfo.vorgno,
+        CYEAR: formInfo.cyear,
+        CYEAR2: formInfo.cyear2,
+        NRUNNO: formInfo.nrunno,
+        MODE: Number(formInfo.mode) ?? null,
+        EMPNO: $('.apv-data').attr('empno'),
+        RETURN: formInfo.return ?? null,
+    };
+
     const empno = $('.apv-data').attr('empno');
     const info = await getUser(empno);
     const orgmfg = await getOrgMfg();
@@ -359,7 +332,6 @@ $(document).ready(async function () {
             }),
         ],
     });
-    await initMyTable();
     await setSelect2({
         id: '#TSORGNO',
         data: orgmfgdata,
@@ -369,7 +341,56 @@ $(document).ready(async function () {
         clear: true,
         emptyValue: true,
     });
-    $(`#TSORGNO`).val(info.SSECCODE).trigger('change');
+    let datatable = [];
+    if (form.RETURN) {
+        const datafrmts = await getData(form);
+        $(`#TSORGNO`).val(datafrmts?.TSORGNO).trigger('change');
+        $('input[name="REQBY"]').val(datafrmts.FORM.VREQNO);
+
+        if (datafrmts && datafrmts.LISTS) {
+            const grouped = {};
+            datafrmts.LISTS.forEach((item) => {
+                const key = item.DWGNO;
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        F01R04: item.DWGNO,
+                        F01R09: item.PRTNAME,
+                        F01R03: item.ITMNO,
+                        QTY: item.QTY,
+                        PROCESS: [],
+                    };
+                }
+                grouped[key].PROCESS.push({
+                    F02R03: item.PROCESS,
+                    F02R04: item.CUR_TP,
+                    F02R05: item.CUR_TC,
+                    // 💡 ส่งค่า After จาก DB เข้าไปด้วย
+                    AF_TP: item.AF_TP,
+                    AF_TC: item.AF_TC,
+                });
+            });
+
+            const formattedList = Object.values(grouped);
+            // 💡 นำข้อมูลที่จัดกลุ่มแล้วเข้าฟังก์ชันเตรียมข้อมูลตาราง
+            datatable = transformDataForTable(formattedList, 0);
+        }
+        const reqflow = datafrmts.FORM.flow.find(
+            (item) =>
+                item.CSTEPST === '3' &&
+                (item.VAPVNO === empno || item.VREPNO === empno),
+        );
+        if (reqflow) {
+            $('textarea[name="txtRemark"]').val(reqflow.VREMARK);
+        }
+
+        console.log('return');
+        console.log(datafrmts);
+    } else {
+        console.log('create');
+        $(`#TSORGNO`).val(info.SSECCODE).trigger('change');
+        $('input[name="REQBY"]').val(empno);
+    }
+    tsTableInstance = await initMyTable(datatable);
 });
 
 const generateMockData = () => {
@@ -404,13 +425,10 @@ const generateMockData = () => {
     });
 };
 
-async function initMyTable() {
-    const mockData = generateMockData();
-    console.log(mockData);
-
+async function initMyTable(data) {
     const tableOption = {
         //data: mockData,
-        data: [],
+        data: data,
         searching: false,
         paging: false,
         ordering: false,
@@ -430,27 +448,26 @@ async function initMyTable() {
         ],
         drawCallback: function (settings) {
             const api = this.api();
-            const intVal = function (i) {
-                return typeof i === 'string'
-                    ? i.replace(/[\$,]/g, '') * 1
-                    : typeof i === 'number'
-                      ? i
-                      : 0;
-            };
+            const allData = api.rows({ page: 'current' }).data().toArray();
 
-            const sumCurrentTS = api
-                .column(8, { page: 'current' })
-                .data()
-                .reduce((a, b) => intVal(a) + intVal(b), 0);
-            const sumAfterTS = api
-                .column(11, { page: 'current' })
-                .data()
-                .reduce((a, b) => intVal(a) + intVal(b), 0);
-            const sumTotal = api
-                .column(12, { page: 'current' })
-                .data()
-                .reduce((a, b) => intVal(a) + intVal(b), 0);
+            // 1. กรองเอาเฉพาะแถวหลัก (parent) เพื่อไม่ให้เอา HTML ในแถว child มาคำนวณ
+            const parentRows = allData.filter((row) => row[15] === 'parent');
 
+            // 2. ใช้ parseFloat แปลงค่าแล้วนำมาบวกกัน
+            const sumCurrentTS = parentRows.reduce(
+                (sum, row) => sum + parseFloat(row[8] || 0),
+                0,
+            );
+            const sumAfterTS = parentRows.reduce(
+                (sum, row) => sum + parseFloat(row[11] || 0),
+                0,
+            );
+            const sumTotal = parentRows.reduce(
+                (sum, row) => sum + parseFloat(row[12] || 0),
+                0,
+            );
+
+            // 3. แสดงผลลงในหน้าจอ
             document.getElementById('sum-current-ts').innerHTML =
                 sumCurrentTS.toFixed(4);
             document.getElementById('sum-after-ts').innerHTML =
@@ -481,10 +498,14 @@ async function initMyTable() {
 $(document).on('click', '.btnact', async function () {
     const act = $(this).val();
     const formInfo = await getAllAttr('.form-info');
+    //console.log('formreturn =', formInfo.return);
+
+    //return false;
     //console.log(act);
     const dwgData = await packDataForSave();
     //console.log(dwgData);
     const payload = {
+        ...(!formInfo.return && act === 'draft' && { DRAFT: 0 }),
         ACTION: act,
         NFRMNO: formInfo.nfrmno,
         VORGNO: formInfo.vorgno,
@@ -499,10 +520,30 @@ $(document).on('click', '.btnact', async function () {
         EMPNO: $('.apv-data').attr('empno'),
         RETURN: formInfo.return ?? null,
         DWGLIST: dwgData,
+        REMARK: $('textarea[name="txtRemark"]').val(),
     };
     console.log(payload);
-    const res = await create(payload);
-    console.log('after create');
+    try {
+        showLoader();
+        let res;
+        if (!formInfo.return) {
+            res = await create(payload);
+        } else {
+            res = await update(payload);
+        }
+
+        if (res.status) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        } else {
+            showMessage(res.message, 'warning');
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
+    }
 });
 
 $(document).on('click', '#btnAdd', async function () {
@@ -548,6 +589,7 @@ $(document).on('click', '#btnAdd', async function () {
             month: month,
             dwgNo: dwgList,
         });
+
         if (res && res.length > 0) {
             if (tsTableInstance) {
                 const allData = tsTableInstance.rows().data().toArray();

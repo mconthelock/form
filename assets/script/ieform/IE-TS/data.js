@@ -20,6 +20,22 @@ export async function create(form) {
     });
 }
 
+export async function update(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/ieform/ie-ts/update`,
+        method: 'PATCH',
+        data: form,
+    });
+}
+
+export async function getData(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/ieform/iets-form/data`,
+        method: 'POST',
+        data: form,
+    });
+}
+
 export async function getOrgMfg() {
     return fetchUtils({
         url: `${process.env.APP_API}/ieform/ie-ts/orgmfg`,

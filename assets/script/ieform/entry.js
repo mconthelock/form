@@ -10,4 +10,5 @@ module.exports = {
 
     //IE-TS
     iets: './assets/script/ieform/IE-TS/create.js',
+    ietsview: './assets/script/ieform/IE-TS/view.js',
 };

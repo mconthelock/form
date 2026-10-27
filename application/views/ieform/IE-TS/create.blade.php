@@ -72,7 +72,7 @@
                                 class="flex items-center justify-center w-1/3 bg-slate-50 text-slate-600 font-medium text-sm border-r border-slate-300 px-3">
                                 Request by
                             </label>
-                            <input name = "REQBY" type="text" value="{{ $empno }}" maxlength="5"
+                            <input name = "REQBY" type="text" value="" maxlength="5"
                                 class="w-2/3 border-0 bg-white py-2 pl-3 text-slate-900 text-sm focus:ring-0 outline-none">
                         </div>
                         <!-- Section -->
