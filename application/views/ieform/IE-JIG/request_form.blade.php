@@ -178,7 +178,7 @@
             </div>
         </section>
         </fieldset>
-        <section id="jig-recheck" hidden class="mb-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
+        <section id="jig-recheck" hidden class="mb-5 mt-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 class="mb-4 font-bold text-slate-900">Corrective Action NG and Recheck</h2>
             <fieldset id="recheck-fields" disabled class="space-y-4">
                 <label class="block text-xs font-semibold text-slate-700">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>

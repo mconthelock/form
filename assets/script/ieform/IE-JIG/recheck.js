@@ -17,7 +17,7 @@ export function initializeRecheck(form) {
         altInput: true, altFormat: 'd/m/Y', disableMobile: true });
     function setNg(value) {
         hasNg = value;
-        section.hidden = !value;
+        section.hidden = !editable || !value;
         fields.disabled = !editable || !value;
         section.querySelectorAll('[data-recheck-upload]').forEach(el => { el.hidden = !editable; });
     }
