@@ -26,7 +26,7 @@
 <body class="flex flex-col min-h-screen">
     <input type="checkbox" id="loading-box" class="modal-toggle" checked />
 
-    <div class="flex flex-col w-full px-4 mt-20 mb-20 md:px-8 lg:mt-5">
+    <div class="flex flex-col w-full px-4 mt-20 mb-20 md:px-8 lg:my-5">
         @yield('contents')
     </div>
 

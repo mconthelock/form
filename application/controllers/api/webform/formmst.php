@@ -41,4 +41,22 @@ trait formmst{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form master by vaname', 'e' => $e]), 1);
         }
     }
+
+    private function setFormProp($name){
+        $data = [];
+        $form = $this->getFormMasterByVaname($name);
+        if(!empty($form)){
+            // $_GET keys are case-sensitive in PHP, normalize to lowercase before reading
+            $get = array_change_key_case($_GET, CASE_LOWER);
+            $data = [
+                'NFRMNO' => isset($get['no']) ? $get['no'] : $form['data']['NNO'],
+                'VORGNO' => isset($get['orgNo']) ? $get['orgNo'] : $form['data']['VORGNO'],
+                'CYEAR'  => isset($get['y']) ? $get['y'] : $form['data']['CYEAR'],
+                'CYEAR2' => isset($get['y2']) ? $get['y2'] : date('Y'),
+                'NRUNNO' => isset($get['runno']) ? $get['runno'] : 0,
+                'EMPNO'  => isset($get['empno']) ? $get['empno'] : '',
+            ];
+        }
+        return $data;
+    }
 }

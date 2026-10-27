@@ -25,7 +25,7 @@
                         </label>
                         <label class="input">
                             <span class="label font-bold">Request by</span>
-                            <input type="text" class="req" id="requester" placeholder="e.g. 24008"/>
+                            <input type="text" value="{{$empno}}" class="req" id="requester" placeholder="e.g. 24008" readonly/>
                         </label>
                     </div>
                     <hr class="">

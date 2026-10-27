@@ -129,7 +129,8 @@ $(document).on('click', '#btnRequest', async function () {
                     message: 'Please fill Quantity for Other Stamp',
                 },
                 {
-                    element: $('#otherAttachment'),
+                    // element: $('#otherAttachment'),
+                    element: $('#otherStampSection').find('input[name="otherAttachment"]'),
                     message: 'Please fill Attachment for Other Stamp',
                 },
             ];

@@ -83,3 +83,5 @@ defined('EXIT_USER_INPUT')     OR define('EXIT_USER_INPUT', 7); // invalid user 
 defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
+
+defined('TCPDF_SILENCE_DEPRECATION') OR define('TCPDF_SILENCE_DEPRECATION', true); // ปิดการเตือน ให้ย้าย libraly ของ tcpdf ตั้งแต่ ver 6.11.4 หากมีอัปเดตใหม่และบังคับปิดไม่ได้ให้ย้อนไป ver 6.10.1

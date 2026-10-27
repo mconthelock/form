@@ -11,9 +11,26 @@ $(async function () {
     const $tableWrapper = $("#tableWrapper");
     const $emptyState = $("#emptyState");
 
+    if (!$("#purScbImportHighlightStyle").length) {
+        $("head").append(`
+            <style id="purScbImportHighlightStyle">
+                #price_table tbody td.pur-scb-import-changed-cell {
+                    background-color: #FEF3C7 !important;
+                }
+            </style>
+        `);
+    }
+
     const setLoadingState = (isLoading) => {
         $loadingSkeleton.toggleClass("hidden", !isLoading);
         $tableWrapper.toggleClass("hidden", isLoading);
+    };
+
+    const normalizeTextValue = (value) => value == null ? '' : String(value).trim();
+    const normalizePriceValue = (value) => {
+        if (value == null || value === '') return '';
+        const numericValue = Number(String(value).replace(/,/g, '').trim());
+        return Number.isFinite(numericValue) ? numericValue.toFixed(2) : normalizeTextValue(value);
     };
 
     setLoadingState(true);
@@ -132,7 +149,12 @@ $(async function () {
     }
 
     // Tag all rows as 'update' by default (toggled by quotation filter)
-    data = data.map(row => ({ ...row, _UPDATE_TYPE: 'update' }));
+    data = data.map(row => ({
+        ...row,
+        _UPDATE_TYPE: 'update',
+        _HAS_IMPORTED_CHANGES: false,
+        _HAS_QUOTATION_CHANGE: false,
+    }));
 
     const table = await createTable({
         data: data,
@@ -208,6 +230,9 @@ $(async function () {
             //     }
             // },
         ],
+        rowCallback: function (row, rowData) {
+            $('td:eq(2)', row).toggleClass('pur-scb-import-changed-cell', Boolean(rowData._HAS_QUOTATION_CHANGE));
+        },
 
     }, {
         id: "price_table"
@@ -480,28 +505,62 @@ $(async function () {
 
             const rawPrice = row.getCell(7).value;
             excelMap[String(scrapId).trim()] = {
+                QUOTATION: normalizeTextValue(row.getCell(3).value),
                 _NEW_VENDOR: row.getCell(6).value ?? '',
-                _NEW_PRICE: rawPrice != null && rawPrice !== '' ? parseFloat(rawPrice).toFixed(2) : '',
-                _EFFECTIVE_DATE: effectiveDate,
+                _NEW_PRICE: normalizePriceValue(rawPrice),
+                _EFFECTIVE_DATE: normalizeTextValue(effectiveDate),
             };
         });
 
         let updated = 0;
+        let changed = 0;
+        let quotationChanged = 0;
         table.rows().every(function () {
             const rowData = this.data();
             const match = excelMap[String(rowData.SCRAP_ID).trim()];
             if (match && rowData._UPDATE_TYPE === 'update') {
-                rowData._NEW_VENDOR = match._NEW_VENDOR;
-                rowData._NEW_PRICE = match._NEW_PRICE;
-                rowData._EFFECTIVE_DATE = match._EFFECTIVE_DATE;
+                const nextQuotation = normalizeTextValue(match.QUOTATION);
+                const nextNewVendor = normalizeTextValue(match._NEW_VENDOR);
+                const nextNewPrice = normalizePriceValue(match._NEW_PRICE);
+                const nextEffectiveDate = normalizeTextValue(match._EFFECTIVE_DATE);
+
+                const hasQuotationChange = normalizeTextValue(rowData.QUOTATION) !== nextQuotation;
+
+                rowData._HAS_IMPORTED_CHANGES = [
+                    hasQuotationChange,
+                    normalizeTextValue(rowData._NEW_VENDOR) !== nextNewVendor,
+                    normalizePriceValue(rowData._NEW_PRICE) !== nextNewPrice,
+                    normalizeTextValue(rowData._EFFECTIVE_DATE) !== nextEffectiveDate,
+                ].some(Boolean);
+                rowData._HAS_QUOTATION_CHANGE = hasQuotationChange;
+
+                rowData.QUOTATION = nextQuotation;
+                rowData._NEW_VENDOR = nextNewVendor;
+                rowData._NEW_PRICE = nextNewPrice;
+                rowData._EFFECTIVE_DATE = nextEffectiveDate;
                 this.data(rowData);
                 updated++;
+                if (rowData._HAS_IMPORTED_CHANGES) changed++;
+                if (rowData._HAS_QUOTATION_CHANGE) quotationChanged++;
+            } else if (rowData._HAS_IMPORTED_CHANGES || rowData._HAS_QUOTATION_CHANGE) {
+                rowData._HAS_IMPORTED_CHANGES = false;
+                rowData._HAS_QUOTATION_CHANGE = false;
+                this.data(rowData);
             }
         });
         table.draw(false);
 
         $("#saveFooter").removeClass("hidden");
-        Swal.fire({ icon: 'success', title: `โหลดข้อมูลแล้ว ${updated} รายการ`, text: 'ตรวจสอบข้อมูลแล้วกด Save', timer: 2000 });
+        Swal.fire({
+            icon: 'success',
+            title: `โหลดข้อมูลแล้ว ${updated} รายการ`,
+            text: changed > 0
+                ? quotationChanged > 0
+                    ? `มี ${changed} รายการที่ถูกแก้ไข และ ${quotationChanged} รายการที่ Quotation เปลี่ยนจึงถูก highlight`
+                    : `มี ${changed} รายการที่ถูกแก้ไข โดย Quotation ยังเป็นค่าเดิมจึงไม่ highlight`
+                : 'ตรวจสอบข้อมูลแล้วกด Save',
+            timer: 2200
+        });
     });
 
     // ---- Save winner data to database ----

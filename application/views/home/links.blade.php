@@ -1,10 +1,10 @@
-<div class="flex-1 card shadow-xl bordered">
-    <figure class="h-[150px]">
+<div class="flex-1 card shadow-xl border border-slate-300">
+    <figure class="h-37.5">
         <img src="{{ base_url() }}assets/images/{{ $links['img'] }}" alt="" class="w-full" />
     </figure>
     <div class="card-body">
         <h2 class="card-title">{{ $links['text'] }}</h2>
-        <ul class="flex flex-col gap-2 lg:min-w-[250px]" id="{{ $links['id'] }}">
+        <ul class="flex flex-col gap-2 lg:min-w-62.5" id="{{ $links['id'] }}">
             <div class="skeleton h-8 w-1/2"></div>
             <div class="skeleton h-8 w-3/4"></div>
             <div class="skeleton h-8 w-2/3"></div>
