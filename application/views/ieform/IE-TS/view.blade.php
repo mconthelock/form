@@ -72,22 +72,27 @@
                     <!-- แถวที่ 1: หัวตารางหลัก -->
                     <tr class="bg-slate-50 text-slate-700">
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">NO
+                            class="col-no sticky-column sticky z-20 border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            NO
                         </th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-left font-bold tracking-wider">PART
+                            class="col-part sticky-column sticky z-20 border-b border-r border-slate-200 px-3 py-2.5 text-left font-bold tracking-wider">
+                            PART
                             NAME</th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">ITEM
+                            class="col-item border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            ITEM
                         </th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">DWG
+                            class="col-dwg border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            DWG
                         </th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">Q'ty
+                            class="col-qty border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            Q'ty
                         </th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            class="col-process border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
                             Process</th>
 
                         <!-- Current -->
@@ -104,7 +109,7 @@
 
                         <!-- Total Request -->
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center bg-red-50 text-red-700 font-bold leading-tight">
+                            class="col-total-req border-b border-r border-slate-200 px-3 py-2.5 text-center bg-red-50 text-red-700 font-bold leading-tight">
                             Total Request<br><span class="text-[10px] font-normal">(Hr)</span>
                         </th>
 
@@ -114,12 +119,12 @@
                             IE Incharge Check & Accept
                         </th>
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-100 font-bold text-green-800">
+                            class="col-accept border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-100 font-bold text-green-800">
                             Accept <span class="text-[9px]">(Hr)</span></th>
 
                         <!-- Requested History -->
                         <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
+                            class="col-history border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
                             Requested<br>History
                         </th>
 
@@ -129,30 +134,34 @@
                     <!-- แถวที่ 2: หัวตารางย่อย -->
                     <tr class="text-slate-500 bg-slate-50">
                         <!-- Current Sub -->
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/50">TP <span
-                                class="text-[9px]">(Hr)</span></th>
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/50">TC <span
-                                class="text-[9px]">(Hr)</span></th>
+                        <th class="col-cur-tp border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/50">TP
+                            <span class="text-[9px]">(Hr)</span>
+                        </th>
+                        <th class="col-cur-tc border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/50">TC
+                            <span class="text-[9px]">(Hr)</span>
+                        </th>
                         <th
-                            class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/80 font-bold text-blue-900">
+                            class="col-cur-ts border-b border-r border-slate-200 px-3 py-1.5 text-center bg-slate-100/80 font-bold text-blue-900">
                             TS <span class="text-[9px]">(Hr)</span></th>
 
                         <!-- After Sub -->
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/30">TP <span
-                                class="text-[9px]">(Hr)</span></th>
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/30">TC <span
-                                class="text-[9px]">(Hr)</span></th>
+                        <th class="col-after-tp border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/30">
+                            TP <span class="text-[9px]">(Hr)</span></th>
+                        <th class="col-after-tc border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/30">
+                            TC <span class="text-[9px]">(Hr)</span></th>
                         <th
-                            class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/70 font-bold text-amber-950">
+                            class="col-after-ts border-b border-r border-slate-200 px-3 py-1.5 text-center bg-amber-50/70 font-bold text-amber-950">
                             TS <span class="text-[9px]">(Hr)</span></th>
 
                         <!-- IE Incharge Sub (เพิ่มใหม่) -->
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/30">TP <span
-                                class="text-[9px]">(Hr)</span></th>
-                        <th class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/30">TC <span
-                                class="text-[9px]">(Hr)</span></th>
+                        <th class="col-ie-tp border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/30">TP
+                            <span class="text-[9px]">(Hr)</span>
+                        </th>
+                        <th class="col-ie-tc border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/30">TC
+                            <span class="text-[9px]">(Hr)</span>
+                        </th>
                         <th
-                            class="border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/70 font-bold text-green-900">
+                            class="col-ie-ts border-b border-r border-slate-200 px-3 py-1.5 text-center bg-green-50/70 font-bold text-green-900">
                             TS <span class="text-[9px]">(Hr)</span></th>
 
                     </tr>
@@ -194,13 +203,13 @@
                         </th>
                         <th class="border-b border-slate-200 px-2 py-1.5">
                             <span id="sum-ie-ts"
-                                class="inline-block w-full px-2 py-1 text-center font-bold rounded-md bg-green-50 text-green-800 border border-green-200 shadow-sm">0.0000</span>
+                                class="inline-block w-full px-2 py-1 text-center font-bold rounded-md bg-green-50 text-green-800 border border-green-200 shadow-sm"></span>
                         </th>
                         <th class="border-b border-r border-slate-200 px-2 py-1.5 bg-green-50/50">
                             <div
                                 class="flex items-center justify-between bg-green-100/80 border border-green-200 rounded-md px-2 py-1 text-green-700 font-bold shadow-sm">
                                 <span class="text-[10px] text-green-600/80 font-normal mr-3">Sum</span>
-                                <span id="sum-ie-accept" class="flex-1 text-right text-xs">+ 0.0000</span>
+                                <span id="sum-ie-accept" class="flex-1 text-right text-xs"></span>
                         </th>
 
                         <!-- เว้นช่องประวัติ -->

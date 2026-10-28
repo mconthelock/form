@@ -5,10 +5,16 @@ import {
     showflow,
 } from '@amec/webasset/api/webform';
 import { getformDetail } from '@amec/webasset/components/form';
-import { getAllAttr } from '@amec/webasset/utils';
-import { getData } from './data';
+import {
+    getAllAttr,
+    showErrorMessage,
+    showMessage,
+} from '@amec/webasset/utils';
+import { approve, getData } from './data';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { showLoader } from '@amec/webasset/preloader';
+import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
 let cextdata;
@@ -23,42 +29,46 @@ const transformDataForTable = (
     apiData.forEach((item, index) => {
         const no = startIndex + index + 1;
 
-        const dwgNo = item.F01R04 ? item.F01R04.trim() : '-';
-        const name = item.F01R09 ? item.F01R09.trim() : '-';
-        const shop = item.F01R03 ? item.F01R03.trim() : '-';
+        const dwgNo = item.F01R04 ? item.F01R04.trim() : '';
+        const name = item.F01R09 ? item.F01R09.trim() : '';
+        const shop = item.F01R03 ? item.F01R03.trim() : '';
         const qty = item.QTY || 0;
 
         let currentTP = 0,
             currentTC = 0;
         let afterTP = 0,
             afterTC = 0;
-        let ieTP = 0,
-            ieTC = 0,
-            ieAccept = 0;
+        let ieTP = null,
+            ieTC = null,
+            ieAccept = null;
 
         if (item.PROCESS && Array.isArray(item.PROCESS)) {
             item.PROCESS.forEach((process) => {
                 currentTP += process.F02R04 || 0;
                 currentTC += process.F02R05 || 0;
 
-                // 💡 เปลี่ยนมาใช้ != null เพื่อดักจับทั้ง null และ undefined
                 afterTP +=
                     process.AF_TP != null ? process.AF_TP : process.F02R04 || 0;
                 afterTC +=
                     process.AF_TC != null ? process.AF_TC : process.F02R05 || 0;
 
-                ieTP +=
-                    process.IE_TP != null ? process.IE_TP : process.F02R04 || 0;
-                ieTC +=
-                    process.IE_TC != null ? process.IE_TC : process.F02R05 || 0;
-                ieAccept += process.IE_ACCEPT != null ? process.IE_ACCEPT : 0;
+                // 💡 2. เก็บผลรวม IE ต่อเมื่อมีค่าส่งมาจาก DB เท่านั้น
+                if (process.IE_TP != null) ieTP = (ieTP || 0) + process.IE_TP;
+                if (process.IE_TC != null) ieTC = (ieTC || 0) + process.IE_TC;
+                if (process.IE_ACCEPT != null)
+                    ieAccept = (ieAccept || 0) + process.IE_ACCEPT;
             });
         }
 
         const currentTS = currentTP + qty * currentTC;
         const afterTS = afterTP + qty * afterTC;
         const totalReq = afterTS - currentTS;
-        const ieTS = ieTP + qty * ieTC;
+
+        // 💡 3. คำนวณ TS ถ้ามีค่า IE ตัวใดตัวหนึ่งอยู่
+        const ieTS =
+            ieTP != null || ieTC != null
+                ? (ieTP || 0) + qty * (ieTC || 0)
+                : null;
 
         flatData.push([
             no,
@@ -75,12 +85,13 @@ const transformDataForTable = (
             afterTS.toFixed(4),
             totalReq.toFixed(4),
 
-            ieTP.toFixed(4),
-            ieTC.toFixed(4),
-            ieTS.toFixed(4),
-            ieAccept > 0 ? ieAccept.toFixed(4) : '-',
+            // 💡 4. ถ้าไม่มีข้อมูลเลย (เป็น null) ให้โชว์ช่องว่าง ('')
+            ieTP != null ? ieTP.toFixed(4) : '',
+            ieTC != null ? ieTC.toFixed(4) : '',
+            ieTS != null ? ieTS.toFixed(4) : '',
+            ieAccept != null && ieAccept > 0 ? ieAccept.toFixed(4) : '',
 
-            '-',
+            '',
             'parent',
         ]);
 
@@ -89,39 +100,62 @@ const transformDataForTable = (
                 const pTP = process.F02R04 || 0;
                 const pTC = process.F02R05 || 0;
 
-                // 💡 เปลี่ยนมาใช้ != null
                 const pAfterTP = process.AF_TP != null ? process.AF_TP : pTP;
                 const pAfterTC = process.AF_TC != null ? process.AF_TC : pTC;
 
-                const pIeTP = process.IE_TP != null ? process.IE_TP : pTP;
-                const pIeTC = process.IE_TC != null ? process.IE_TC : pTC;
+                const hasIeTP = process.IE_TP != null;
+                const hasIeTC = process.IE_TC != null;
                 const pIeAccept = process.IE_ACCEPT;
 
                 const pTS = pTP + qty * pTC;
                 const pAfterTS = pAfterTP + qty * pAfterTC;
                 const pTotalReq = pAfterTS - pTS;
-                const pIeTS = pIeTP + qty * pIeTC;
 
                 const spanAfterTP = `<span class="text-amber-900 font-medium">${pAfterTP.toFixed(4)}</span>`;
                 const spanAfterTC = `<span class="text-amber-900 font-medium">${pAfterTC.toFixed(4)}</span>`;
                 const spanAfterTS = `<span class="span-after-ts text-amber-950">${pAfterTS.toFixed(4)}</span>`;
-
                 const spanTotalReq = `<span class="span-total-req ${pTotalReq !== 0 ? 'text-red-600 font-bold' : ''}">${pTotalReq.toFixed(4)}</span>`;
 
                 let ieTpHtml, ieTcHtml, ieAcceptHtml;
-                const spanIeTS = `<span class="span-ie-ts text-slate-400">${pIeTS.toFixed(4)}</span>`;
+                let spanIeTS;
 
                 if (isIeEditable) {
-                    ieTpHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tp" value="${pIeTP.toFixed(4)}" data-qty="${qty}">`;
-                    ieTcHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tc" value="${pIeTC.toFixed(4)}" data-qty="${qty}">`;
-                    ieAcceptHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-bold bg-white border border-green-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 input-ie-accept" value="${pIeAccept != null ? pIeAccept.toFixed(4) : ''}" placeholder="-">`;
+                    const inputTP = hasIeTP ? process.IE_TP : pAfterTP;
+                    const inputTC = hasIeTC ? process.IE_TC : pAfterTC;
+                    const inputTS = inputTP + qty * inputTC;
+
+                    spanIeTS = `<span class="span-ie-ts text-slate-600">${inputTS.toFixed(4)}</span>`;
+
+                    ieTpHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tp" data-id="${process.ID}" value="${inputTP.toFixed(4)}" data-qty="${qty}">`;
+
+                    ieTcHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tc" data-id="${process.ID}" value="${inputTC.toFixed(4)}" data-qty="${qty}">`;
+
+                    // 💡 เปลี่ยน placeholder="-" เป็น placeholder=""
+                    ieAcceptHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-bold bg-white border border-green-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 input-ie-accept" data-id="${process.ID}" value="${pIeAccept != null ? pIeAccept.toFixed(4) : ''}" placeholder="">`;
                 } else {
-                    ieTpHtml = `<span class="text-slate-600 font-medium">${pIeTP.toFixed(4)}</span>`;
-                    ieTcHtml = `<span class="text-slate-600 font-medium">${pIeTC.toFixed(4)}</span>`;
+                    // 💡 โหมดแสดงผลปกติ: ถ้าไม่มีค่า IE ใน DB ให้ปล่อยว่างไว้ (เอา span ขีดเทาออก)
+                    const viewTS =
+                        hasIeTP && hasIeTC
+                            ? process.IE_TP + qty * process.IE_TC
+                            : null;
+
+                    spanIeTS =
+                        viewTS != null
+                            ? `<span class="span-ie-ts text-slate-600">${viewTS.toFixed(4)}</span>`
+                            : ``;
+
+                    ieTpHtml = hasIeTP
+                        ? `<span class="text-slate-600 font-medium">${process.IE_TP.toFixed(4)}</span>`
+                        : ``;
+
+                    ieTcHtml = hasIeTC
+                        ? `<span class="text-slate-600 font-medium">${process.IE_TC.toFixed(4)}</span>`
+                        : ``;
+
                     ieAcceptHtml =
-                        pIeAccept != null && pIeAccept > 0
+                        pIeAccept != null
                             ? `<span class="text-green-700 font-semibold">${pIeAccept.toFixed(4)}</span>`
-                            : `<span class="text-slate-300">-</span>`;
+                            : ``;
                 }
 
                 flatData.push([
@@ -130,7 +164,7 @@ const transformDataForTable = (
                     '',
                     '',
                     '',
-                    process.F02R03 ? process.F02R03.trim() : '-',
+                    process.F02R03 ? process.F02R03.trim() : '',
                     pTP.toFixed(4),
                     pTC.toFixed(4),
                     pTS.toFixed(4),
@@ -171,10 +205,31 @@ $(document).ready(async function () {
         showflow({ ...form, showStep: true }),
         getData(form),
     ]);
+    const reqflow = ietsfrm.FORM.flow.find(
+        (item) =>
+            item.CSTEPST === '3' &&
+            (item.VAPVNO === apvno || item.VREPNO === apvno),
+    );
+    if (reqflow) {
+        $('textarea[name="txtRemark"]').val(reqflow.VREMARK);
+    }
 
     if (ietsfrm && ietsfrm.LISTS) {
         const grouped = {};
-        ietsfrm.LISTS.forEach((item) => {
+        let listToProcess = ietsfrm.LISTS;
+
+        // 💡 เช็คว่าถ้า EXTDATA เท่ากับ 2 ถึงจะทำการกรองข้อมูล
+        if (cextdata == 2) {
+            listToProcess = ietsfrm.LISTS.filter((item) => {
+                // ปรับแก้ property ตามโครงสร้างข้อมูล (item.SEMPNO หรือ item.PICMST?.SEMPNO)
+                return (
+                    item.PICMST.SEMPNO === apvno ||
+                    item.PICMST.SEMPNO2 === apvno
+                );
+            });
+        }
+
+        listToProcess.forEach((item) => {
             const key = item.DWGNO;
             if (!grouped[key]) {
                 grouped[key] = {
@@ -209,12 +264,12 @@ $(document).ready(async function () {
     const jung = ietsfrm?.JUNG;
 
     // 1. สร้าง DOM จำลองเพื่อดึงข้อมูล
-    const $temp = $('<div>').html(formDetail);
+    const temp = $('<div>').html(formDetail);
 
     // 2. โครงสร้างแบบโปร่ง ไม่มีพื้นหลังทึบ เว้นระยะห่างให้ดูสบายตา
     let displayHtml = '<div class="flex flex-col gap-4 p-2">';
 
-    $temp.find('tr').each(function () {
+    temp.find('tr').each(function () {
         const $tds = $(this).find('td');
         if ($tds.length >= 2) {
             let label = $($tds[0]).text().replace(':', '').trim();
@@ -284,29 +339,53 @@ $(document).ready(async function () {
 
             // 💡 เพิ่ม 3 บรรทัดนี้เพื่อแก้ปัญหาตารางตก/มีลูกศร
             responsive: false, // ปิดการซ่อนคอลัมน์อัตโนมัติ
-            scrollX: true, // เปิดให้ใช้ Scrollbar แนวนอน
             autoWidth: false, // ให้ตารางคำนวณความกว้างตามเนื้อหาจริง
 
             columns: Array(18).fill({ defaultContent: '-' }),
             columnDefs: [
-                { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' },
-                { targets: [9, 10], className: 'bg-[#ffffe6] text-center' },
-                { targets: 11, className: 'bg-[#ffff99] text-center border-r' },
                 {
-                    targets: 12,
+                    targets: 'col-no',
+                    className:
+                        'sticky-column sticky z-10 bg-white border-r border-slate-200 text-center',
+                },
+                {
+                    targets: 'col-part',
+                    className:
+                        'sticky-column sticky z-10 bg-white border-r border-slate-200',
+                },
+                {
+                    targets: 'col-cur-ts',
+                    className: 'bg-[#d9d9d9] text-center border-r',
+                },
+                {
+                    targets: ['col-after-tp', 'col-after-tc'],
+                    className: 'bg-[#ffffe6] text-center',
+                },
+                {
+                    targets: 'col-after-ts',
+                    className: 'bg-[#ffff99] text-center border-r',
+                },
+                {
+                    targets: 'col-total-req',
                     className:
                         'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
                 },
-                { targets: [13, 14], className: 'bg-green-50/30 text-center' },
                 {
-                    targets: 15,
+                    targets: ['col-ie-tp', 'col-ie-tc'],
+                    className: 'bg-green-50/30 text-center',
+                },
+                {
+                    targets: 'col-ie-ts',
                     className: 'bg-green-50/70 text-center border-r',
                 },
                 {
-                    targets: 16,
+                    targets: 'col-accept',
                     className: 'bg-green-100 text-center border-r font-bold',
                 },
-                { targets: [0, 4, 5, 17], className: 'text-center' },
+                {
+                    targets: ['col-qty', 'col-process', 'col-history'],
+                    className: 'text-center',
+                },
             ],
             drawCallback: function (settings) {
                 const api = this.api();
@@ -348,10 +427,11 @@ $(document).ready(async function () {
                 document.getElementById('sum-total').innerHTML =
                     totalPrefix + Math.abs(sumTotal).toFixed(4);
 
+                // 💡 แสดงช่องว่างถ้าผลรวมของตาราง IE ยังเป็น 0 หรือว่างเปล่า
                 document.getElementById('sum-ie-ts').innerHTML =
-                    sumIeTS.toFixed(4);
+                    sumIeTS > 0 ? sumIeTS.toFixed(4) : '';
                 document.getElementById('sum-ie-accept').innerHTML =
-                    sumIeAccept > 0 ? sumIeAccept.toFixed(4) : '0.0000';
+                    sumIeAccept > 0 ? '+ ' + sumIeAccept.toFixed(4) : '';
             },
         };
 
@@ -368,6 +448,58 @@ $(document).ready(async function () {
         };
 
         const myTable = await createTable(tableOption, setupOpt);
+        if (cextdata == 1) {
+            console.log('iffffffffffffff');
+            myTable
+                .columns('.col-ie-tp, .col-ie-tc, .col-ie-ts, .col-accept')
+                .visible(false);
+        }
         return myTable;
+    }
+});
+
+$(document).on('click', '.btn', async function () {
+    const act = $(this).val();
+    const txtRemark = $('textarea[name="txtRemark"]').val();
+    if ((act == 'return' || act == 'reject') && txtRemark == '') {
+        showMessage('Please input Reason & Remark', 'warning');
+        return false;
+    }
+    const payload = {
+        ACTION: act,
+        NFRMNO: form.NFRMNO,
+        VORGNO: form.VORGNO,
+        CYEAR: form.CYEAR,
+        CYEAR2: form.CYEAR2,
+        NRUNNO: form.NRUNNO,
+        EMPNO: $('.apv-data').attr('empno'),
+        EXTDATA: cextdata,
+        REMARK: $('textarea[name="txtRemark"]').val(),
+    };
+    if (cextdata == 2) {
+        const dwgListArray = [];
+        $('#TsTable .input-ie-tp').each(function () {
+            const $tpInput = $(this);
+            const $tcInput = $tpInput.closest('tr').find('.input-ie-tc');
+            dwgListArray.push({
+                ID: $tpInput.data('id'),
+                IE_TP: $tpInput.val() || null,
+                IE_TC: $tcInput.val() || null,
+            });
+        });
+        payload.DWGLIST = dwgListArray;
+    }
+    try {
+        showLoader({ show: true });
+        const res = await approve(payload);
+        if (res.status) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        }
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error);
+    } finally {
+        showLoader({ show: false });
     }
 });

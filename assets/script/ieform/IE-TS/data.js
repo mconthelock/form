@@ -28,6 +28,14 @@ export async function update(form) {
     });
 }
 
+export async function approve(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/ieform/ie-ts/approve`,
+        method: 'PATCH',
+        data: form,
+    });
+}
+
 export async function getData(form) {
     return fetchUtils({
         url: `${process.env.APP_API}/ieform/iets-form/data`,
