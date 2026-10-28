@@ -124,7 +124,7 @@ $(async function () {
             let htmlContent = '';
             //console.log('xxxx' + formeva.MJUDGEMENT);
 
-            if (cextdata == '02') {
+            if (cextdata == '01' || cextdata == '02') {
                 // สร้าง Radio ทั้งหมดแบบสั้นๆ ด้วยการวนลูปจาก Map
                 const radios = Object.entries(judgementMap)
                     .map(
@@ -434,7 +434,7 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         return false;
     }
 
-    if (cextdata == '02') {
+    if (cextdata == '01' || cextdata == '02') {
         if (act == 'approve') {
             let textValue = $('#VENDGROUP').text();
             if (textValue != 'Non-Production (6)') {
