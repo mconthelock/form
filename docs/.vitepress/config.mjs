@@ -2,10 +2,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitepress';
 import dotenv from 'dotenv';
 import * as sidebar from './sidebar.js';
-import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vitepress';
-import dotenv from 'dotenv';
-import * as sidebar from './sidebar.js';
+import { mermaidPlugin } from './plugins/vitepress-mermaid';
 
 // โหลดไฟล์ .env ที่ root ของโปรเจกต์
 dotenv.config();
