@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vitepress';
 import dotenv from 'dotenv';
+import { mermaidPlugin } from './plugins/vitepress-mermaid';
 
 // โหลดไฟล์ .env ที่ root ของโปรเจกต์
 dotenv.config();
@@ -21,6 +22,9 @@ export default defineConfig({
     markdown: {
         image: {
             lazyLoading: true,
+        },
+        config(md) {
+            md.use(mermaidPlugin);
         },
     },
     themeConfig: {
