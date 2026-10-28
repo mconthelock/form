@@ -147,7 +147,7 @@ $(document).ready(async function () {
         $('input[name="TAXID"], #TAXID').val(purvmm.TAXID || '');
         $('input[name="CANO"], #CANO').val(purvmm.CANO || '');
         $('input[name="BANO"], #BANO').val(purvmm.BANO || '');
-        $('#constdcur').text(purvmm.CURRENCY.CURR_NAME || '');
+        $('#constdcur').text(purvmm.CURRENCY?.CURR_NAME || '');
         $('#CURCODE').val(purvmm.CURCODE || '');
         $('#VPAYTO').val(purvmm.VPAYTO || '');
         $('#VTYPE').val(purvmm.VTYPE).trigger('change');

@@ -52,7 +52,7 @@ export async function renderLink(formno) {
 
     if (match) {
         // let frmtype = match[1];
-        let frmtype = 'PRO-VMM';
+        let frmtype = 'PRO-EVA';
         let year = '20' + match[2];
         let runningNo = parseInt(match[3], 10);
 
