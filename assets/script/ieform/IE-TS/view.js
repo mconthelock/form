@@ -44,19 +44,42 @@ const transformDataForTable = (
 
         if (item.PROCESS && Array.isArray(item.PROCESS)) {
             item.PROCESS.forEach((process) => {
-                currentTP += process.F02R04 || 0;
-                currentTC += process.F02R05 || 0;
+                const pTP = process.F02R04 || 0;
+                const pTC = process.F02R05 || 0;
 
-                afterTP +=
-                    process.AF_TP != null ? process.AF_TP : process.F02R04 || 0;
-                afterTC +=
-                    process.AF_TC != null ? process.AF_TC : process.F02R05 || 0;
+                currentTP += pTP;
+                currentTC += pTC;
 
-                // 💡 2. เก็บผลรวม IE ต่อเมื่อมีค่าส่งมาจาก DB เท่านั้น
-                if (process.IE_TP != null) ieTP = (ieTP || 0) + process.IE_TP;
-                if (process.IE_TC != null) ieTC = (ieTC || 0) + process.IE_TC;
-                if (process.IE_ACCEPT != null)
-                    ieAccept = (ieAccept || 0) + process.IE_ACCEPT;
+                const pAfterTP = process.AF_TP != null ? process.AF_TP : pTP;
+                const pAfterTC = process.AF_TC != null ? process.AF_TC : pTC;
+
+                afterTP += pAfterTP;
+                afterTC += pAfterTC;
+
+                if (isIeEditable) {
+                    const valTP =
+                        process.IE_TP != null ? process.IE_TP : pAfterTP;
+                    const valTC =
+                        process.IE_TC != null ? process.IE_TC : pAfterTC;
+
+                    ieTP = (ieTP || 0) + valTP;
+                    ieTC = (ieTC || 0) + valTC;
+
+                    // คำนวณ Accept ของ process นี้เพื่อบวกเข้ายอดรวมของ Header
+                    const pTS = pTP + qty * pTC;
+                    const inputTS = valTP + qty * valTC;
+                    const pIeAccept = inputTS - pTS;
+
+                    ieAccept = (ieAccept || 0) + pIeAccept;
+                } else {
+                    // 💡 2. เก็บผลรวม IE ต่อเมื่อมีค่าส่งมาจาก DB เท่านั้น
+                    if (process.IE_TP != null)
+                        ieTP = (ieTP || 0) + process.IE_TP;
+                    if (process.IE_TC != null)
+                        ieTC = (ieTC || 0) + process.IE_TC;
+                    if (process.IE_ACCEPT != null)
+                        ieAccept = (ieAccept || 0) + process.IE_ACCEPT;
+                }
             });
         }
 
@@ -105,7 +128,6 @@ const transformDataForTable = (
 
                 const hasIeTP = process.IE_TP != null;
                 const hasIeTC = process.IE_TC != null;
-                const pIeAccept = process.IE_ACCEPT;
 
                 const pTS = pTP + qty * pTC;
                 const pAfterTS = pAfterTP + qty * pAfterTC;
@@ -123,15 +145,17 @@ const transformDataForTable = (
                     const inputTP = hasIeTP ? process.IE_TP : pAfterTP;
                     const inputTC = hasIeTC ? process.IE_TC : pAfterTC;
                     const inputTS = inputTP + qty * inputTC;
+                    const pIeAccept = inputTS - pTS;
 
                     spanIeTS = `<span class="span-ie-ts text-slate-600">${inputTS.toFixed(4)}</span>`;
 
-                    ieTpHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tp" data-id="${process.ID}" value="${inputTP.toFixed(4)}" data-qty="${qty}">`;
+                    ieTpHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tp" data-id="${process.ID}" value="${inputTP.toFixed(4)}" data-pts="${pTS.toFixed(4)}" data-qty="${qty}">`;
 
-                    ieTcHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tc" data-id="${process.ID}" value="${inputTC.toFixed(4)}" data-qty="${qty}">`;
+                    ieTcHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tc" data-id="${process.ID}" value="${inputTC.toFixed(4)}" data-pts="${pTS.toFixed(4)}" data-qty="${qty}">`;
+                    ieAcceptHtml = `<span class="input-ie-accept text-green-900">${pIeAccept.toFixed(4)}</span>`;
 
                     // 💡 เปลี่ยน placeholder="-" เป็น placeholder=""
-                    ieAcceptHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-bold bg-white border border-green-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 input-ie-accept" data-id="${process.ID}" value="${pIeAccept != null ? pIeAccept.toFixed(4) : ''}" placeholder="">`;
+                    // ieAcceptHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-bold bg-white border border-green-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 input-ie-accept" data-id="${process.ID}" value="${pIeAccept != null ? pIeAccept.toFixed(4) : ''}" placeholder="">`;
                 } else {
                     // 💡 โหมดแสดงผลปกติ: ถ้าไม่มีค่า IE ใน DB ให้ปล่อยว่างไว้ (เอา span ขีดเทาออก)
                     const viewTS =
@@ -196,7 +220,10 @@ $(document).ready(async function () {
         MODE: Number(formInfo.mode) ?? null,
         EMPNO: $('.apv-data').attr('empno'),
     };
-
+    //view
+    if (form.MODE == 3) {
+        $('#remark-section').addClass('hidden');
+    }
     cextdata = await getExtData({ ...form });
     const cst = await getFormStatus(form);
     const [formDetail, apvno, flow, ietsfrm] = await Promise.all([
@@ -205,14 +232,15 @@ $(document).ready(async function () {
         showflow({ ...form, showStep: true }),
         getData(form),
     ]);
-    const reqflow = ietsfrm.FORM.flow.find(
-        (item) =>
-            item.CSTEPST === '3' &&
-            (item.VAPVNO === apvno || item.VREPNO === apvno),
-    );
-    if (reqflow) {
-        $('textarea[name="txtRemark"]').val(reqflow.VREMARK);
-    }
+
+    // const reqflow = ietsfrm.FORM.flow.find(
+    //     (item) =>
+    //         item.CSTEPST === '3' &&
+    //         (item.VAPVNO === apvno || item.VREPNO === apvno),
+    // );
+    // if (reqflow) {
+    //     $('textarea[name="txtRemark"]').val(reqflow.VREMARK);
+    // }
 
     if (ietsfrm && ietsfrm.LISTS) {
         const grouped = {};
@@ -241,6 +269,7 @@ $(document).ready(async function () {
                 };
             }
             grouped[key].PROCESS.push({
+                ID: item.ID,
                 F02R03: item.PROCESS,
                 F02R04: item.CUR_TP,
                 F02R05: item.CUR_TC,
@@ -253,8 +282,12 @@ $(document).ready(async function () {
         });
 
         const formattedList = Object.values(grouped);
-        // 💡 นำข้อมูลที่จัดกลุ่มแล้วเข้าฟังก์ชันเตรียมข้อมูลตาราง
-        datatable = transformDataForTable(formattedList, 0);
+        let isedit = false;
+        if (form.MODE == 2 && cextdata == 2) {
+            isedit = true;
+        }
+
+        datatable = transformDataForTable(formattedList, 0, isedit);
         await initMyTable(datatable);
     }
 
@@ -380,7 +413,8 @@ $(document).ready(async function () {
                 },
                 {
                     targets: 'col-accept',
-                    className: 'bg-green-100 text-center border-r font-bold',
+                    className:
+                        'bg-green-100 text-green-900  text-center border-r font-bold',
                 },
                 {
                     targets: ['col-qty', 'col-process', 'col-history'],
@@ -502,4 +536,80 @@ $(document).on('click', '.btn', async function () {
     } finally {
         showLoader({ show: false });
     }
+});
+
+$(document).on('input', '.input-ie-tp, .input-ie-tc', function () {
+    const $row = $(this).closest('tr');
+
+    // ดึงค่าคงที่ (qty และ pTS ของ DB) จาก data-attributes ที่ฝังไว้
+    const qty = parseFloat($(this).data('qty')) || 0;
+    const pTS = parseFloat($(this).data('pts')) || 0;
+
+    // ดึงค่าที่ผู้ใช้กำลังพิมพ์ปัจจุบัน
+    const tp = parseFloat($row.find('.input-ie-tp').val()) || 0;
+    const tc = parseFloat($row.find('.input-ie-tc').val()) || 0;
+
+    // 1. คำนวณและอัปเดตบรรทัดลูก (Child Row)
+    const inputTS = tp + qty * tc;
+    const pIeAccept = inputTS - pTS;
+
+    $row.find('.span-ie-ts').text(inputTS.toFixed(4));
+    $row.find('.input-ie-accept').text(pIeAccept.toFixed(4));
+
+    // 2. ค้นหาบรรทัดแม่ (Parent Row) ของกลุ่มนี้
+    // (ดูจากคอลัมน์แรกที่มีตัวเลขลำดับ Item)
+    const $parentRow = $row
+        .prevAll()
+        .filter(function () {
+            return $(this).find('td').eq(0).text().trim() !== '';
+        })
+        .first();
+
+    if ($parentRow.length) {
+        // 3. วนลูปหาผลรวมของ Child Row ทั้งหมดภายใต้ Parent กลุ่มนี้
+        let groupIeTS = 0;
+        let groupIeAccept = 0;
+
+        $parentRow
+            .nextUntil(function () {
+                return $(this).find('td').eq(0).text().trim() !== ''; // หยุดหาเมื่อเจอ Parent ตัวถัดไป
+            })
+            .each(function () {
+                const childTS =
+                    parseFloat($(this).find('.span-ie-ts').text()) || 0;
+                const childAccept =
+                    parseFloat($(this).find('.input-ie-accept').text()) || 0;
+
+                groupIeTS += childTS;
+                groupIeAccept += childAccept;
+            });
+
+        // อัปเดตผลรวมกลับไปที่ Parent Row (คอลัมน์ที่ 15 = ieTS, คอลัมน์ที่ 16 = ieAccept)
+        $parentRow.find('td').eq(15).text(groupIeTS.toFixed(4));
+        $parentRow.find('td').eq(16).text(groupIeAccept.toFixed(4));
+    }
+
+    // 4. คำนวณ Footer ผลรวมของทั้งตารางใหม่ทันที
+    let totalIeTS = 0;
+    let totalIeAccept = 0;
+
+    // ดึง Parent Row ทั้งหมดในตารางมารวมกัน
+    $('#TsTable tbody tr')
+        .filter(function () {
+            return $(this).find('td').eq(0).text().trim() !== '';
+        })
+        .each(function () {
+            totalIeTS += parseFloat($(this).find('td').eq(15).text()) || 0;
+            totalIeAccept += parseFloat($(this).find('td').eq(16).text()) || 0;
+        });
+
+    // อัปเดตที่ id ของ Footer (แสดง 0, บวก, ลบ เสมอ)
+    $('#sum-ie-ts').text(totalIeTS.toFixed(4));
+
+    // ถ้า Accept รวมเป็นบวก ใส่ + นำหน้า นอกนั้น (0 หรือติดลบ) โชว์ตัวเลขปกติ
+    $('#sum-ie-accept').text(
+        totalIeAccept > 0
+            ? '+ ' + totalIeAccept.toFixed(4)
+            : totalIeAccept.toFixed(4),
+    );
 });

@@ -55,7 +55,8 @@
                     </div>
 
                     <!-- Right Form (Textarea) -->
-                    <div class="flex-1 flex flex-col rounded-md shadow-sm ring-1 ring-inset ring-slate-300 overflow-hidden">
+                    <div id="remark-section"
+                        class="flex-1 flex flex-col rounded-md shadow-sm ring-1 ring-inset ring-slate-300 overflow-hidden">
                         <div class="bg-slate-50 text-slate-600 font-medium text-sm px-4 py-2 border-b border-slate-300">
                             Reason &
                             Remark</div>

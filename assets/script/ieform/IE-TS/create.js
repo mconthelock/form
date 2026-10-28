@@ -393,41 +393,8 @@ $(document).ready(async function () {
     tsTableInstance = await initMyTable(datatable);
 });
 
-const generateMockData = () => {
-    return Array.from({ length: 30 }, (_, i) => {
-        const no = i + 1;
-        const dwgNo = `DWG-${String(no).padStart(15, '0')}`;
-
-        const currentTS = (0.3 + i * 0.01).toFixed(4);
-        const afterTS = (0.35 + i * 0.01).toFixed(4);
-        const totalReq = (parseFloat(afterTS) - parseFloat(currentTS)).toFixed(
-            4,
-        );
-
-        return [
-            no, // [0]
-            `PART NAME TEST EXAM ${no}`, // [1]
-            'XXX', // [2]
-            dwgNo, // [3]
-            'X', // [4]
-            'K', // [5]
-            '0.0500', // [6]
-            '0.2500', // [7]
-            currentTS, // [8]
-            '0.0500', // [9]
-            '0.3000', // [10]
-            afterTS, // [11]
-            totalReq, // [12]
-            no === 3 ? '20-Feb-26' : '-', // [13]
-            btnDeleteHTML, // [14] 💡 เพิ่ม Action ลบ
-            'parent', // [15] 💡 เลื่อน flag มาที่ 15
-        ];
-    });
-};
-
 async function initMyTable(data) {
     const tableOption = {
-        //data: mockData,
         data: data,
         searching: false,
         paging: false,
