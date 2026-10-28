@@ -1,4 +1,4 @@
-# คู่มือการสร้างฟอร์ม Price Approval (PUR-PRA)
+# คู่มือการสร้างฟอร์ม Price Approval (PRO-PRA)
 
 ฟอร์ม Price Approval มี 2 โหมดสำหรับระบุข้อมูล Price Comparison:
 
