@@ -510,17 +510,32 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     //     }
     // }
     const formElement = $('#frmmain')[0];
+    let isScmIncomplete = false;
     let SCMUSER = $('.row-template')
         .map((_, row) => {
             let NAME = $(row).find('.scm-name').val();
             let EMAIL = $(row).find('.scm-mail').val();
             let USERNAME = $(row).find('.scm-usrname').val();
 
-            // ถ้าว่างหมดให้ return null (jQuery จะไม่เอาเข้า array ให้เอง)
-            return NAME || EMAIL || USERNAME ? { NAME, EMAIL, USERNAME } : null;
+            // เช็คว่าแถวนี้มีการกรอกข้อมูลมาบ้างหรือไม่ (ช่องใดช่องหนึ่ง)
+            if (NAME || EMAIL || USERNAME) {
+                // ถ้ากรอกมาบ้าง แต่กรอกไม่ครบทุกช่อง
+                if (!NAME || !EMAIL || !USERNAME) {
+                    isScmIncomplete = true;
+                }
+                return { NAME, EMAIL, USERNAME };
+            }
+            return null; // ถ้าว่างหมด ไม่เอาเข้า Array
         })
         .get(); // .get() เพื่อแปลง jQuery Object ให้เป็น Array ปกติ
     //console.log(SCMUSER);
+    if (isScmIncomplete) {
+        showMessage(
+            'Please complete all fields (Name, Email, Username) for the SCM User.',
+            'warning',
+        ); // ปรับข้อความและฟังก์ชันแจ้งเตือนตามที่คุณใช้จริง
+        return false; // หยุดการทำงานของฟังก์ชัน
+    }
 
     const fd = new FormData(formElement);
     const formInfo = await getAllAttr('.form-info');
@@ -587,17 +602,31 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     }
     $('input[name="ACTION"]').val(act);
     const formElement = $('#frmmain')[0];
+    let isScmIncomplete = false;
     let SCMUSER = $('.row-template')
         .map((_, row) => {
             let NAME = $(row).find('.scm-name').val();
             let EMAIL = $(row).find('.scm-mail').val();
             let USERNAME = $(row).find('.scm-usrname').val();
 
-            // ถ้าว่างหมดให้ return null (jQuery จะไม่เอาเข้า array ให้เอง)
-            return NAME || EMAIL || USERNAME ? { NAME, EMAIL, USERNAME } : null;
+            if (NAME || EMAIL || USERNAME) {
+                // ถ้ากรอกมาบ้าง แต่กรอกไม่ครบทุกช่อง
+                if (!NAME || !EMAIL || !USERNAME) {
+                    isScmIncomplete = true;
+                }
+                return { NAME, EMAIL, USERNAME };
+            }
+            return null;
         })
         .get(); // .get() เพื่อแปลง jQuery Object ให้เป็น Array ปกติ
     //console.log(SCMUSER);
+    if (isScmIncomplete) {
+        showMessage(
+            'Please complete all fields (Name, Email, Username) for the SCM User.',
+            'warning',
+        ); // ปรับข้อความและฟังก์ชันแจ้งเตือนตามที่คุณใช้จริง
+        return false; // หยุดการทำงานของฟังก์ชัน
+    }
 
     const fd = new FormData(formElement);
     const formInfo = await getAllAttr('.form-info');
