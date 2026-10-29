@@ -662,6 +662,7 @@ function formatAmount(value) {
 }
 
 function formatAmountInput(value) {
+    const sign = String(value).trimStart().startsWith('-') ? '-' : '';
     const [whole, ...decimalParts] = String(value)
         .replace(/,/g, '')
         .replace(/[^\d.]/g, '')
@@ -670,8 +671,8 @@ function formatAmountInput(value) {
     const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     return decimalParts.length
-        ? `${grouped || '0'}.${decimalParts.join('').slice(0, 2)}`
-        : grouped;
+        ? `${sign}${grouped || '0'}.${decimalParts.join('').slice(0, 2)}`
+        : sign + grouped;
 }
 
 function emptyInvoiceRow() {
@@ -915,7 +916,7 @@ $(document).on(
                 (invoice) =>
                     !invoice.INVOICE_DATE ||
                     !invoice.INVOICE_NO ||
-                    invoice.TOTAL_AMOUNT <= 0,
+                    invoice.TOTAL_AMOUNT === 0,
             );
 
             if (invalidInvoiceIndex >= 0) {

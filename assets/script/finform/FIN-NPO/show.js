@@ -337,6 +337,7 @@ async function sendActionEmail(form, action, remark) {
 
     const result = await sendmail({
         to: dimStep ? recipients : to,
+        // to: dimStep ? recipients : 'supakitt@MitsubishiElevatorAsia.co.th',
         subject: `FIN-NPO ${formNo} ${dimStep ? 'Pending Controller Approval' : status}`,
         html: `<p>Dear ${dimStep ? 'Controller and Requester' : escapeHtml(recipient.SNAME || 'Requester')},</p>
             <p>Form No: ${escapeHtml(formNo)}</p>
