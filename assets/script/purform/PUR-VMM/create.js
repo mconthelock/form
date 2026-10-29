@@ -414,7 +414,7 @@ $(document).on('input', '#VENDCODE', async function () {
                 }
             } catch (err) {
                 console.error('Error get Vendor:', err);
-                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า', '2034');
             } finally {
                 showLoader({ show: false });
             }
@@ -575,7 +575,7 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
         }
     } catch (err) {
         console.error(err);
-        showErrorMessage(err);
+        showErrorMessage(err, '2034');
     } finally {
         showLoader({ show: false });
     }
@@ -666,7 +666,7 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         }
     } catch (err) {
         console.error(err);
-        showErrorMessage(err);
+        showErrorMessage(err, '2034');
     } finally {
         showLoader({ show: false });
     }
