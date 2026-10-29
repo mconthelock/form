@@ -514,7 +514,7 @@ $(document).on('click', '.btnact', async function () {
 });
 
 $(document).on('click', '#btnAdd', async function () {
-    console.log('ADD');
+    //console.log('ADD');
     try {
         showLoader({ show: true });
         let rawMonth = $('#jung').val();

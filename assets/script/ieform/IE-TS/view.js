@@ -77,8 +77,17 @@ const transformDataForTable = (
                         ieTP = (ieTP || 0) + process.IE_TP;
                     if (process.IE_TC != null)
                         ieTC = (ieTC || 0) + process.IE_TC;
-                    if (process.IE_ACCEPT != null)
-                        ieAccept = (ieAccept || 0) + process.IE_ACCEPT;
+
+                    // 💡 3. คำนวณ Accept สำหรับยอดรวม Parent ในโหมด View
+                    if (process.IE_TP != null && process.IE_TC != null) {
+                        const pTP = process.F02R04 || 0;
+                        const pTC = process.F02R05 || 0;
+                        const pTS = pTP + qty * pTC;
+                        const viewTS = process.IE_TP + qty * process.IE_TC;
+                        const pIeAccept = viewTS - pTS;
+
+                        ieAccept = (ieAccept || 0) + pIeAccept;
+                    }
                 }
             });
         }
@@ -112,7 +121,7 @@ const transformDataForTable = (
             ieTP != null ? ieTP.toFixed(4) : '',
             ieTC != null ? ieTC.toFixed(4) : '',
             ieTS != null ? ieTS.toFixed(4) : '',
-            ieAccept != null && ieAccept > 0 ? ieAccept.toFixed(4) : '',
+            ieAccept != null ? ieAccept.toFixed(4) : '',
 
             '',
             'parent',
@@ -520,6 +529,11 @@ $(document).on('click', '.btn', async function () {
             const $tpInput = $(this);
             const $tcInput = $tpInput.closest('tr').find('.input-ie-tc');
             dwgListArray.push({
+                NFRMNO: form.NFRMNO,
+                VORGNO: form.VORGNO,
+                CYEAR: form.CYEAR,
+                CYEAR2: form.CYEAR2,
+                NRUNNO: form.NRUNNO,
                 ID: $tpInput.data('id'),
                 IE_TP: $tpInput.val() || null,
                 IE_TC: $tcInput.val() || null,
