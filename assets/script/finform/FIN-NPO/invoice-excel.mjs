@@ -57,11 +57,11 @@ function textValue(value, rowNumber, label) {
 
 function amountValue(value, rowNumber, label) {
     const text = typeof value === 'string' ? value.trim() : '';
-    if (typeof value !== 'number' && !/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(text)) {
+    if (typeof value !== 'number' && !/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(text)) {
         throw new Error(`Row ${rowNumber}: ${label} must be a number with up to 2 decimal places.`);
     }
     const amount = typeof value === 'number' ? value : Number(text.replace(/,/g, ''));
-    if (!Number.isFinite(amount) || amount < 0 || !Number.isSafeInteger(Math.round(amount * 100)) || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.0001) {
+    if (!Number.isFinite(amount) || !Number.isSafeInteger(Math.round(amount * 100)) || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.0001) {
         throw new Error(`Row ${rowNumber}: ${label} is invalid.`);
     }
     return amount;
@@ -100,8 +100,8 @@ export function readInvoiceWorkbook(workbook) {
             VAT: amountValue(vat, rowNumber, 'VAT'),
             REFERENCE: textValue(reference, rowNumber, 'Reference'),
         };
-        if (!invoice.INVOICE_NO || invoice.TOTAL_AMOUNT <= 0 || invoice.VAT > invoice.TOTAL_AMOUNT || invoice.REFERENCE.length > 255) {
-            throw new Error(`Row ${rowNumber}: Invoice No. is required, Total Amount must be greater than 0, VAT must not exceed Total Amount, and Reference must not exceed 255 characters.`);
+        if (!invoice.INVOICE_NO || invoice.TOTAL_AMOUNT === 0 || invoice.REFERENCE.length > 255) {
+            throw new Error(`Row ${rowNumber}: Invoice No. is required, Total Amount must not be 0, and Reference must not exceed 255 characters.`);
         }
         invoice.NET_PRICE = Math.round((invoice.TOTAL_AMOUNT - invoice.VAT) * 100) / 100;
         invoices.push(invoice);
