@@ -140,12 +140,14 @@ const transformDataForTable = (
 
                 let ieTpHtml, ieTcHtml, ieAcceptHtml;
                 let spanIeTS;
+                let pIeAccept = null; // 💡 1. ประกาศตัวแปรไว้ด้านนอก
 
                 if (isIeEditable) {
                     const inputTP = hasIeTP ? process.IE_TP : pAfterTP;
                     const inputTC = hasIeTC ? process.IE_TC : pAfterTC;
                     const inputTS = inputTP + qty * inputTC;
-                    const pIeAccept = inputTS - pTS;
+
+                    pIeAccept = inputTS - pTS; // 💡 2. เอา const ออก
 
                     spanIeTS = `<span class="span-ie-ts text-slate-600">${inputTS.toFixed(4)}</span>`;
 
@@ -153,15 +155,17 @@ const transformDataForTable = (
 
                     ieTcHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-medium bg-white border border-green-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-400 input-ie-tc" data-id="${process.ID}" value="${inputTC.toFixed(4)}" data-pts="${pTS.toFixed(4)}" data-qty="${qty}">`;
                     ieAcceptHtml = `<span class="input-ie-accept text-green-900">${pIeAccept.toFixed(4)}</span>`;
-
-                    // 💡 เปลี่ยน placeholder="-" เป็น placeholder=""
-                    // ieAcceptHtml = `<input type="number" step="0.0001" class="w-[85px] block mx-auto text-center py-1 px-2 text-green-900 font-bold bg-white border border-green-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 input-ie-accept" data-id="${process.ID}" value="${pIeAccept != null ? pIeAccept.toFixed(4) : ''}" placeholder="">`;
                 } else {
-                    // 💡 โหมดแสดงผลปกติ: ถ้าไม่มีค่า IE ใน DB ให้ปล่อยว่างไว้ (เอา span ขีดเทาออก)
+                    // 💡 โหมดแสดงผลปกติ
                     const viewTS =
                         hasIeTP && hasIeTC
                             ? process.IE_TP + qty * process.IE_TC
                             : null;
+
+                    // 💡 3. คำนวณ pIeAccept กรณีแสดงผลปกติเพื่อให้ ieAcceptHtml มีค่า
+                    if (viewTS != null) {
+                        pIeAccept = viewTS - pTS;
+                    }
 
                     spanIeTS =
                         viewTS != null
