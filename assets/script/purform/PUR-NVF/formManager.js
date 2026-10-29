@@ -581,7 +581,7 @@ export const vendorCodeManager = {
                 }
             } catch (err) {
                 console.error('Error in vendorCodeManager.change:', err);
-                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า', '2034');
             } finally {
                 showLoader({ show: false }); // ปิด Loader
             }
@@ -620,7 +620,7 @@ export const formManager = {
             await this.setForm(state.FormInfo.MODE);
         } catch (err) {
             console.error(err);
-            showErrorMessage(err);
+            showErrorMessage(err, '2034');
         } finally {
             showLoader({ show: false });
         }
@@ -1877,7 +1877,7 @@ export const actionFormManager = {
             }
         } catch (err) {
             console.error(err);
-            showErrorMessage(err);
+            showErrorMessage(err, '2034');
         } finally {
             showLoader({ show: false });
         }
@@ -2000,7 +2000,7 @@ export const actionFormManager = {
             }
         } catch (error) {
             console.error(error);
-            showErrorMessage(error);
+            showErrorMessage(error, '2034');
         } finally {
             showLoader({ show: false });
         }
