@@ -268,9 +268,11 @@ async function actionFinNpo(payload) {
 }
 
 async function sendActionEmail(form, action, remark) {
+    const detail = await getFormDetail(form);
+    const isCompleted = action === 'approve' && String(detail?.CST).trim() === '2';
     const currentEmployee = String(form.EMPNO || '').trim();
     const dimStep =
-        action === 'approve' && currentEmployee
+        action === 'approve' && !isCompleted && currentEmployee
             ? workflowSteps.find(
                   (step) =>
                       String(step.CSTEPNO).trim() === '02' &&
@@ -281,9 +283,8 @@ async function sendActionEmail(form, action, remark) {
                       ),
               )
             : null;
-    if (action === 'approve' && !dimStep) return;
+    if (action === 'approve' && !dimStep && !isCompleted) return;
 
-    const detail = await getFormDetail(form);
     const controller = dimStep
         ? workflowSteps.find(
               (step) =>
@@ -341,7 +342,7 @@ async function sendActionEmail(form, action, remark) {
         subject: `FIN-NPO ${formNo} ${dimStep ? 'Pending Controller Approval' : status}`,
         html: `<p>Dear ${dimStep ? 'Controller and Requester' : escapeHtml(recipient.SNAME || 'Requester')},</p>
             <p>Form No: ${escapeHtml(formNo)}</p>
-            <p>${dimStep ? 'DIM has approved this FIN-NPO form. The form is pending review by Job Controller.' : `Your FIN-NPO form has been ${status.toLowerCase()} at the current workflow step.`}</p>
+            <p>${isCompleted ? 'Your FIN-NPO form has been fully approved. The approval workflow is complete.' : dimStep ? 'DIM has approved this FIN-NPO form. The form is pending review by Job Controller.' : `Your FIN-NPO form has been ${status.toLowerCase()} at the current workflow step.`}</p>
             ${remark ? `<p>Remark: ${escapeHtml(remark)}</p>` : ''}
             <p>Please check the form for details.</p>
             <p>Best Regards,</p>`,
