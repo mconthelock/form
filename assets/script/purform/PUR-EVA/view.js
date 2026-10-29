@@ -145,7 +145,10 @@ $(async function () {
     `;
                 $('#CONJUDGEMENT').html(htmlContent);
             }
-            if (formeva?.MJUDGEMENT && form.MODE != 2) {
+            if (
+                formeva?.MJUDGEMENT &&
+                (form.MODE != 2 || (cextdata == '03' && form.MODE == 2))
+            ) {
                 htmlContent = `
         <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-white text-sm">
             <span class="font-semibold underline">TOTAL EVALUATION</span>
