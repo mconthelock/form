@@ -37,6 +37,7 @@ const transformDataForTable = (apiData, startIndex = 0) => {
         const name = item.F01R09 ? item.F01R09.trim() : '-';
         const shop = item.F01R03 ? item.F01R03.trim() : '-';
         const qty = item.QTY || 0;
+        const history = item.HISTORY || '-';
 
         let currentTP = 0;
         let currentTC = 0;
@@ -79,7 +80,7 @@ const transformDataForTable = (apiData, startIndex = 0) => {
             afterTC.toFixed(4), // [10]
             afterTS.toFixed(4), // [11]
             totalReq.toFixed(4), // [12]
-            '-', // [13] Date/Remarks
+            history, // [13] Date/Remarks
             btnDeleteHTML, // [14] 💡 คอลัมน์ Action
             'parent', // [15] 💡 ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
         ]);
@@ -127,7 +128,7 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                     inputAfterTC, // [10]
                     spanAfterTS, // [11]
                     spanTotalReq, // [12]
-                    '-', // [13]
+                    '', // [13]
                     '', // [14] 💡 ว่างไว้สำหรับแถว Child
                     'child', // [15] 💡 ตัวบอกว่าเป็นแถวย่อย
                 ]);
@@ -556,6 +557,9 @@ $(document).on('click', '#btnAdd', async function () {
             month: month,
             dwgNo: dwgList,
         });
+        console.log('============');
+        console.log(res);
+        console.log('============');
 
         if (res && res.length > 0) {
             if (tsTableInstance) {

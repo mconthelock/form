@@ -123,7 +123,7 @@ const transformDataForTable = (
             ieTS != null ? ieTS.toFixed(4) : '',
             ieAccept != null ? ieAccept.toFixed(4) : '',
 
-            '',
+            item.HISTORY,
             'parent',
         ]);
 
@@ -279,6 +279,7 @@ $(document).ready(async function () {
                     F01R03: item.ITMNO,
                     QTY: item.QTY,
                     PROCESS: [],
+                    HISTORY: item.HISTORY,
                 };
             }
             grouped[key].PROCESS.push({
