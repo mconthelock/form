@@ -315,6 +315,8 @@ $(document).ready(async function () {
     };
 
     const empno = $('.apv-data').attr('empno');
+    console.log(empno);
+
     const info = await getUser(empno);
     const orgmfg = await getOrgMfg();
     const orgmfgdata = orgmfg.map((t) => ({
