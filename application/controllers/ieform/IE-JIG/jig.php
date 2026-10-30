@@ -138,12 +138,14 @@ class jig extends MY_Controller {
         return $prefix . substr($key['CYEAR2'], -2) . '-' . str_pad((string)(int)$key['NRUNNO'], 6, '0', STR_PAD_LEFT);
     }
 
-    private function jigAttachmentPath($key, $name, $createDirectory = false, $storedPath = null) {
+    private function jigAttachmentPath($key, $name, $createDirectory = false, $storedPath = null, $group = 'REFERENCE') {
         if (!is_string($name) || strlen($name) > 255 || !preg_match('/^[\p{L}\p{M}\p{N}_-]+\.(jpg|jpeg|png|pdf)$/iuD', $name)) {
             throw new Exception('Invalid filename');
         }
         $folder = $this->jigFileDirectory($key);
         $legacy = strpos($folder, 'IE-JIG') === 0 && preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name);
+        if (!in_array($group, ['REFERENCE', 'BEFORE', 'AFTER'], true)) throw new Exception('Invalid file group');
+        if ($group !== 'REFERENCE') $folder .= '/' . $group;
         $legacyFolder = implode('_', array_map(function ($field) use ($key) { return $key[$field]; }, ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO']));
         if ($storedPath !== null) {
             $relative = str_replace('\\', '/', $storedPath);
@@ -157,9 +159,10 @@ class jig extends MY_Controller {
         }
         $root = realpath($configuredRoot);
         if ($root === false) throw new Exception('Upload directory not found');
+        if (is_link($root . DIRECTORY_SEPARATOR . $this->jigFileDirectory($key))) throw new Exception('Invalid attachment directory');
         $directory = $root . DIRECTORY_SEPARATOR . $folder;
         if (is_link($directory)) throw new Exception('Invalid attachment directory');
-        if ($createDirectory && !is_dir($directory) && !mkdir($directory, 0770) && !is_dir($directory)) {
+        if ($createDirectory && !is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
             throw new Exception('Cannot create upload directory');
         }
         $path = $directory . DIRECTORY_SEPARATOR . $name;
@@ -197,7 +200,12 @@ class jig extends MY_Controller {
             if (!preg_match('/^[A-Za-z0-9]{1,10}$/D', $actor)) throw new Exception('Invalid employee');
             if (isset($_SESSION['user']) && (string)$_SESSION['user']->SEMPNO !== $actor) throw new Exception('Employee does not match login');
             //if (!$forms || !in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
+            $group = (string)($this->input->post('FILE_GROUP') ?: 'REFERENCE');
+            if (!in_array($group, ['REFERENCE', 'BEFORE', 'AFTER'], true)) throw new Exception('Invalid file group');
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
+            if ($group !== 'REFERENCE' && ((string)$mode !== '2' || $this->currentJigStep($key, $actor) !== '19' || strpos($this->jigFileDirectory($key), 'IE-DELJIG') === 0)) throw new Exception('Only Job Controller can upload recheck files');
+            if ($group === 'REFERENCE' && $this->currentJigStep($key, $actor) === '19') throw new Exception('Job Controller can upload BEFORE/AFTER only');
+            if (!in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
             if ((string)$mode !== '2' && (string)$forms[0]->VINPUTER !== $actor) throw new Exception('No permission to upload');
             if (strpos($this->jigFileDirectory($key), 'IE-DELJIG') === 0) {
                 if (!in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
@@ -216,15 +224,16 @@ class jig extends MY_Controller {
                 if (!is_uploaded_file($tmp)) throw new Exception('Invalid upload');
                 $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
                 if ($mime !== $allowed[$ext]) throw new Exception('Attachment content does not match file type');
+                if ($group !== 'REFERENCE' && $ext === 'pdf') throw new Exception('Before/After requires JPG or PNG');
                 $stored = $this->jigStoredFilename($name);
-                $attachment = $this->jigAttachmentPath($key, $stored, true);
+                $attachment = $this->jigAttachmentPath($key, $stored, true, null, $group);
                 $destination = $attachment['path'];
                 // Reuse identical retries, but never silently substitute an older file with the same name.
                 if (is_file($destination) && hash_file('sha256', $destination) !== hash_file('sha256', $tmp)) {
                     throw new Exception('มีไฟล์ชื่อ ' . $stored . ' อยู่แล้ว กรุณาเปลี่ยนชื่อไฟล์ก่อนอัปโหลด');
                 }
                 if (!is_file($destination) && !move_uploaded_file($tmp, $destination)) throw new Exception('Upload failed');
-                $files[] = ['FILE_NAME' => $stored, 'FILE_PATH' => $attachment['relative'], 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
+                $files[] = ['FILE_GROUP' => $group, 'FILE_NAME' => $stored, 'FILE_PATH' => $attachment['relative'], 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
             }
             $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'files' => $files]));
         } catch (Exception $e) {
@@ -257,7 +266,7 @@ class jig extends MY_Controller {
             if (!is_string($seq) || !preg_match('/^[1-9][0-9]*$/D', $seq)) throw new Exception('Invalid file sequence');
 
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
-            if ((string)$mode !== '2' || $this->currentJigStep($key, $actor) !== '--') throw new Exception('Only requester can delete attachments');
+            if ((string)$mode !== '2' || !in_array($this->currentJigStep($key, $actor), ['--', '19'], true)) throw new Exception('No permission to delete attachments');
 
             // PHP uses the server-side API address, as in the shared Webform API traits.
             $apiBase = trim((string)($_ENV['APP_APIPHP'] ?? ''));
@@ -278,16 +287,19 @@ class jig extends MY_Controller {
                 }
             }
             if (!$file) throw new Exception('Attachment not found');
+            $group = $file['FILE_GROUP'] ?? 'REFERENCE';
+            $requiredStep = $group === 'REFERENCE' ? '--' : '19';
+            if ($this->currentJigStep($key, $actor) !== $requiredStep) throw new Exception('No permission to delete this file group');
 
             $name = basename(str_replace('\\', '/', $file['FILE_PATH']));
-            $path = $this->jigAttachmentPath($key, $name, false, $file['FILE_PATH'])['path'];
+            $path = $this->jigAttachmentPath($key, $name, false, $file['FILE_PATH'], $group)['path'];
 
             $stage = 'ลบรายการไฟล์ผ่าน API';
-            $result = json_decode($client->delete($url . '/files/' . rawurlencode($seq))->getBody(), true);
+            $result = json_decode($client->delete($url . '/files/' . rawurlencode($seq), ['headers' => ['X-Jig-Actor' => $actor]])->getBody(), true);
             if (!is_array($result) || ($result['deleted'] ?? false) !== true) throw new Exception('API did not confirm attachment deletion');
 
             $warning = null;
-            if (is_file($path) && !@unlink($path)) $warning = 'ลบรายการในฐานข้อมูลแล้ว แต่ลบไฟล์จริงไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ';
+            if (!array_filter($snapshot['FILES'], function ($other) use ($file, $seq) { return (string)$other['FILE_SEQ'] !== (string)$seq && $other['FILE_PATH'] === $file['FILE_PATH']; }) && is_file($path) && !@unlink($path)) $warning = 'ลบรายการในฐานข้อมูลแล้ว แต่ลบไฟล์จริงไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ';
 
             $this->output->set_content_type('application/json')
                 ->set_output(json_encode(['status' => true, 'warning' => $warning]));
@@ -311,7 +323,8 @@ class jig extends MY_Controller {
             $key = $this->fileKey('get');
             if (!$this->form->getRequestNo($key)) throw new Exception('Form not found');
             $name = $this->input->get('file');
-            $path = $this->jigAttachmentPath($key, $name)['path'];
+            $group = (string)($this->input->get('group') ?: 'REFERENCE');
+            $path = $this->jigAttachmentPath($key, $name, false, null, $group)['path'];
             if (!is_file($path)) throw new Exception('File not found');
             $this->output->set_header('X-Content-Type-Options: nosniff');
             if ($download) {

@@ -448,19 +448,25 @@
                                 </div>
                             </div>
                             {{-- เพิ่มปุ่ม Add Row ก่อนตาราง --}}
-                            <div class="flex items-center gap-3 mb-4">
+                            <div class="flex flex-wrap items-center gap-3 mb-4">
                                 <div class="bg-accent/20 p-1.5 rounded-lg text-accent-focus"> ... </div>
                                 <h2 class="text-base font-bold text-accent-focus uppercase tracking-widest">Purpose &amp;
                                     Vendor / Supplier name</h2>
                                 {{-- ปุ่ม Add Row --}}
-                                <button type="button" id="addStampRow" class="btn btn-sm btn-accent ml-auto gap-1">
+                                <div class="flex flex-wrap items-center gap-2 ml-auto">
+                                <button type="button" id="exportInvoiceExcel" class="btn btn-sm btn-success">Export Excel</button>
+                                <button type="button" id="importInvoiceExcel" class="btn btn-sm btn-warning">+ Import Excel</button>
+                                <input type="file" id="invoiceExcelFile" accept=".xlsx" class="hidden" aria-label="Import invoice Excel template" />
+                                <button type="button" id="addStampRow" class="btn btn-sm btn-accent gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                     </svg>
                                     Add Invoice
                                 </button>
+                                </div>
                             </div>
+                            <p class="mb-2 text-xs text-base-content/60">Import accepts the Export Excel template only. Use YYYY-MM-DD dates and enter VAT as 0 when exempt. Imported invoices are added to the current list.</p>
 
                             <div>
                                 <div class="overflow-x-auto">
@@ -521,12 +527,26 @@
                                 <p class="text-xs text-base-content/50 mt-2">
                                     Accepted formats: PDF, JPG, PNG
                                 </p>
+                                <p class="text-xs text-base-content/50 mt-1">Choose files again to add more attachments.</p>
 
+                                <ul id="selectedAttachmentList" class="mt-3 space-y-2" aria-live="polite" aria-label="Selected attachments"></ul>
                                 <div id="existingAttachmentList" class="mt-3 hidden" aria-live="polite"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <section aria-labelledby="invoiceRemarkHeading"
+                    class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                    <h2 id="invoiceRemarkHeading" class="mb-3 text-base font-bold text-slate-700">Remark</h2>
+                    <ol class="list-decimal space-y-3 pl-5 text-sm leading-relaxed text-slate-600">
+                        <li class="pl-1">
+                            Upon completion of the form by the user, the original invoice/Tax Invoice shall be submitted to the Accounting Section.
+                        </li>
+                        <li class="pl-1">
+                            Upon receipt of the original invoice/Tax Invoice and completion of all required approvals, the Accounting Section shall record the information in the system.
+                        </li>
+                    </ol>
+                </section>
                 <div class="divider before:bg-base-300 after:bg-base-300"></div>
 
                 <div id="actionform"></div>

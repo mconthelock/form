@@ -145,7 +145,10 @@ $(async function () {
     `;
                 $('#CONJUDGEMENT').html(htmlContent);
             }
-            if (formeva?.MJUDGEMENT && form.MODE != 2) {
+            if (
+                formeva?.MJUDGEMENT &&
+                (form.MODE != 2 || (cextdata == '03' && form.MODE == 2))
+            ) {
                 htmlContent = `
         <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-white text-sm">
             <span class="font-semibold underline">TOTAL EVALUATION</span>
@@ -379,7 +382,7 @@ $(async function () {
         }
     } catch (err) {
         console.error(err);
-        showErrorMessage(err);
+        showErrorMessage(err, '2034');
     } finally {
         $('#frmmain').css('visibility', 'visible');
         showLoader({ show: false });
@@ -470,7 +473,7 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         redirectWebflow();
     } catch (error) {
         console.error(error);
-        showErrorMessage(error);
+        showErrorMessage(error, '2034');
     } finally {
         showLoader({ show: false });
     }

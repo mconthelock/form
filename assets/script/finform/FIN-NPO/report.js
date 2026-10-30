@@ -51,6 +51,8 @@ $(async function () {
         '#formDateTo',
         '#invoiceDateFrom',
         '#invoiceDateTo',
+        '#approveDateFrom',
+        '#approveDateTo',
     ].forEach((element) => setDatePicker({ element }));
 
     await Promise.all([loadSelect('expense'), loadSelect('vendor')]);
@@ -105,6 +107,9 @@ $(document).on('submit', '#reportSearchForm', async function (event) {
 
 $(document).on('click', '#btnReset', async function () {
     document.getElementById('reportSearchForm')?.reset();
+    $('#reportSearchForm input').each(function () {
+        this._flatpickr?.clear();
+    });
     $('#reportSearchForm select').val('').trigger('change');
     await renderTable([]);
 });
@@ -197,6 +202,8 @@ function getCriteria() {
         formDateTo: $('#formDateTo').val() || null,
         invoiceDateFrom: $('#invoiceDateFrom').val() || null,
         invoiceDateTo: $('#invoiceDateTo').val() || null,
+        approveDateFrom: $('#approveDateFrom').val() || null,
+        approveDateTo: $('#approveDateTo').val() || null,
         expenseCode: $('#expenseType').val() || null,
         vendorCode: $('#vendor').val() || null,
         costCenter: $('#costCenter').val()?.trim() || null,
@@ -207,6 +214,7 @@ function validateDateRanges() {
     const ranges = [
         ['#formDateFrom', '#formDateTo', 'Form Date'],
         ['#invoiceDateFrom', '#invoiceDateTo', 'Invoice Date'],
+        ['#approveDateFrom', '#approveDateTo', 'Approve Date'],
     ];
     for (const [fromId, toId, label] of ranges) {
         const from = $(fromId).val();

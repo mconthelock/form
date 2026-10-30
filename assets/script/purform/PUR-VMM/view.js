@@ -152,7 +152,7 @@ $(async function () {
         }
     } catch (err) {
         console.error(err);
-        showErrorMessage(err);
+        showErrorMessage(err, '2034');
     } finally {
         $('#frmmain').css('visibility', 'visible');
         showLoader({ show: false });
@@ -231,7 +231,7 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         redirectWebflow();
     } catch (error) {
         console.error(error);
-        showErrorMessage(error);
+        showErrorMessage(error, '2034');
     } finally {
         showLoader({ show: false });
     }

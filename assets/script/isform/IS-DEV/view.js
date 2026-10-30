@@ -6,7 +6,7 @@ import { displayEmpInfo, fillImages } from '@amec/webasset/indexDB';
 import { setSelect2 } from '@amec/webasset/select2';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { showMessage, intVal, showDigits } from '@amec/webasset/utils';
-import { getFormIsDev } from '../FORM-1/data';
+import { getFormIsDev } from './data';
 
 select2();
 $(document).ready(async function () {

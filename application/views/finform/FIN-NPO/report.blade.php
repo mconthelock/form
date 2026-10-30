@@ -76,10 +76,17 @@
                             </select>
                         </label>
 
-                        <label class="form-control w-full lg:col-span-2">
+                        <label class="form-control w-full">
                             <span class="label-text mb-2 text-sm font-bold">Cost Center</span>
                             <input type="text" id="costCenter" class="input input-bordered w-full bg-base-100" placeholder="All cost centers" autocomplete="off">
                         </label>
+                        <fieldset>
+                            <legend class="mb-2 text-sm font-bold">Approve Date</legend>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <input type="text" id="approveDateFrom" class="input input-bordered w-full bg-base-100" placeholder="From Date" aria-label="Approve Date From" autocomplete="off">
+                                <input type="text" id="approveDateTo" class="input input-bordered w-full bg-base-100" placeholder="To Date" aria-label="Approve Date To" autocomplete="off">
+                            </div>
+                        </fieldset>
                     </div>
 
                     <div class="mt-6 flex flex-wrap gap-3 border-t border-base-300 pt-5">
@@ -100,5 +107,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/finNpoReport.js?ver={{ $GLOBALS['version'] }}&rev=9"></script>
+<script src="{{ $_ENV['APP_JS'] }}/finNpoReport.js?ver={{ $GLOBALS['version'] }}&rev=10"></script>
 @endsection
