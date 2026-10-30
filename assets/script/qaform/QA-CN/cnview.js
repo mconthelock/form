@@ -64,7 +64,7 @@ $(document).ready(async function () {
             if (action !== 'deleteApv') {
                 if ($('#mstatus').val() != '1') {
                     // --- โค้ดสำหรับ Debug ดูค่าของ class req ---
-                    console.log('--- ตรวจสอบช่องที่บังคับกรอก (.req) ---');
+                    // console.log('--- ตรวจสอบช่องที่บังคับกรอก (.req) ---');
                     $('#cn-form .req').each(function () {
                         // ดึงชื่อ ID หรือ Name เพื่อให้รู้ว่าเป็นช่องไหน
                         const elemName =
@@ -84,7 +84,7 @@ $(document).ready(async function () {
                             );
                         }
                     });
-                    console.log('------------------------------------');
+                    //  console.log('------------------------------------');
                     // ------------------------------------------
 
                     if (!(await requiredForm('#cn-form'))) return;
@@ -97,7 +97,7 @@ $(document).ready(async function () {
                     return;
                 }
             }
-            console.log('xxxxxxxxxxx');
+            //  console.log('xxxxxxxxxxx');
             const txtRemark = $('#txtRemark').val();
             console.log('yyyyyyyyyyy');
             if (action == 'deleteApv') {
@@ -242,6 +242,8 @@ $(document).ready(async function () {
                         }
                     });
                 }
+                //console.log('dwg===' + dwgArray);
+                //return false;
 
                 const frm2 = {
                     NFRMNO: nfrmno,
