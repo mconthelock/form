@@ -17,6 +17,7 @@ select2();
 
 const isReturnMode = window.FIN_NPO_RETURN_MODE === true;
 const deletedAttachmentIds = [];
+const selectedAttachments = [];
 
 $(async function () {
     const queryString = window.location.search;
@@ -194,26 +195,28 @@ $(document).on('click', '.delete-existing-attachment', function () {
     }
 });
 
-$(document).on('change', '#attachfile', function () {
-    if (!isReturnMode) return;
+function renderSelectedAttachments() {
+    // Keep the input's FileList in sync for validation and both submission paths.
+    const transfer = new DataTransfer();
+    selectedAttachments.forEach((file) => transfer.items.add(file));
+    document.getElementById('attachfile').files = transfer.files;
 
-    const selectedFiles = Array.from(this.files || []);
-    const container = $('#existingAttachmentList');
-    container.find('.new-attachment-preview').remove();
-
-    if (!selectedFiles.length) return;
-
-    container.removeClass('hidden').append(
-        `<div class="new-attachment-preview mt-3">
-            <p class="mb-2 text-xs font-semibold text-success">New attachment to be added:</p>
-            <ul class="space-y-1">${selectedFiles
-                .map(
-                    (file) =>
-                        `<li class="truncate text-sm font-semibold" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</li>`,
-                )
-                .join('')}</ul>
-        </div>`,
+    $('#selectedAttachmentList').html(
+        selectedAttachments.map((file, index) => `<li class="flex items-center justify-between gap-3 rounded-lg border border-info/20 bg-white px-3 py-2">
+            <span class="min-w-0 break-all text-sm font-semibold" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+            <button type="button" class="remove-selected-attachment btn btn-xs btn-error shrink-0" data-index="${index}" aria-label="Remove ${escapeHtml(file.name)}">Remove</button>
+        </li>`).join(''),
     );
+}
+
+$(document).on('change', '#attachfile', function () {
+    selectedAttachments.push(...Array.from(this.files || []));
+    renderSelectedAttachments();
+});
+
+$(document).on('click', '.remove-selected-attachment', function () {
+    selectedAttachments.splice(Number($(this).attr('data-index')), 1);
+    renderSelectedAttachments();
 });
 
 async function populateAirSalesEmployees(employeeCodes = []) {
@@ -659,6 +662,7 @@ function formatAmount(value) {
 }
 
 function formatAmountInput(value) {
+    const sign = String(value).trimStart().startsWith('-') ? '-' : '';
     const [whole, ...decimalParts] = String(value)
         .replace(/,/g, '')
         .replace(/[^\d.]/g, '')
@@ -667,8 +671,8 @@ function formatAmountInput(value) {
     const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
     return decimalParts.length
-        ? `${grouped || '0'}.${decimalParts.join('').slice(0, 2)}`
-        : grouped;
+        ? `${sign}${grouped || '0'}.${decimalParts.join('').slice(0, 2)}`
+        : sign + grouped;
 }
 
 function emptyInvoiceRow() {
@@ -744,6 +748,79 @@ function createTableStamp(data = []) {
 $(document).on('click', '#addStampRow', function () {
     $('#stampTable tbody').append(invoiceRowHtml(emptyInvoiceRow(), true));
     setInvoiceDatePicker();
+});
+
+$(document).on('click', '#exportInvoiceExcel', async function () {
+    const button = $(this).prop('disabled', true);
+    try {
+        const { createInvoiceWorkbook } = await import('./invoice-excel.mjs');
+        const invoices = [];
+        $('#stampTable tbody tr').each(function () {
+            const row = $(this);
+            const amount = row.find('.total-amount').val();
+            const vat = row.find('.vat').val();
+            invoices.push({
+                INVOICE_DATE: row.find('.invoice-date').val() || '',
+                INVOICE_NO: row.find('.invoice-no').val() || '',
+                TOTAL_AMOUNT: amount === '' ? '' : numberValue(amount),
+                VAT: vat === '' ? '' : numberValue(vat),
+                REFERENCE: row.find('.reference').val() || '',
+            });
+        });
+        const workbook = createInvoiceWorkbook(invoices);
+        const buffer = await workbook.xlsx.writeBuffer();
+        const url = URL.createObjectURL(new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'FIN-NPO-Invoices.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+        console.error(error);
+        showMessage('Cannot export Excel. Please try again.', 'error');
+    } finally {
+        button.prop('disabled', false);
+    }
+});
+
+$(document).on('click', '#importInvoiceExcel', function () {
+    $('#invoiceExcelFile').trigger('click');
+});
+
+$(document).on('change', '#invoiceExcelFile', async function () {
+    const file = this.files?.[0];
+    if (!file) return;
+    const button = $('#importInvoiceExcel').prop('disabled', true);
+    try {
+        if (!/\.xlsx$/i.test(file.name)) {
+            throw new Error('Please select an .xlsx file downloaded from Export Excel.');
+        }
+        const { loadInvoiceFile } = await import('./invoice-excel.mjs');
+        const invoices = await loadInvoiceFile(await file.arrayBuffer());
+        const tbody = $('#stampTable tbody');
+        tbody.find('tr').each(function () {
+            const inputs = $(this).find('input:not(.net-price)');
+            if (inputs.toArray().every((input) => !input.value.trim())) {
+                $(this).find('.invoice-date').each(function () { this._flatpickr?.destroy(); });
+                $(this).remove();
+            }
+        });
+        tbody.append(invoices.map((invoice) => invoiceRowHtml({
+            ...invoice, LINEID: ++invoiceLineId,
+        }, true)).join(''));
+        setInvoiceDatePicker();
+        showMessage(`Imported ${invoices.length} invoice(s).`, 'success');
+    } catch (error) {
+        console.error(error);
+        showMessage(error.message || 'Cannot import Excel. Please use the exported template.', 'error');
+    } finally {
+        this.value = '';
+        button.prop('disabled', false);
+    }
 });
 
 $(document).on('click', '.remove-invoice-row', function () {
@@ -839,7 +916,7 @@ $(document).on(
                 (invoice) =>
                     !invoice.INVOICE_DATE ||
                     !invoice.INVOICE_NO ||
-                    invoice.TOTAL_AMOUNT <= 0,
+                    invoice.TOTAL_AMOUNT === 0,
             );
 
             if (invalidInvoiceIndex >= 0) {

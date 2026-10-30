@@ -29,7 +29,7 @@ class form extends MY_Controller {
         $this->SmmtBase    = 'SMMT';    // SMMT: Header, Master Type/Step, Admin
         $this->webflowBase = 'DEFAULT'; // DEFAULT: FORM, FLOW, FE_FILE, AMECUSERALL
     }
-  // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
 
     // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
@@ -132,7 +132,7 @@ class form extends MY_Controller {
             $reqByPost   = trim((string)$this->input->post('REQBY'));
             $empNoPost   = trim((string)$this->input->post('EMPNO'));
 
-            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
+            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : '');
 
             if (empty($docTypeCode)) {
                 throw new Exception("กรุณาระบุประเภทเอกสาร (DOC_TYPE_CODE)");
@@ -467,7 +467,7 @@ class form extends MY_Controller {
             $nrunno   = (int)$this->input->post('NRUNNO');
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
             $extdata  = trim((string)$this->input->post('EXTDATA'));
-            $empno    = (string)($this->input->post('EMPNO') ?: ($this->session->userdata('empno') ?? ''));
+            $empno    = (string)($this->input->post('EMPNO') ?: '');
 
             $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
             $header = $dbSmmt->where([

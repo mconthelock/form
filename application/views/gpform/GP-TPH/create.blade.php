@@ -87,7 +87,12 @@
         .tph-page .table :is(th, td) { border: 0; border-bottom: 1px solid var(--tph-line); padding: 10px 8px; }
         .tph-page .table th { font-size: 13px; font-weight: 700; white-space: nowrap; }
         .tph-page .table tbody tr:hover { background: var(--tph-soft); }
-        .tph-page #applicant-visitor-section table { min-width: 700px; }
+        .tph-page #applicant-visitor-section table { min-width: 912px; table-layout: fixed; }
+        .tph-page .visitor-col-number { width: 48px; }
+        .tph-page .visitor-col-employee { width: 90px; }
+        .tph-page .visitor-col-name { width: 320px; }
+        .tph-page .visitor-col-organization { width: 130px; }
+        .tph-page .visitor-col-action { width: 64px; }
         #modalTable_wrapper .dt-search { display: none; }
         #modalTable_wrapper .dt-length { color: var(--color-neutral); font-size: 13px; }
         #modalTable_wrapper .dt-length .dt-input {
@@ -201,6 +206,15 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="table w-full border border-slate-200">
+                            <colgroup>
+                                <col class="visitor-col-number">
+                                <col class="visitor-col-employee">
+                                <col class="visitor-col-name">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-action">
+                            </colgroup>
                             <thead class="table-header">
                                 <tr>
                                     <th class="p-3 text-center">No.</th>
@@ -208,7 +222,7 @@
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Division</th>
                                     <th class="p-3 text-left">Department</th>
-                                    <th class="p-3 text-left">SECTION</th>
+                                    <th class="p-3 text-left">Section</Section></th>
                                     <th class="p-3 text-center" data-action-column>Action</th>
                                 </tr>
                             </thead>
@@ -292,17 +306,16 @@
                         <span>Long-Term Use (ใช้ระยะยาว)</span>
                     </label>
                     <div class="mt-3">
-                        <input type="number" name="LONGTERM_YEARS" id = "LONGTERM_YEARS" class="input input-bordered w-full"
-                            placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="1" max="2" step="1" aria-describedby="long-term-years-hint">
-                        <p id="long-term-years-hint" class="tph-hint">ขออนุญาตได้สูงสุด 2 ปี (1–2 years)</p>
+                        <input type="hidden" name="LONGTERM_YEARS" id="LONGTERM_YEARS">
+                        <p class="tph-hint">ระยะเวลาการอนุญาต 2 ปี (730 วันนับจากวันปัจจุบัน)</p>
                     </div>
                     <div id="long-term-valid-until" class="mt-3 hidden rounded-lg border border-slate-200 bg-slate-50 p-3"
                         aria-live="polite">
                         <div class="text-sm font-semibold text-slate-700">Valid Until (ใช้ได้จนถึง)</div>
                         <div id="LONGTERM_VALID_UNTIL_DISPLAY" class="mt-1 font-medium text-slate-900">
-                            Enter year(s) to calculate the end date.
+                            Calculated from today plus 730 days.
                         </div>
-                        <p class="tph-hint">Calculated from today and the selected year(s).</p>
+                        <p class="tph-hint">Calculated from the current date plus 730 days.</p>
                     </div>
                     <label class="inline-flex items-center gap-2 mt-4">
                         <input type="radio" name="permit_option" class="radio radio-primary" id='period' value="period">

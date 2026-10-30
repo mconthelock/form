@@ -1,4 +1,10 @@
 <?php
+// === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+// === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+
+// === http://localhost:8080/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+// === http://localhost:8080/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    
 use GuzzleHttp\Client;
 
 defined('BASEPATH') OR exit('No direct script access allowed');
@@ -11,6 +17,7 @@ require_once APPPATH . 'controllers/_file.php';
 class Form extends MY_Controller {
     use formApi, flow, formmst;
 
+    public $CodeForm = 'AMEC-AR';
     public function __construct() {
         parent::__construct();
         $this->client = new Client(['verify' => false]);
@@ -76,14 +83,14 @@ class Form extends MY_Controller {
             $data['VORGNO'] = $this->input->get('orgNo');
             $data['CYEAR']  = $this->input->get('y');
         } else {
-            $formMst        = $this->getFormMasterByVaname('FE-ASP');
+            $formMst        = $this->getFormMasterByVaname($this->CodeForm);
             $data['NFRMNO'] = $formMst['data']['NNO'] ?? $formMst[0]->NNO;
             $data['VORGNO'] = $formMst['data']['VORGNO'] ?? $formMst[0]->VORGNO;
             $data['CYEAR']  = $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR;
         }
 
         // 4. สิทธิ์การใช้งาน
-        $data['isAdmin']      = $this->MainModel->isFormAdmin('FE-ASP', $data['EMPNO']);
+        $data['isAdmin']      = $this->MainModel->isFormAdmin($this->CodeForm, $data['EMPNO']);
         $data['isSuperAdmin'] = ($data['EMPNO'] === '13204');
 
         // 5. โหมด View / Edit
@@ -135,25 +142,29 @@ class Form extends MY_Controller {
             ])->get('FE_FILE')->result();
         }
 
-        // 6. ดึง Controls ตามสิทธิ์ (พนักงานทั่วไปจะกรองเฉพาะแผนกตัวเองเสมอ)[cite: 1]
+        // 6. ดึง Controls ตามสิทธิ์ และ Topics[cite: 19]
         $data['controls'] = $this->MainModel->getAllActiveControls($data['REQBY_EMPNO'], $data['SDIVCODE'], $data['SDEPCODE']);
         $data['topics']   = $this->MainModel->getActiveTopics();
 
-        // 7. โหมดสร้างเอกสารใหม่
+        // 7. โหมดสร้างเอกสารใหม่: Default Control พร้อมดึง DEPT และ SECT ของ Control นั้นมาเป็น Default[cite: 19]
         if (empty($data['NRUNNO']) && !empty($data['controls']) && is_array($data['controls'])) {
             $bestCtrl = $this->MainModel->pickDefaultControl($data['controls'], $data['SSECCODE']);
             if ($bestCtrl) {
                 $data['CONTROL_NO'] = $bestCtrl['CONTROL_NO'];
 
-                // เฉพาะ Super Admin (13204) เท่านั้นที่ซิงค์สังกัดตาม Control
+                // ดึง DEPT และ SEC ของ Control ตัวที่ถูก Default มาใช้ทันที
+                if (!empty($bestCtrl['SDEPCODE'])) {
+                    $data['SDEPCODE'] = $bestCtrl['SDEPCODE'];
+                }
+                $data['SSECCODE'] = !empty($bestCtrl['SSECCODE']) ? $bestCtrl['SSECCODE'] : '00';
+
+                // หากเป็น Super Admin (13204) ให้ดึง Division ประจำ Control มาด้วย[cite: 19]
                 if ($data['isSuperAdmin']) {
                     $data['SDIVCODE']      = $bestCtrl['SDIVCODE'] ?? $data['SDIVCODE'];
                     $data['DIVISION_NAME'] = $bestCtrl['DIVISION_NAME'] ?? $data['DIVISION_NAME'];
-                    $data['SDEPCODE']      = $bestCtrl['SDEPCODE'] ?? $data['SDEPCODE'];
-                    $data['SSECCODE']      = $bestCtrl['SSECCODE'] ?? '00';
                 }
 
-                // ดึงไฟล์ Approved ล่าสุดตั้งแต่ Server Side ทันที
+                // ดึงไฟล์ Approved ล่าสุดตั้งแต่ Server Side[cite: 19]
                 $data['prevApprovedFile'] = $this->MainModel->getLatestApprovedFile(
                     $data['CONTROL_NO'], 
                     '', 
@@ -162,11 +173,11 @@ class Form extends MY_Controller {
             }
         }
 
-        // 8. ดึง Dropdowns: พนักงานทั่วไปล็อกเฉพาะ Dept ตนเอง / 13204 เห็นทั้งฝ่าย
+        // 8. ดึง Dropdowns: Departments และ Sections ตามค่า SDEPCODE ที่อัปเดตแล้ว[cite: 19]
         $data['departments'] = $this->MainModel->getDepartmentsByRole($data['SDIVCODE'], $data['SDEPCODE'], $data['REQBY_EMPNO']);
         $data['sections']    = !empty($data['SDEPCODE']) ? $this->MainModel->getSectionsByDept($data['SDEPCODE']) : [];
 
-        // 9. ตรวจสอบสถานะการอนุมัติ Step 1
+        // 9. ตรวจสอบสถานะการอนุมัติ Step 1[cite: 19]
         $data['isFirstStepApproved'] = false;
         if (!empty($data['NRUNNO'])) {
             $data['isFirstStepApproved'] = $this->MainModel->isFirstStepApproved(
@@ -270,16 +281,18 @@ class Form extends MY_Controller {
         $ctrlDep = $control['SDEPCODE'] ?? '';
         $ctrlSec = $control['SSECCODE'] ?? '00';
 
+        // ดึงรายการ Department ถ้าเป็น Super Admin
         $departments = [];
-        $sections    = [];
         if ($isSuperAdmin) {
             $departments = $this->MainModel->getDepartmentsByRole($divCode, $ctrlDep, $empNo);
-            $sections    = !empty($ctrlDep) ? $this->MainModel->getSectionsByDept($ctrlDep) : [];
         }
+
+        // ดึงรายการ Section ของ Department ประจำ Control นั้นให้ทุกคนเสมอ เพื่อใช้อัปเดต Dropdown
+        $sections = !empty($ctrlDep) ? $this->MainModel->getSectionsByDept($ctrlDep) : [];
 
         $prevFile = $this->MainModel->getLatestApprovedFile($controlNo, $cyear2, $runNo);
 
-        $this->output
+        return $this->output
             ->set_content_type('application/json')
             ->set_output(json_encode([
                 'status'       => true,
@@ -327,7 +340,7 @@ class Form extends MY_Controller {
             $cyear2 = $this->input->post('CYEAR2');
             $nrunno = $this->input->post('NRUNNO');
 
-            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
+            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : '');
 
             if (empty($controlNo)) throw new Exception("กรุณาเลือก Control No.");
             if (empty($sDepCode))  throw new Exception("กรุณาระบุ Department");
@@ -343,7 +356,7 @@ class Form extends MY_Controller {
             $isCreateNew = empty($headerId) && empty($nrunno);
 
             if ($isCreateNew) {
-                $formMst  = $this->getFormMasterByVaname('FE-ASP');
+                $formMst  = $this->getFormMasterByVaname($this->CodeForm);
                 $formData = $formMst['data'];
 
                 $flowData = [
@@ -363,7 +376,7 @@ class Form extends MY_Controller {
 
                 $cyear2 = $rsf['data']['CYEAR2'];
                 $nrunno = $rsf['data']['NRUNNO'];
-                $docNo  = "FE-ASP-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+                $docNo  = $this->CodeForm . "-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
 
                 $headerData = [
                     'DOC_NO'           => $docNo,
@@ -418,7 +431,10 @@ class Form extends MY_Controller {
                             'HEADER_ID'     => $headerId,
                             'TOPIC_ID'      => $t['TOPIC_ID'],
                             'CONDITION_VAL' => $t['CONDITION_VAL'] ?? null,
-                            'CHANGE_VAL'    => $t['CHANGE_VAL'] ?? null,
+                            'CHANGE_VAL'    => $t['CHANGE_VAL'] ?? null, // สำหรับกลุ่ม AUDIT_COMPLAIN (FOUND / NOT_FOUND)
+                            'INC_VAL'       => $t['INC_VAL'] ?? 'N',
+                            'DEC_VAL'       => $t['DEC_VAL'] ?? 'N',
+                            'NO_CHANGE_VAL' => $t['NO_CHANGE_VAL'] ?? 'N',
                             'DETAILS'       => $t['DETAILS'] ?? null,
                         ]);
                     }
@@ -455,7 +471,7 @@ class Form extends MY_Controller {
             $nrunno   = (int)$this->input->post('NRUNNO');
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
             $extdata  = trim((string)$this->input->post('EXTDATA'));
-            $empno    = (string)($this->input->post('EMPNO') ?: ($this->session->userdata('empno') ?? ''));
+            $empno    = (string)($this->input->post('EMPNO') ?: '');
             $headerId = $this->input->post('DOC_HEADER_ID');
 
             $dbSmmt = $this->load->database($this->SmmtBase, TRUE);

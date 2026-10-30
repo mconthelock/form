@@ -1,4 +1,5 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
+import { sendmail } from '@amec/webasset/api/mail';
 import {
     getExtData,
     getFormDetail,
@@ -11,6 +12,7 @@ import { redirectWebflow } from '@amec/webasset/form';
 
 let isActionProcessing = false;
 let cextData = '';
+let workflowSteps = [];
 
 $(async function () {
     lockForm();
@@ -122,6 +124,17 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
+        if (['approve', 'reject', 'return'].includes(action)) {
+            try {
+                await sendActionEmail(form, action, remark);
+            } catch (error) {
+                console.error('Cannot send FIN-NPO email:', error);
+                showMessage(
+                    'Workflow action completed, but notification email could not be sent.',
+                    'warning',
+                );
+            }
+        }
         returnToWebflow();
     } catch (error) {
         console.error(error);
@@ -252,6 +265,91 @@ async function actionFinNpo(payload) {
         method: 'POST',
         data: payload,
     });
+}
+
+async function sendActionEmail(form, action, remark) {
+    const detail = await getFormDetail(form);
+    const isCompleted = action === 'approve' && String(detail?.CST).trim() === '2';
+    const currentEmployee = String(form.EMPNO || '').trim();
+    const dimStep =
+        action === 'approve' && !isCompleted && currentEmployee
+            ? workflowSteps.find(
+                  (step) =>
+                      String(step.CSTEPNO).trim() === '02' &&
+                      String(step.CSTEPST).trim() === '3' &&
+                      [step.VAPVNO, step.VREPNO].some(
+                          (empno) =>
+                              String(empno || '').trim() === currentEmployee,
+                      ),
+              )
+            : null;
+    if (action === 'approve' && !dimStep && !isCompleted) return;
+
+    const controller = dimStep
+        ? workflowSteps.find(
+              (step) =>
+                  String(step.CSTEPNO).trim() === '19' &&
+                  String(step.CSTEPNO).trim() ===
+                      String(dimStep.CSTEPNEXTNO).trim(),
+          )
+        : null;
+    const recipientCode = dimStep
+        ? controller?.VAPVNO
+        : detail?.VREQNO || detail?.REQBY;
+    if (!recipientCode) {
+        throw new Error(
+            dimStep ? 'Controller not found' : 'Requester not found',
+        );
+    }
+
+    const recipient = await getEmployee(recipientCode);
+    const to = String(recipient?.SRECMAIL || '').trim();
+    if (!to) {
+        throw new Error(
+            dimStep
+                ? 'Controller email not found'
+                : 'Requester email not found',
+        );
+    }
+
+    const recipients = [to];
+    if (dimStep) {
+        const requesterCode = detail?.VREQNO || detail?.REQBY;
+        if (!requesterCode) throw new Error('Requester not found');
+
+        const requester = await getEmployee(requesterCode);
+        const requesterEmail = String(requester?.SRECMAIL || '').trim();
+        if (!requesterEmail) throw new Error('Requester email not found');
+
+        if (requesterEmail.toLowerCase() !== to.toLowerCase()) {
+            recipients.push(requesterEmail);
+        }
+    }
+
+    const formNo =
+        detail.FORMNO ||
+        detail.VFORMNO ||
+        `FIN-NPO${String(form.CYEAR2).slice(-2)}-${String(form.NRUNNO).padStart(6, '0')}`;
+    const status = {
+        approve: 'Approved',
+        reject: 'Rejected',
+        return: 'Returned',
+    }[action];
+
+    const result = await sendmail({
+        to: dimStep ? recipients : to,
+        // to: dimStep ? recipients : 'supakitt@MitsubishiElevatorAsia.co.th',
+        subject: `FIN-NPO ${formNo} ${dimStep ? 'Pending Controller Approval' : status}`,
+        html: `<p>Dear ${dimStep ? 'Controller and Requester' : escapeHtml(recipient.SNAME || 'Requester')},</p>
+            <p>Form No: ${escapeHtml(formNo)}</p>
+            <p>${isCompleted ? 'Your FIN-NPO form has been fully approved. The approval workflow is complete.' : dimStep ? 'DIM has approved this FIN-NPO form. The form is pending review by Job Controller.' : `Your FIN-NPO form has been ${status.toLowerCase()} at the current workflow step.`}</p>
+            ${remark ? `<p>Remark: ${escapeHtml(remark)}</p>` : ''}
+            <p>Please check the form for details.</p>
+            <p>Best Regards,</p>`,
+    });
+    if (result?.status === false) {
+        throw new Error(result.message || 'Cannot send FIN-NPO email');
+    }
 }
 
 function lockForm() {
@@ -523,6 +621,7 @@ async function renderWorkflowAction(form, modeResponse) {
         const mode = normalizeWorkflowMode(modeResponse);
         cextData = getCextDataValue(await getExtData(form));
         const flow = await showflow(form);
+        workflowSteps = Array.isArray(flow?.data) ? flow.data : [];
         const action =
             mode === '2'
                 ? webflowSubmit({
