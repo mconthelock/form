@@ -296,7 +296,11 @@ async function addInvestmentRow(data = null) {
         const qty = intVal(data.QTY) || 1;
         const matchedDevice = deviceMst.find((d) => d.DNO == deviceCode);
         const price =
-            intVal(data.PRICE ?? data.STANDARD_COST ?? matchedDevice?.STANDARD_COST) || 0;
+            intVal(
+                data.PRICE ??
+                    data.STANDARD_COST ??
+                    matchedDevice?.STANDARD_COST,
+            ) || 0;
 
         newRow.find('.select-device').val(deviceCode);
         newRow.find('.device-qty').val(qty);
@@ -707,7 +711,7 @@ function setBenefit(formData) {
     let i = 0;
     for (const row of rows) {
         if (intVal($(row).find('.subtotal-cost').val()) > 0) {
-            formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
+            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
             formData.append(
                 `benefit[${i}][BENEFIT_CURRENT]`,
                 intVal($(row).find('.present-cost').val()) || 0,

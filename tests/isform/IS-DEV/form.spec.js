@@ -760,7 +760,6 @@ test.describe('Real API Integration: Create IS-DEV Form with Realistic Data', ()
             await investRow0
                 .locator('.select-device')
                 .selectOption(firstDeviceVal);
-            await investRow0.locator('.select-device').click();
             await investRow0.locator('.select-device').dispatchEvent('change');
         }
         await investRow0.locator('.device-qty').fill('1');
