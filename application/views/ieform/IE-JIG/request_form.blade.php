@@ -204,7 +204,7 @@
         </section>
         </fieldset>
         <section id="jig-recheck" hidden class="mb-5 mt-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 class="mb-4 font-bold text-slate-900">Corrective Action NG and Recheck</h2>
+            <h2 class="mb-4 font-bold text-slate-900">Corrective Action &amp; Verification Results</h2>
             <fieldset id="recheck-fields" disabled class="space-y-4">
                 <label class="block text-xs font-semibold text-slate-700 md:w-1/2">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
                     <input name="actual_finnish_date" placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white text-sm" required>
@@ -224,6 +224,22 @@
                         <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
                     </div>
                     @endforeach
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-blue-200 bg-white">
+                    <table class="w-full min-w-[980px] table-fixed text-sm">
+                        <colgroup>
+                            <col style="width:4%"><col style="width:22%"><col style="width:9%"><col style="width:9%">
+                            <col style="width:12%"><col style="width:9%"><col style="width:16%"><col style="width:10%">
+                        </colgroup>
+                        <thead class="bg-blue-50 text-xs font-bold text-blue-900">
+                            <tr>
+                                <th class="p-3">#</th><th>Check Point</th><th>MIN</th><th>MAX</th>
+                                <th>Measured เดิม</th><th>ผลเดิม</th>
+                                <th>Confirm Measured <span class="text-red-600">*</span></th><th>ผลยืนยัน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confirmation-rows"></tbody>
+                    </table>
                 </div>
             </fieldset>
         </section>
