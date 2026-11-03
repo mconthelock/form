@@ -112,6 +112,20 @@
             </div>
         </div>
     </div>
+    
+    <!-- แถวที่ 3: DOC SUBJECT (หัวข้อเอกสาร) -->
+    <div class="mb-4">
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+            DOC SUBJECT (หัวข้อเอกสาร) <span class="text-rose-500">*</span>
+        </label>
+        <input type="text" 
+               id="DOC_SUBJECTTxt" 
+               name="DOC_SUBJECT" 
+               maxlength="500"
+               placeholder="ระบุหัวข้อเอกสารหรือเรื่องที่ขออนุมัติ..." 
+               value="{{ $DOC_SUBJECT ?? '' }}"
+               class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+    </div>
 
     <!-- โซนแนบไฟล์เอกสาร (PDF) -->
     <div class="mt-5 pt-4 border-t border-slate-200/60">

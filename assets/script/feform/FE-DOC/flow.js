@@ -53,6 +53,10 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
 
     if (mode === '1') {
         $('#DocTypeDrp').prop('disabled', false);
+        $('#DOC_SUBJECTTxt')
+            .prop('readonly', false)
+            .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .addClass('bg-white text-slate-800');
         $('#drop-zone').removeClass('hidden');
 
         // แก้ไข Request By ได้เฉพาะตอนสร้างเอกสารใหม่ครั้งแรกสุดเท่านั้น
@@ -81,6 +85,12 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
 
         $('#DocTypeDrp').prop('disabled', true);
         if (isOwner) {
+            // เมื่อเอกสารถูก Return กลับมาหา Requester สามารถแก้ไข Subject และไฟล์ได้
+            $('#DOC_SUBJECTTxt')
+                .prop('readonly', false)
+                .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
+                .addClass('bg-white text-slate-800');
+
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
@@ -96,6 +106,10 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
             .removeClass('bg-white text-slate-800');
 
         $('#DocTypeDrp').prop('disabled', true);
+        $('#DOC_SUBJECTTxt')
+            .prop('readonly', true)
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
         $('#drop-zone').addClass('hidden');
     }
 
