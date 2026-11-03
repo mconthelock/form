@@ -34,6 +34,15 @@ const columns = [
     //     },
     // },
     {
+        title: 'DOC SUBJECT',
+        data: 'DOC_SUBJECT',
+        defaultContent: '-',
+        render: (data) =>
+            data
+                ? `<span class="font-medium text-slate-700">${data}</span>`
+                : '-',
+    },
+    {
         title: 'STATUS',
         data: 'STATUS',
         className: 'text-center',
