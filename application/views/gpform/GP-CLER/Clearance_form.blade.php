@@ -139,13 +139,13 @@
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
+                                <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST, 2) }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
                             </tr>
                         @endforeach
                         <tr class="font-semibold bg-blue-100">
                             <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
-                            <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                            <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum, 2) }}</td>
                             <td class="py-2 px-2"></td>
                         </tr>
                     </tbody>
