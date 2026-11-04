@@ -10,15 +10,69 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { approve, getData } from './data';
+import { approve, getData, getTemplate } from './data';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { showLoader } from '@amec/webasset/preloader';
 import { redirectWebflow } from '@amec/webasset/form';
+import { exportExcel, writeExcelTemp } from '@amec/webasset/excel';
+import ExcelJS from 'exceljs';
 
 var form = {};
 let cextdata;
 let datatable = [];
+
+const getFormHeaderData = () => {
+    const headerData = {};
+    $('#form-detail .flex.items-start').each(function () {
+        // ดึงชื่อหัวข้อ (span ตัวแรก) และลบช่องว่าง
+        const label = $(this).find('span').eq(0).text().trim();
+        // ดึงค่าข้อมูล (span ตัวที่สอง)
+        const value = $(this).find('span').eq(1).text().trim();
+        headerData[label] = value;
+    });
+    return headerData;
+};
+
+const packDataForExport = () => {
+    const exportData = [];
+
+    $('#TsTable tbody tr').each(function () {
+        const $tds = $(this).find('td');
+
+        // เช็คว่ามีคอลัมน์ข้อมูลอยู่จริง
+        if ($tds.length > 5) {
+            const getCleanValue = (index) => {
+                const $cell = $tds.eq(index);
+                const $input = $cell.find('input');
+                // ถ้าเป็น input ดึง value, ถ้าโชว์เฉยๆ ดึงเฉพาะ text ตัด tag html ทิ้ง
+                return $input.length > 0 ? $input.val() : $cell.text().trim();
+            };
+
+            exportData.push({
+                no: getCleanValue(0),
+                prtname: getCleanValue(1),
+                item: getCleanValue(2),
+                dwgNo: getCleanValue(3),
+                qty: getCleanValue(4),
+                process: getCleanValue(5),
+                curTP: getCleanValue(6),
+                curTC: getCleanValue(7),
+                curTS: getCleanValue(8),
+                afterTP: getCleanValue(9),
+                afterTC: getCleanValue(10),
+                afterTS: getCleanValue(11),
+                totalReq: getCleanValue(12),
+                ieTP: getCleanValue(13),
+                ieTC: getCleanValue(14),
+                ieTS: getCleanValue(15),
+                accept: getCleanValue(16),
+                history: getCleanValue(17),
+            });
+        }
+    });
+    return exportData;
+};
 const transformDataForTable = (
     apiData,
     startIndex = 0,
@@ -224,6 +278,8 @@ const transformDataForTable = (
 };
 $(document).ready(async function () {
     const formInfo = await getAllAttr('.form-info');
+    // สร้าง HTML ของปุ่ม Export โดยอิงคลาสจากปุ่มเดิมที่มีอยู่
+
     form = {
         NFRMNO: formInfo.nfrmno,
         VORGNO: formInfo.vorgno,
@@ -367,6 +423,7 @@ $(document).ready(async function () {
             webflowSubmit({
                 flow: true,
                 flowhtml: flow.html,
+                save: cextdata == 2 && form.MODE == 2 ? true : false,
                 approve: form.MODE == 2 ? true : false,
                 reject: cextdata == 1 && form.MODE == 2 ? true : false,
                 remark: false,
@@ -504,56 +561,66 @@ $(document).ready(async function () {
         }
         return myTable;
     }
+
+    var exportBtn =
+        '<button type="button" class="btn bg-green-200 hover:bg-green-300 text-green-900 shadow mg-l-12" id="btnExport" name="btnAction" value="export">Export</button>';
+    $(exportBtn).insertBefore('button[onclick="history.back()"]');
 });
 
 $(document).on('click', '.btn', async function () {
     const act = $(this).val();
-    const txtRemark = $('textarea[name="txtRemark"]').val();
-    if ((act == 'return' || act == 'reject') && txtRemark == '') {
-        showMessage('Please input Reason & Remark', 'warning');
-        return false;
-    }
-    const payload = {
-        ACTION: act,
-        NFRMNO: form.NFRMNO,
-        VORGNO: form.VORGNO,
-        CYEAR: form.CYEAR,
-        CYEAR2: form.CYEAR2,
-        NRUNNO: form.NRUNNO,
-        EMPNO: $('.apv-data').attr('empno'),
-        EXTDATA: cextdata,
-        REMARK: $('textarea[name="txtRemark"]').val(),
-    };
-    if (cextdata == 2) {
-        const dwgListArray = [];
-        $('#TsTable .input-ie-tp').each(function () {
-            const $tpInput = $(this);
-            const $tcInput = $tpInput.closest('tr').find('.input-ie-tc');
-            dwgListArray.push({
-                NFRMNO: form.NFRMNO,
-                VORGNO: form.VORGNO,
-                CYEAR: form.CYEAR,
-                CYEAR2: form.CYEAR2,
-                NRUNNO: form.NRUNNO,
-                ID: $tpInput.data('id'),
-                IE_TP: $tpInput.val() || null,
-                IE_TC: $tcInput.val() || null,
-            });
-        });
-        payload.DWGLIST = dwgListArray;
-    }
-    try {
-        showLoader({ show: true });
-        const res = await approve(payload);
-        if (res.status) {
-            showMessage(res.message, 'success');
-            redirectWebflow();
+
+    if (act == 'export') {
+        const exportData = packDataForExport();
+        const res = await writeExcelTsForm(exportData);
+    } else {
+        const txtRemark = $('textarea[name="txtRemark"]').val();
+        if ((act == 'return' || act == 'reject') && txtRemark == '') {
+            showMessage('Please input Reason & Remark', 'warning');
+            return false;
         }
-    } catch (error) {
-        console.error(error);
-        showErrorMessage(error);
-    } finally {
-        showLoader({ show: false });
+        const payload = {
+            ACTION: act,
+            NFRMNO: form.NFRMNO,
+            VORGNO: form.VORGNO,
+            CYEAR: form.CYEAR,
+            CYEAR2: form.CYEAR2,
+            NRUNNO: form.NRUNNO,
+            EMPNO: $('.apv-data').attr('empno'),
+            EXTDATA: cextdata,
+            REMARK: $('textarea[name="txtRemark"]').val(),
+        };
+        if (cextdata == 2) {
+            const dwgListArray = [];
+            $('#TsTable .input-ie-tp').each(function () {
+                const $tpInput = $(this);
+                const $tcInput = $tpInput.closest('tr').find('.input-ie-tc');
+                dwgListArray.push({
+                    NFRMNO: form.NFRMNO,
+                    VORGNO: form.VORGNO,
+                    CYEAR: form.CYEAR,
+                    CYEAR2: form.CYEAR2,
+                    NRUNNO: form.NRUNNO,
+                    ID: $tpInput.data('id'),
+                    IE_TP: $tpInput.val() || null,
+                    IE_TC: $tcInput.val() || null,
+                });
+            });
+            payload.DWGLIST = dwgListArray;
+        }
+        try {
+            showLoader({ show: true });
+            const res = await approve(payload);
+            if (res.status) {
+                showMessage(res.message, 'success');
+                redirectWebflow();
+            }
+        } catch (error) {
+            console.error(error);
+            showErrorMessage(error);
+        } finally {
+            showLoader({ show: false });
+        }
     }
 });
 
@@ -632,3 +699,167 @@ $(document).on('input', '.input-ie-tp, .input-ie-tc', function () {
             : totalIeAccept.toFixed(4),
     );
 });
+
+async function writeExcelTsForm(dataList) {
+    const headdata = getFormHeaderData();
+    console.log(headdata);
+    console.log(dataList);
+
+    //return false; // ปิดการทำงานชั่วคราวเพื่อทดสอบ
+    var workbook = new ExcelJS.Workbook();
+
+    //const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
+    try {
+        const bfile = await getTemplate('temptsform.xlsx');
+        const workbook = await writeExcelTemp(bfile.buffer, {
+            write: (wb) => {
+                const sheet = wb.getWorksheet(1);
+
+                // 1. แก้ไข Object สี: เพิ่ม bgColor ให้เหมือน fgColor เพื่อบังคับให้สีแสดงผล 100%
+                const fillLightBlue = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFDAE9F8' },
+                    bgColor: { argb: 'FFDAE9F8' },
+                };
+                const fillYellow = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFFFFE7' },
+                    bgColor: { argb: 'FFFFFFE7' },
+                };
+                const fillLightRed = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFFE6E1' },
+                    bgColor: { argb: 'FFFFE6E1' },
+                };
+                const fillLightGreen = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFDDFFDD' },
+                    bgColor: { argb: 'FFDDFFDD' },
+                };
+
+                // ส่วนหัว (Header)
+                sheet.getCell('B1').value = headdata['Form no'];
+                sheet.getCell('B2').value = headdata['Input by'];
+                sheet.getCell('B3').value = headdata['Requested by'];
+                sheet.getCell('B4').value = headdata['Section'];
+                sheet.getCell('B5').value = headdata['Production (JUNG)'];
+                let totcurrentTS = 0;
+                let totafterTS = 0;
+                let tottotalReq = 0;
+                let totieTS = 0;
+                let totieAccept = 0;
+                const startRow = 10;
+                dataList.forEach((item, index) => {
+                    const currentRow = startRow + index;
+
+                    // ฟังก์ชันช่วยแปลงข้อมูลเป็นตัวเลข เพื่อลบสามเหลี่ยมมุมสีเขียวแจ้งเตือน
+                    const parseNum = (val) =>
+                        val !== null && val !== undefined && val !== ''
+                            ? Number(val)
+                            : null;
+                    if (item.no != '') {
+                        if (parseNum(item.curTS)) {
+                            totcurrentTS += parseNum(item.curTS);
+                        }
+                        if (parseNum(item.afterTS)) {
+                            totafterTS += parseNum(item.afterTS);
+                        }
+                        if (parseNum(item.totalReq)) {
+                            tottotalReq += parseNum(item.totalReq);
+                        }
+                        if (parseNum(item.ieTS)) {
+                            totieTS += parseNum(item.ieTS);
+                        }
+                        if (parseNum(item.accept)) {
+                            totieAccept += parseNum(item.accept);
+                        }
+                    }
+
+                    // ใส่ข้อมูลทั่วไป
+                    sheet.getCell(`A${currentRow}`).value = item.no;
+                    sheet.getCell(`B${currentRow}`).value = item.prtname;
+                    sheet.getCell(`E${currentRow}`).value = item.item;
+                    sheet.getCell(`F${currentRow}`).value = item.dwgNo;
+                    sheet.getCell(`G${currentRow}`).value = parseNum(item.qty); // แปลงเป็นเลข
+                    sheet.getCell(`H${currentRow}`).value = item.process;
+                    sheet.getCell(`S${currentRow}`).value = parseNum(
+                        item.accept,
+                    );
+                    sheet.getCell(`T${currentRow}`).value = item.history;
+
+                    // ใส่ข้อมูลตัวเลข (แปลง String เป็น Number)
+                    const numericCols = {
+                        I: item.curTP,
+                        J: item.curTC,
+                        K: item.curTS,
+                        L: item.afterTP,
+                        M: item.afterTC,
+                        N: item.afterTS,
+                        O: item.totalReq,
+                        P: item.ieTP,
+                        Q: item.ieTC,
+                        R: item.ieTS,
+                    };
+                    for (const [col, val] of Object.entries(numericCols)) {
+                        sheet.getCell(`${col}${currentRow}`).value =
+                            parseNum(val);
+                        sheet.getCell(`${col}${currentRow}`).numFmt = '0.0000'; // บังคับโชว์ทศนิยม 4 ตำแหน่ง
+                    }
+
+                    const applyFill = (col, fillObj) => {
+                        const cell = sheet.getCell(`${col}${currentRow}`);
+
+                        const cellValue = cell.value;
+                        const cellNumFmt = cell.numFmt;
+
+                        cell.style = {};
+
+                        cell.value = cellValue;
+                        if (cellNumFmt) cell.numFmt = cellNumFmt;
+                        cell.fill = fillObj;
+                        cell.font = {
+                            name: 'Tahoma',
+                            size: 10,
+                        };
+                    };
+
+                    ['I', 'J', 'K'].forEach((col) =>
+                        applyFill(col, fillLightBlue),
+                    );
+                    ['L', 'M', 'N'].forEach((col) =>
+                        applyFill(col, fillYellow),
+                    );
+                    applyFill('O', fillLightRed);
+                    ['P', 'Q', 'R', 'S'].forEach((col) =>
+                        applyFill(col, fillLightGreen),
+                    );
+                });
+                sheet.getCell(`K9`).value = totcurrentTS;
+                sheet.getCell(`N9`).value = totafterTS;
+                sheet.getCell(`O9`).value = tottotalReq;
+                sheet.getCell(`R9`).value = totieTS;
+                sheet.getCell(`S9`).value = totieAccept;
+            },
+        });
+        const d = new Date();
+        const formatted = d
+            .toLocaleString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            })
+            .replace(/\D/g, '');
+        exportExcel(workbook, `IE_TS_FORM_${formatted}`);
+    } catch (error) {
+        console.error('Error reading excel template on NAS server:', error);
+        throw new Error('can not open file');
+    }
+}
