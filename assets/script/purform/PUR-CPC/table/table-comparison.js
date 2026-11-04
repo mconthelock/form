@@ -10,6 +10,7 @@ import {
     formatNumber,
     roundNumber,
     showMessage,
+    removeComma,
 } from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
 import { steps } from '../steps';
@@ -94,10 +95,10 @@ export const tableComparison = {
     },
     get total() {
         return {
-            TOTAL_PRES: this.totalPres,
-            TOTAL_NEW: this.totalNew,
-            TOTAL_COST: this.totalCost,
-            TOTAL_RATIO: this.ratio,
+            TOTAL_PRES: removeComma(this.totalPres),
+            TOTAL_NEW: removeComma(this.totalNew),
+            TOTAL_COST: removeComma(this.totalCost),
+            TOTAL_RATIO: removeComma(this.ratio),
         };
     },
     handleInstance() {
@@ -152,13 +153,11 @@ export const tableComparison = {
             if (!oldData.status) {
                 throw new Error(oldData.message);
             }
+            if (!func) {
+                func = oldData.data.NFUNCTIONS;
+            }
 
-            data = oldData.data.flatMap((parent) =>
-                parent.DETAILS.map((child) => ({
-                    ...parent,
-                    ...child,
-                })),
-            );
+            data = oldData.data.DETAILS;
         }
         if (newData && newData.length > 0) {
             data = newData;

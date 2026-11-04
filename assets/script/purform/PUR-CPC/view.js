@@ -25,7 +25,10 @@ $(async function () {
         steps.formNo = data.VFORMNO;
         steps.priceApvForm = { PRA_NO: priceApv };
         steps.function = data.NFUNCTIONS;
-        tableComparison.init({ formNo: data.VFORMNO });
+        tableComparison.init({
+            formNo: data.VFORMNO,
+            function: data.NFUNCTIONS,
+        });
         if (priceApv) {
             const linkRes = await getLink({
                 PNO: priceApv,
