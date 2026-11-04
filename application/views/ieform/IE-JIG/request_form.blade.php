@@ -148,39 +148,14 @@
             <ul id="file-list" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
             <p class="mt-3 text-xs text-slate-400">แนบเอกสารเกี่ยวกับ JIG เพื่อใช้อ้างอิงในการตรวจสอบ</p>
         </section>
-        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div class="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 class="flex items-center gap-3 font-bold text-slate-900"><span class="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sm text-sky-700">3</span>Check Points <span class="text-xs font-normal text-slate-400">Inspection Data</span></h2><span id="checkpoint-summary" class="text-xs text-slate-500" aria-live="polite"></span></div>
-            <div class="overflow-x-auto rounded-xl border border-slate-200">
-                <table class="w-full min-w-[900px] table-fixed text-sm">
-                    <colgroup>
-                        <col style="width:4%"><col style="width:25%"><col style="width:17%">
-                        <col style="width:9%"><col style="width:9%"><col style="width:10%">
-                        <col style="width:13%"><col style="width:9%"><col style="width:4%">
-                    </colgroup>
-                    <thead class="bg-slate-50 text-xs font-bold text-slate-800">
-                        <tr>
-                            <th rowspan="2" class="p-3">#</th>
-                            <th rowspan="2">Check Point <span class="text-red-600">*</span></th>
-                            <th rowspan="2">Inspection Tool</th><th colspan="2" class="p-2">Standard</th>
-                            <th rowspan="2">Measured <span class="text-red-600">*</span></th>
-                            <th rowspan="2">Unit</th><th rowspan="2">Result</th>
-                            <th rowspan="2"><span class="sr-only">ลบ</span></th>
-                        </tr>
-                        <tr>
-                            <th class="p-2">MIN<span class="text-red-600">*</span></th>
-                            <th>MAX<span class="text-red-600">*</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="checkpoint-rows"></tbody>
-                </table>
-            </div>
-            <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><button id="add-checkpoint" type="button" class="btn btn-sm border-slate-200 bg-white text-indigo-700">+ เพิ่ม Check Point</button><p class="text-xs text-slate-400">กรอก MIN / MAX ก่อน Measured · ค่าในช่วงรวมขอบเขต = OK</p></div>
-        </section>
+        @if ($pageMode !== 'create')
+            @include('ieform/IE-JIG/checkpoint_fields')
+        @endif
         <section id="ng-detail" hidden class="mt-5 rounded-2xl border border-red-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="ng-heading">
             <h2 id="ng-heading" class="mb-5 font-bold text-red-700">NG Detail</h2>
             <fieldset id="ng-fields" disabled class="space-y-4">
                 <label class="block text-xs font-semibold text-slate-700">Defect Detail <span class="text-red-600">*</span>
-                    <textarea name="ng_defect_detail" maxlength="500" required rows="3" class="textarea mt-1 w-full bg-white text-sm" placeholder="อธิบายลักษณะข้อบกพร่องที่พบ"></textarea>
+                    <textarea name="ng_defect_detail" maxlength="2000" required rows="3" class="textarea mt-1 w-full bg-white text-sm" placeholder="อธิบายลักษณะข้อบกพร่องที่พบ"></textarea>
                 </label>
                 <fieldset><legend class="mb-2 text-xs font-semibold text-slate-700">Action <span class="text-red-600">*</span> — เลือกวิธีแก้ไข (เลือกได้มากกว่า 1)</legend>
                     <div class="flex flex-wrap gap-4 text-sm">
@@ -204,10 +179,34 @@
                 <p class="mt-2 text-center text-xs text-slate-500">เปิด PDF ในแท็บใหม่ · ใช้ข้อมูลที่บันทึกแล้วล่าสุด</p>
             </div>
         </section>
-        @if ($pageMode === 'create')
-        <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>
-        @endif
         </fieldset>
+        <section id="jig-recheck" hidden class="mb-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 class="mb-4 font-bold text-slate-900">Corrective Action NG and Recheck</h2>
+            <fieldset id="recheck-fields" disabled class="space-y-4">
+                <label class="block text-xs font-semibold text-slate-700">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
+                    <input name="actual_finnish_date" placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white text-sm" required>
+                </label>
+                <label class="block text-xs font-semibold text-slate-700">สรุปการดำเนินงาน <span class="text-red-600">*</span>
+                    <textarea name="summary_detail" maxlength="2000" required rows="4" class="textarea mt-1 w-full bg-white text-sm"></textarea>
+                </label>
+                <div class="grid gap-4 md:grid-cols-2">
+                    @foreach (['BEFORE' => 'Before — ก่อนแก้ไข', 'AFTER' => 'After — หลังแก้ไข'] as $group => $label)
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold">{{ $label }} <span class="text-red-600">*</span></h3>
+                        <label data-recheck-upload class="flex cursor-pointer flex-col gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 text-center text-sm">
+                            ลากวางหรือคลิกเลือก JPG / PNG อย่างน้อย 1 ไฟล์
+                            <span class="text-xs text-slate-500">สูงสุด 5 ไฟล์ต่อช่อง ไฟล์ละไม่เกิน 10 MB</span>
+                            <input type="file" data-recheck-input="{{ $group }}" accept=".jpg,.jpeg,.png" multiple class="file-input file-input-sm w-full">
+                        </label>
+                        <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm"></ul>
+                    </div>
+                    @endforeach
+                </div>
+            </fieldset>
+        </section>
+        @if ($pageMode === 'create')
+            @include('ieform/IE-JIG/checkpoint_fields')
+        @endif
     </form>
     <section id="jig-approval" hidden class="mt-6">
         <label for="jig-remark" class="block text-sm font-semibold text-slate-700">Remark</label>

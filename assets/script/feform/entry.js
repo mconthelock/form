@@ -9,5 +9,6 @@ module.exports = {
 
     // FE-ASP
     feaspview: './assets/script/feform/FE-ASP/view.js',
+    feaspctrlmst: './assets/script/feform/FE-ASP/control_mst.js',
     // feaspreport: './assets/script/feform/FE-ASP/report.js',
 };

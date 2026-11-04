@@ -29,7 +29,7 @@ class form extends MY_Controller {
         $this->SmmtBase    = 'SMMT';    // SMMT: Header, Master Type/Step, Admin
         $this->webflowBase = 'DEFAULT'; // DEFAULT: FORM, FLOW, FE_FILE, AMECUSERALL
     }
-  // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
 
     // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
@@ -52,6 +52,7 @@ class form extends MY_Controller {
         $data['DOC_HEADER_ID'] = '';
         $data['DOC_TYPE_CODE'] = '';
         $data['DOC_NO']        = '';
+        $data['DOC_SUBJECT']   = '';
         $data['REMARK']        = '';
         $data['STATUS']        = '';
         $data['attachedFiles'] = [];
@@ -75,6 +76,7 @@ class form extends MY_Controller {
                 $data['DOC_HEADER_ID'] = $header->DOC_HEADER_ID;
                 $data['DOC_TYPE_CODE'] = $header->DOC_TYPE_CODE;
                 $data['DOC_NO']        = $header->DOC_NO;
+                $data['DOC_SUBJECT']   = $header->DOC_SUBJECT ?? '';
                 $data['REMARK']        = $header->REMARK;
                 $data['STATUS']        = $header->STATUS;
             }
@@ -128,11 +130,12 @@ class form extends MY_Controller {
             $docHeaderId = trim((string)$this->input->post('DOC_HEADER_ID'));
             $isResubmit  = $this->input->post('IS_RESUBMIT') === '1' || !empty($docHeaderId);
             $docTypeCode = trim((string)$this->input->post('DOC_TYPE_CODE'));
+            $docSubject  = trim((string)$this->input->post('DOC_SUBJECT'));
             $remark      = trim((string)($this->input->post('REMARK') ?? ''));
             $reqByPost   = trim((string)$this->input->post('REQBY'));
             $empNoPost   = trim((string)$this->input->post('EMPNO'));
 
-            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
+            $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : '');
 
             if (empty($docTypeCode)) {
                 throw new Exception("กรุณาระบุประเภทเอกสาร (DOC_TYPE_CODE)");
@@ -158,6 +161,7 @@ class form extends MY_Controller {
             if ($isResubmit) {
                 $updateData = [
                     'DOC_TYPE_CODE' => $docTypeCode,
+                    'DOC_SUBJECT'   => $docSubject,
                     'REMARK'        => $remark,
                     'STATUS'        => 'PROCESS',
                 ];
@@ -279,6 +283,7 @@ class form extends MY_Controller {
                 'NRUNNO'        => $nrunno,
                 'DOC_NO'        => $docNo,
                 'DOC_TYPE_CODE' => $docTypeCode,
+                'DOC_SUBJECT'   => $docSubject,
                 'REMARK'        => $remark,
                 'STATUS'        => 'PROCESS',
                 'CREATE_BY'   => $requesterEmpNo,
@@ -305,158 +310,7 @@ class form extends MY_Controller {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
-    // public function SaveDocMaster0() {
-    //     $this->output->set_content_type('application/json');
-    //     try {
-    //         $docTypeCode = trim((string)$this->input->post('DOC_TYPE_CODE'));
-    //         $remark      = trim((string)($this->input->post('REMARK') ?? ''));
-    //         $reqByPost   = trim((string)$this->input->post('REQBY'));
-    //         $empNoPost   = trim((string)$this->input->post('EMPNO'));
-
-    //         // เลือกรหัสผู้สร้าง/ผู้ขออนุมัติ: 1) จากหน้าจอ REQBY 2) จาก EMPNO 3) จาก Session
-    //         $currentEmpNo = !empty($reqByPost) ? $reqByPost : (!empty($empNoPost) ? $empNoPost : ($this->session->userdata('empno') ?? ''));
-
-    //         if (empty($docTypeCode)) {
-    //             throw new Exception("กรุณาระบุประเภทเอกสาร (DOC_TYPE_CODE)");
-    //         }
-
-    //         // ถ้าหน้าจอกรอกรหัสผู้ขออนุมัติมา ให้ยึดตามหน้าจอเป็นหลัก หากไม่มี จึงใช้ค่าจาก Step 00
-    //         $requesterEmpNo = $currentEmpNo;
-    //         if (empty($requesterEmpNo)) {
-    //             $step00 = $this->MainModel->getStepByDocAndExtData($docTypeCode, '00');
-    //             if ($step00 && !empty(trim($step00->TARGET_EMPNO))) {
-    //                 $requesterEmpNo = trim($step00->TARGET_EMPNO);
-    //             }
-    //         }
-
-    //         if (empty($requesterEmpNo)) {
-    //             throw new Exception("ไม่พบรหัสผู้ขออนุมัติ (REQBY) กรุณากรอกรหัสพนักงาน");
-    //         }
-
-    //         $formMst  = $this->getFormMasterByVaname('FE-DOC');
-    //         $formData = $formMst['data'];
-
-    //         $flowData = [
-    //             'NFRMNO'  => $formData['NNO'],
-    //             'VORGNO'  => $formData['VORGNO'],
-    //             'CYEAR'   => $formData['CYEAR'],
-    //             'REQBY'   => $requesterEmpNo,
-    //             'INPUTBY' => !empty($empNoPost) ? $empNoPost : $requesterEmpNo,
-    //             'REMARK'  => $remark,
-    //         ];
-    //         $rsf = $this->createForm($flowData);
-    //         if (!$rsf || empty($rsf['status'])) {
-    //             throw new Exception("สร้างเอกสาร Webflow ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
-    //         }
-
-    //         $cyear2      = $rsf['data']['CYEAR2'];
-    //         $nrunno      = $rsf['data']['NRUNNO'];
-    //         $docNo       = "FE-DOC-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
-    //         $docHeaderId = date('Ymd') . str_pad($nrunno, 4, '0', STR_PAD_LEFT);
-
-    //         $activeSteps = $this->MainModel->getStepsByDocType($docTypeCode);
-    //         $validExtDataList = [];
-    //         foreach ($activeSteps as $st) {
-    //             if (!empty($st->CEXTDATA) && trim($st->CEXTDATA) !== '00') {
-    //                 $validExtDataList[] = trim($st->CEXTDATA);
-    //             }
-    //         }
-
-    //         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-
-    //         $dbWebflow->where('NFRMNO', $formData['NNO'])
-    //                   ->where('VORGNO', $formData['VORGNO'])
-    //                   ->where('CYEAR', $formData['CYEAR'])
-    //                   ->where('CYEAR2', $cyear2)
-    //                   ->where('NRUNNO', $nrunno)
-    //                   ->where("CEXTDATA != '00'");
-
-    //         if (!empty($validExtDataList)) {
-    //             $dbWebflow->where_not_in('CEXTDATA', $validExtDataList);
-    //         }
-    //         $dbWebflow->delete('FLOW');
-
-    //         $approverRows = $dbWebflow->select('CSTEPNO, CEXTDATA')
-    //                                   ->where([
-    //                                       'NFRMNO' => $formData['NNO'],
-    //                                       'VORGNO' => $formData['VORGNO'],
-    //                                       'CYEAR'  => $formData['CYEAR'],
-    //                                       'CYEAR2' => $cyear2,
-    //                                       'NRUNNO' => $nrunno,
-    //                                       'CSTART' => 0,
-    //                                   ])
-    //                                   ->where("CEXTDATA IS NOT NULL")
-    //                                   ->order_by('CEXTDATA', 'ASC')
-    //                                   ->get('FLOW')
-    //                                   ->result();
-
-    //         if (!empty($approverRows)) {
-    //             $totalApprovers = count($approverRows);
-    //             $firstApproverStepNo = trim($approverRows[0]->CSTEPNO);
-
-    //             $dbWebflow->where([
-    //                 'NFRMNO' => $formData['NNO'],
-    //                 'VORGNO' => $formData['VORGNO'],
-    //                 'CYEAR'  => $formData['CYEAR'],
-    //                 'CYEAR2' => $cyear2,
-    //                 'NRUNNO' => $nrunno,
-    //                 'CSTART' => 1,
-    //             ])->update('FLOW', [
-    //                 'CSTEPNEXTNO' => $firstApproverStepNo
-    //             ]);
-
-    //             foreach ($approverRows as $index => $row) {
-    //                 $newStepSt = ($index === 0) ? '3' : (($index === 1) ? '2' : '1');
-    //                 $nextStepNo = ($index + 1 < $totalApprovers) ? trim($approverRows[$index + 1]->CSTEPNO) : '00';
-
-    //                 $dbWebflow->where([
-    //                     'NFRMNO'  => $formData['NNO'],
-    //                     'VORGNO'  => $formData['VORGNO'],
-    //                     'CYEAR'   => $formData['CYEAR'],
-    //                     'CYEAR2'  => $cyear2,
-    //                     'NRUNNO'  => $nrunno,
-    //                     'CSTEPNO' => trim($row->CSTEPNO),
-    //                 ])->update('FLOW', [
-    //                     'CSTEPST'     => $newStepSt,
-    //                     'CSTEPNEXTNO' => $nextStepNo
-    //                 ]);
-    //             }
-    //         }
-
-    //         $headerData = [
-    //             'DOC_HEADER_ID' => $docHeaderId,
-    //             'NFRMNO'        => $formData['NNO'],
-    //             'VORGNO'        => $formData['VORGNO'],
-    //             'CYEAR'         => $formData['CYEAR'],
-    //             'CYEAR2'        => $cyear2,
-    //             'NRUNNO'        => $nrunno,
-    //             'DOC_NO'        => $docNo,
-    //             'DOC_TYPE_CODE' => $docTypeCode,
-    //             'REMARK'        => $remark,
-    //             'STATUS'        => 'PROCESS',
-    //             'CREATE_BY'   => $requesterEmpNo,
-    //         ];
-    //         $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-    //         $dbSmmt->set('CREATE_DATE', 'SYSDATE', FALSE);
-    //         $dbSmmt->insert('FE_DOC_HEADER', $headerData);
-
-    //         return $this->output->set_output(json_encode([
-    //             'status'  => true,
-    //             'message' => "บันทึกและสร้างเอกสารสำเร็จ ({$docNo})",
-    //             'docNo'   => $docNo,
-    //             'data'    => [
-    //                 'NFRMNO'        => $formData['NNO'],
-    //                 'VORGNO'        => $formData['VORGNO'],
-    //                 'CYEAR'         => $formData['CYEAR'],
-    //                 'CYEAR2'        => $cyear2,
-    //                 'NRUNNO'        => $nrunno,
-    //                 'DOC_HEADER_ID' => $docHeaderId
-    //             ]
-    //         ]));
-    //     } catch (\Throwable $e) {
-    //         return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
-    //     }
-    // }
+    
 
     public function ActionFlow() {
         $this->output->set_content_type('application/json');
@@ -467,7 +321,7 @@ class form extends MY_Controller {
             $nrunno   = (int)$this->input->post('NRUNNO');
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
             $extdata  = trim((string)$this->input->post('EXTDATA'));
-            $empno    = (string)($this->input->post('EMPNO') ?: ($this->session->userdata('empno') ?? ''));
+            $empno    = (string)($this->input->post('EMPNO') ?: '');
 
             $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
             $header = $dbSmmt->where([

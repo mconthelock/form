@@ -11,7 +11,7 @@ import { host } from '../../utils';
 import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
 import {
-    getCurrentPrevFiles, //  เติม s ให้ตรงกับ form.js (หรือตัดออกหากไม่ได้ใช้)
+    getCurrentPrevFiles,
     initFormControls,
     loadSectionDropdown,
     applyReviewPeriodRules,
@@ -19,7 +19,7 @@ import {
     fetchEmpNameAndOrg,
     populateSavedDetails,
     buildSavePayload,
-    renderPrevFile, // เพิ่ม import ตัวนี้เข้ามา
+    renderPrevFile,
 } from './form';
 
 let empno = '';
@@ -120,7 +120,6 @@ $(document).ready(async function () {
     // --------------------------------------------------------
     // ปุ่มเปิดดู Active Revision เดิม
     // --------------------------------------------------------
-    // ปุ่มเปิดดู Active Revision เดิม
     $(document).on('click', '.btn-open-prev-file', async function (e) {
         e.preventDefault();
         const baseDir = $(this).data('base-dir');
@@ -233,6 +232,74 @@ $(document).ready(async function () {
             $('#ControlNoDrp').trigger('change');
         }
     }
+
+    // --------------------------------------------------------
+    // 🧪 ปุ่มทดสอบส่ง Email แจ้งเตือน PIC (sendNotifyEmailToPic)
+    // --------------------------------------------------------
+    $('#btnTestSendEmail')
+        .off('click')
+        .on('click', async function () {
+            // เช็คว่ามี NRUNNO หรือยัง (ต้องเป็นฟอร์มที่ถูกสร้างแล้ว)
+            if (!form.NRUNNO) {
+                showErrorMessage(
+                    'ยังไม่มีเลขที่เอกสาร (NRUNNO) กรุณาบันทึกแบบร่างก่อนทดสอบส่งอีเมล',
+                );
+                return;
+            }
+
+            const targetEmpNo = (
+                $('#REQUEST_BY_EMPNO').val() ||
+                $('#EMPNOHid').val() ||
+                empno ||
+                '13204'
+            ).trim();
+
+            const selectedControlNo = ($('#ControlNoDrp').val() || '').trim();
+
+            const isConfirm = await showConfirm({
+                title: '🧪 ทดสอบส่งอีเมลแจ้งเตือน PIC',
+                message: `ต้องการทดสอบส่งอีเมล (เอกสาร: ${form.DOC_NO || 'Doc'})\nไปยัง siripapa@mitsubishielevatorasia.co.th ใช่หรือไม่?`,
+                acceptText: 'ส่งอีเมลทดสอบ',
+                cancelText: 'ยกเลิก',
+            });
+            if (!isConfirm) return;
+
+            try {
+                await showLoader({ show: true });
+                const res = await $.ajax({
+                    url: `${host}feform/FE-ASP/batch/ajax_test_send_email`,
+                    type: 'POST',
+                    data: {
+                        NFRMNO: form.NFRMNO,
+                        VORGNO: form.VORGNO,
+                        CYEAR: form.CYEAR,
+                        CYEAR2: form.CYEAR2,
+                        NRUNNO: form.NRUNNO,
+                        DOC_NO: form.DOC_NO,
+                        empno: targetEmpNo,
+                        controlNo: selectedControlNo,
+                    },
+                    dataType: 'json',
+                });
+
+                if (res && res.status) {
+                    showMessage(
+                        res.message ||
+                            'ส่งอีเมลแจ้งเตือนทดสอบสำเร็จ กรุณาตรวจสอบกล่องข้อความ',
+                        'success',
+                    );
+                } else {
+                    showErrorMessage(res?.message || 'ส่งอีเมลไม่สำเร็จ');
+                }
+            } catch (err) {
+                showErrorMessage(
+                    'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' +
+                        (err.responseJSON?.message || err.statusText),
+                );
+            } finally {
+                await showLoader({ show: false });
+            }
+        });
 });
 
 /**

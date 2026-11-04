@@ -289,6 +289,7 @@ class edoc_model extends my_model
                     H.CYEAR2,
                     H.NRUNNO,
                     H.DOC_NO,
+                    H.DOC_SUBJECT,
                     H.DOC_TYPE_CODE,
                     T.DOC_TYPE_NAME,
                     H.STATUS,
@@ -327,8 +328,11 @@ class edoc_model extends my_model
 
         // กรองค้นหาเลขที่เอกสาร
         if (!empty($filter['keyword'])) {
-            $sql .= " AND (UPPER(H.DOC_NO) LIKE UPPER(?) OR UPPER(H.DOC_HEADER_ID) LIKE UPPER(?)) ";
+            $sql .= " AND (UPPER(H.DOC_NO) LIKE UPPER(?) 
+                       OR UPPER(H.DOC_HEADER_ID) LIKE UPPER(?) 
+                       OR UPPER(H.DOC_SUBJECT) LIKE UPPER(?)) "; // 🟢 ค้นหาตาม Subject ได้ด้วย
             $kw = '%' . trim($filter['keyword']) . '%';
+            $binds[] = $kw;
             $binds[] = $kw;
             $binds[] = $kw;
         }
