@@ -123,7 +123,7 @@
                name="DOC_SUBJECT" 
                maxlength="500"
                placeholder="ระบุหัวข้อเอกสารหรือเรื่องที่ขออนุมัติ..." 
-               value="{{ $DOC_SUBJECT ?? '' }}"
+               value="{{ $DOC_SUBJECT  ?? '' }}"
                class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
     </div>
 

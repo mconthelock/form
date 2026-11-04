@@ -130,7 +130,7 @@ class form extends MY_Controller {
             $docHeaderId = trim((string)$this->input->post('DOC_HEADER_ID'));
             $isResubmit  = $this->input->post('IS_RESUBMIT') === '1' || !empty($docHeaderId);
             $docTypeCode = trim((string)$this->input->post('DOC_TYPE_CODE'));
-            $docSubject  = trim((string)$this->input->post('DOC_SUBJECT'));
+            $docSubject  = trim((string)$this->input->post('docSubject'));
             $remark      = trim((string)($this->input->post('REMARK') ?? ''));
             $reqByPost   = trim((string)$this->input->post('REQBY'));
             $empNoPost   = trim((string)$this->input->post('EMPNO'));
