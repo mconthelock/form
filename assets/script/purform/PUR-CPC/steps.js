@@ -417,7 +417,10 @@ export const steps = {
                 break;
             case 4:
                 importExcel.reset();
-                await tableComparison.init({ formNo: this.formNo });
+                await tableComparison.init({
+                    formNo: this.formNo,
+                    function: this.function,
+                });
                 btnPrevious.removeClass('hidden');
                 const submitOpt = {
                     remark: false,
