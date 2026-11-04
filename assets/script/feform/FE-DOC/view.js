@@ -27,6 +27,7 @@ $(document).ready(async function () {
         NRUNNO: formData.nrunno,
         EMPNO: empno,
         DOC_NO: formData.doc_no,
+        DOC_SUBJECT: formData.doc_subject || '',
     };
 
     $('#DOC_IDTxt').val(form.DOC_NO);

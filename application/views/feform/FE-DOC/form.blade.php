@@ -11,6 +11,7 @@
      data-doc_no="{{ $DOC_NO ?? '' }}"
      data-doc_header_id="{{ $DOC_HEADER_ID ?? '' }}"
      data-doc_type_code="{{ $DOC_TYPE_CODE ?? '' }}"
+     data-doc_subject="{{ $DOC_SUBJECT ?? '' }}"
      data-status="{{ $STATUS ?? '' }}"
      data-reqby="{{ $REQBY ?? '' }}"
      data-inputby="{{ $INPUTBY ?? '' }}"
