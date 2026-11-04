@@ -438,7 +438,6 @@ export async function setReturn() {
         // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
         await tableComparison.init({
             formNo: priceComparisonForms,
-            function: data.NMODE,
         });
     } else {
         // หากไม่มีฟอร์มที่ลิงก์มา ให้ตั้งค่าฟิลด์อัตโนมัติด้วยโหมดปัจจุบันเท่านั้น
@@ -685,7 +684,6 @@ export async function setView() {
         // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
         await tableComparison.init({
             formNo: data.LINK_FORM.CNO,
-            function: data.NMODE,
         });
     }
     // ตรวจสอบและตั้งค่าข้อมูล Vendor

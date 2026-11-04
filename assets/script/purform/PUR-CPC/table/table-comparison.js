@@ -153,13 +153,11 @@ export const tableComparison = {
             if (!oldData.status) {
                 throw new Error(oldData.message);
             }
+            if (!func) {
+                func = oldData.data.NFUNCTIONS;
+            }
 
-            data = oldData.data.flatMap((parent) =>
-                parent.DETAILS.map((child) => ({
-                    ...parent,
-                    ...child,
-                })),
-            );
+            data = oldData.data.DETAILS;
         }
         if (newData && newData.length > 0) {
             data = newData;
