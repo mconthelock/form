@@ -17,6 +17,8 @@ import {
     totalInvestment,
     createFormIsDev,
 } from './data.js';
+    createFormIsDev,
+} from './data.js';
 select2();
 
 $(document).ready(async function () {
@@ -453,7 +455,7 @@ function setBenefit(formData) {
     let i = 0;
     for (const row of rows) {
         if ($(row).find('.subtotal-cost').val() > 0) {
-            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
+            formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
             formData.append(
                 `benefit[${i}][BENEFIT_CURRENT]`,
                 $(row).find('.present-cost').val() || 0,
