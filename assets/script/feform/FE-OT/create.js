@@ -3,23 +3,51 @@ import { dayOff, getDayOff, setDatePicker } from '@amec/webasset/flatpickr';
 import { redirectWebflow } from '@amec/webasset/form';
 import { showMessage } from '@amec/webasset/utils';
 import ExcelJS from 'exceljs';
-import { createFEOTForm, getdatOT } from './data';
+import { createFEOTForm, deletedataOT, getdatOT, updatedataOT } from './data';
+import { data } from 'jquery';
 
 var mockupTable;
+var editingRow,
+    editingOriginal = null;
+var isLoadingOTForEdit = false;
 //main
 $(async function () {
     try {
         mockupTable = await createTable(
             {
                 responsive: false,
+                data: [],
                 columns: [
-                    { title: 'Date' },
-                    { title: 'Time In' },
-                    { title: 'Time Out' },
-                    { title: 'Hour' },
-                    { title: 'Detail' },
-                    { title: 'Type' },
-                    { title: 'Action' },
+                    { data: 'SEMPNO', title: 'Employee No.' },
+                    { data: 'WORKDATE', title: 'Date' },
+                    { data: 'WORKTIMEIN', title: 'Time In' },
+                    { data: 'WORKTIMEOUT', title: 'Time Out' },
+                    { data: 'WORKHOURS', title: 'Hour' },
+                    { data: 'WORKDESC', title: 'Detail' },
+                    { data: 'WORKTYPE', title: 'Type' },
+                    {
+                        data: null,
+                        title: 'Action',
+                        orderable: false,
+                        searchable: false,
+                        className: 'whitespace-nowrap',
+                        render: () => `
+                    <button
+                        type="button"
+                        class="edit-expense btn btn-sm btn-info btn-outline btn-square btn-edit-ot"
+                        aria-label="Edit expense"
+                        title="Edit expense">
+                        <i class="fi fi-rr-pencil"></i>
+                    </button>
+                    <button
+                        type="button"
+                        class="delete-expense btn btn-sm btn-error btn-outline btn-square btn-delete-ot"
+                        aria-label="Delete expense"
+                        title="Delete expense">
+                        <i class="fi fi-rr-trash"></i>
+                    </button>
+                `,
+                    },
                 ],
             },
             {
@@ -42,20 +70,70 @@ $(async function () {
             dayOffSelected: true,
             minDate: displayMonth,
             maxDate: lastDayOfDisplayMonth,
+
+            onDayCreate: (_, __, instance, dayElement) => {
+                const workDates = getOTWorkDates();
+                const dateKey = instance.formatDate(
+                    dayElement.dateObj,
+                    'Y-m-d',
+                );
+
+                if (!workDates.has(dateKey)) return;
+
+                dayElement.classList.add('has-ot');
+                dayElement.title = 'มีรายการ OT';
+
+                const marker = document.createElement('span');
+                marker.style.cssText = `
+                    position: absolute;
+                    bottom: 3px;
+                    left: 50%;
+                    width: 5px;
+                    height: 5px;
+                    border-radius: 9999px;
+                    background: #2563eb;
+                    transform: translateX(-50%);
+                `;
+
+                dayElement.style.position = 'relative';
+                dayElement.appendChild(marker);
+            },
+
             onReady: (_, __, instance) => {
                 instance.jumpToDate(displayMonth);
                 $('#PLANYEAR').val(instance.currentYear);
                 $('#PLANMONTH').val(instance.currentMonth + 1);
+
                 const monthFromCalendar = new Date(
                     instance.currentYear,
                     instance.currentMonth,
                     1,
                 );
+
                 document.querySelector('#monthOT').textContent =
                     new Intl.DateTimeFormat('en-US', {
                         month: 'long',
                         year: 'numeric',
                     }).format(monthFromCalendar);
+            },
+
+            onChange: async (_, dateKey) => {
+                if (isLoadingOTForEdit || !dateKey) return;
+
+                const rowIndex = mockupTable
+                    .rows()
+                    .indexes()
+                    .toArray()
+                    .find(
+                        (index) =>
+                            String(
+                                mockupTable.row(index).data().WORKDATE ?? '',
+                            ).slice(0, 10) === dateKey,
+                    );
+
+                if (rowIndex !== undefined) {
+                    await loadOTForEdit(mockupTable.row(rowIndex));
+                }
             },
         });
 
@@ -65,6 +143,21 @@ $(async function () {
         });
     } catch (error) {}
 });
+
+function refreshOTCalendar() {
+    document.querySelector('#calendarOT')._flatpickr?.redraw();
+}
+
+function getOTWorkDates() {
+    return new Set(
+        mockupTable
+            .rows()
+            .data()
+            .toArray()
+            .map((row) => String(row.WORKDATE ?? '').slice(0, 10))
+            .filter(Boolean),
+    );
+}
 
 // logic for display date ot
 function getOTDisplayMonth(today = new Date()) {
@@ -261,6 +354,7 @@ function formatExcelTime(value) {
     return String(value ?? '').trim();
 }
 
+// upload file excel and save to database and bring to tableOT
 $(document).on('change', '#uploadFile', async function () {
     try {
         const file = $('#uploadFile')[0].files[0];
@@ -270,7 +364,7 @@ $(document).on('change', '#uploadFile', async function () {
             await workbook.xlsx.load(await file.arrayBuffer());
 
             const worksheet = workbook.worksheets[0];
-
+            const uploadedRows = [];
             for (
                 let rowNumber = 4;
                 rowNumber <= worksheet.rowCount;
@@ -288,6 +382,8 @@ $(document).on('change', '#uploadFile', async function () {
                 if (!empNo && !workDate && !timeIn && !timeOut) continue;
 
                 const date = new Date(`${workDate}T00:00:00`);
+                // const planyear = date.getFullYear();
+                // const planmonth = date.getMonth() + 1 ;
                 const otHour = await calculateHours(timeIn, timeOut);
                 const otType = await getOTType(workDate, timeIn, timeOut);
 
@@ -306,20 +402,27 @@ $(document).on('change', '#uploadFile', async function () {
 
                 const res = await createFEOTForm(dataOT);
 
+                uploadedRows.push(dataOT);
+
                 if (res.status == true) {
                     showMessage(res.message, 'success');
                 } else {
                     throw new Error(res.message);
                 }
             }
+            // const getDataotfile = await getdatOT(planyear, planmonth, empNo);
+            mockupTable.rows.add(uploadedRows).draw(false);
+            refreshOTSummary();
+            refreshOTCalendar();
+
             $('#uploadFile').val('');
-            // const getDataot = await getdatOT();
         }
     } catch (error) {
         console.log(error);
     }
 });
 
+// save/update form to database and bring to tableOT
 $(document).on('click', '#saveOT', async function (e) {
     e.preventDefault();
     try {
@@ -350,20 +453,180 @@ $(document).on('click', '#saveOT', async function (e) {
             WORKTIMEOUT: $('#timeOUT').val(),
             WORKHOURS: $('#OTHour').val(),
             WORKTYPE: $('#OTType').val(),
-            CSTATUS: 'A',
+            CSTATUS: editingRow ? 'U' : 'A',
             WORKDESC: $('#deTail').val(),
         };
-        const res = await createFEOTForm(dataOT);
+        let res;
+
+        if (editingRow) {
+            res = await updatedataOT({
+                ...dataOT,
+
+                // API update ต้องใช้ key เดิมเพื่อหา record
+                OLD_PLANYEAR: editingOriginal.PLANYEAR,
+                OLD_PLANMONTH: editingOriginal.PLANMONTH,
+                OLD_SEMPNO: editingOriginal.SEMPNO,
+                OLD_WORKDATE: editingOriginal.WORKDATE,
+            });
+        } else {
+            res = await createFEOTForm(dataOT);
+        }
+        // const res = await createFEOTForm(dataOT);
+
+        // mockupTable.row.add(dataOT).draw(false);
 
         if (res.status == true) {
+            if (editingRow) {
+                editingRow.data(dataOT).draw(false);
+                editingRow = null;
+                editingOriginal = null;
+                $('#saveOT').text('Save OT');
+            } else {
+                mockupTable.row.add(dataOT).draw(false);
+            }
             showMessage(res.message, 'success');
             const currentEmpNo = $('#empNo').val();
             $('#OTform')[0].reset();
             $('#empNo').val(currentEmpNo);
+            document.querySelector('#calendarOT')._flatpickr?.clear();
+            document.querySelector('#timeIN')._flatpickr?.clear();
+            document.querySelector('#timeOUT')._flatpickr?.clear();
+            refreshOTSummary();
         } else {
             throw new Error(res.message);
         }
     } catch (error) {
         console.log(error);
     }
+});
+
+// กด Delete: ลบแถวออกจากตาราง
+$(document).on('click', '.btn-delete-ot', async function () {
+    const row = mockupTable.row($(this).closest('tr'));
+    const dataOT = row.data();
+
+    const confirmed = confirm(
+        `ต้องการลบ OT ของพนักงาน ${dataOT.SEMPNO} วันที่ ${dataOT.WORKDATE} ใช่หรือไม่?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+        const res = await deletedataOT(
+            dataOT.PLANYEAR,
+            dataOT.PLANMONTH,
+            dataOT.SEMPNO,
+            dataOT.WORKDATE,
+        );
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+        } else {
+            throw new Error(res.message);
+        }
+        row.remove().draw(false);
+        refreshOTSummary();
+    } catch (error) {
+        console.error(error);
+        showMessage(error.message || 'ลบข้อมูลไม่สำเร็จ', 'error');
+    }
+});
+
+// get hour and ot type
+async function refreshOTCalculation() {
+    const workDate = $('#calendarOT').val();
+    const timeIn = $('#timeIN').val();
+    const timeOut = $('#timeOUT').val();
+
+    if (!workDate || !timeIn || !timeOut) {
+        $('#OTHour').val('');
+        $('#OTType').val('');
+        return;
+    }
+
+    const otHour = await calculateHours(timeIn, timeOut);
+    const otType = await getOTType(workDate, timeIn, timeOut);
+
+    $('#OTHour').val(otHour.toFixed(2));
+    $('#OTType').val(otType ?? '');
+}
+
+// sum hour with ot type
+function refreshOTSummary() {
+    const totals = {
+        bronze: 0, // Type 1.3
+        silver: 0, // Type 1.5
+        gold: 0, // Type 3
+    };
+
+    mockupTable
+        .rows()
+        .data()
+        .toArray()
+        .forEach((row) => {
+            const hour = Number.parseFloat(row.WORKHOURS);
+            const type = Number.parseFloat(row.WORKTYPE);
+
+            if (!Number.isFinite(hour)) return;
+
+            if (type === 1.3) totals.bronze += hour;
+            if (type === 1.5) totals.silver += hour;
+            if (type === 3) totals.gold += hour;
+        });
+
+    $('#bronze').text(totals.bronze.toFixed(2));
+    $('#silver').text(totals.silver.toFixed(2));
+    $('#gold').text(totals.gold.toFixed(2));
+}
+
+async function loadOTForEdit(row) {
+    editingRow = row;
+    const dataOT = editingRow.data();
+
+    editingOriginal = {
+        PLANYEAR: dataOT.PLANYEAR,
+        PLANMONTH: dataOT.PLANMONTH,
+        SEMPNO: dataOT.SEMPNO,
+        WORKDATE: dataOT.WORKDATE,
+    };
+
+    $('#PLANYEAR').val(dataOT.PLANYEAR);
+    $('#PLANMONTH').val(dataOT.PLANMONTH);
+    $('#empNo').val(dataOT.SEMPNO);
+
+    const calendar = document.querySelector('#calendarOT')._flatpickr;
+
+    if (calendar) {
+        // ป้องกัน onChange เรียกซ้ำจากการ setDate ในโหมด Edit
+        isLoadingOTForEdit = true;
+        calendar.setDate(dataOT.WORKDATE, true, 'Y-m-d');
+        isLoadingOTForEdit = false;
+    } else {
+        $('#calendarOT').val(dataOT.WORKDATE);
+    }
+
+    const timeInPicker = document.querySelector('#timeIN')._flatpickr;
+    const timeOutPicker = document.querySelector('#timeOUT')._flatpickr;
+
+    if (timeInPicker) {
+        timeInPicker.setDate(dataOT.WORKTIMEIN, true, 'H:i');
+    } else {
+        $('#timeIN').val(dataOT.WORKTIMEIN);
+    }
+
+    if (timeOutPicker) {
+        timeOutPicker.setDate(dataOT.WORKTIMEOUT, true, 'H:i');
+    } else {
+        $('#timeOUT').val(dataOT.WORKTIMEOUT);
+    }
+
+    $('#deTail').val(dataOT.WORKDESC);
+
+    await refreshOTCalculation();
+
+    $('#saveOT').text('Update OT');
+}
+
+// กด Edit: นำข้อมูลแถวนั้นกลับไปแสดงในฟอร์ม
+$(document).on('click', '.btn-edit-ot', async function () {
+    await loadOTForEdit(mockupTable.row($(this).closest('tr')));
 });

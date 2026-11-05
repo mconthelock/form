@@ -70,19 +70,19 @@
                     <div
                         class="bg-gradient-to-br from-amber-600 to-orange-700 text-white rounded-2xl flex flex-col items-center justify-center p-4 shadow-md shadow-orange-700/20 border border-orange-500/30">
                         <span class="text-xs font-semibold text-orange-100/80 mb-1">Rate 1.3</span>
-                        <span class="text-3xl font-black drop-shadow-md">0</span>
+                        <span class="text-3xl font-black drop-shadow-md" id="bronze">0</span>
                     </div>
                     <!-- เงิน (Silver) - Rate 1.5 -->
                     <div
                         class="bg-gradient-to-br from-slate-400 to-slate-600 text-white rounded-2xl flex flex-col items-center justify-center p-4 shadow-md shadow-slate-600/20 border border-slate-300/30">
                         <span class="text-xs font-semibold text-slate-100/80 mb-1">Rate 1.5</span>
-                        <span class="text-3xl font-black drop-shadow-md">0</span>
+                        <span class="text-3xl font-black drop-shadow-md" id="silver">0</span>
                     </div>
                     <!-- ทอง (Gold) - Rate 3.0 -->
                     <div
                         class="bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-2xl flex flex-col items-center justify-center p-4 shadow-md shadow-amber-500/30 border border-yellow-300/40">
                         <span class="text-xs font-semibold text-amber-50/90 mb-1">Rate 3.0</span>
-                        <span class="text-3xl font-black drop-shadow-md">0</span>
+                        <span class="text-3xl font-black drop-shadow-md" id="gold">0</span>
                     </div>
                 </div>
 
