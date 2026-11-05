@@ -37,7 +37,7 @@ class Batch extends MY_Controller {
     }
 
     /**
-     * Logic สร้างเอกสาร Yearly Review (Draft) พร้อมตรวจเช็คความครบถ้วนทุกรายการ
+     *Logic สร้างเอกสาร Yearly Review (Draft) พร้อมตรวจเช็คความครบถ้วนทุกรายการ
      */
     protected function generateYearlyDrafts($targetControlNo = '', $targetEmpNo = '', $checkDuplicate = true) {
         // 1. ดึง Master Form จากตาราง FORMMST โดยตรง
