@@ -71,11 +71,19 @@ switch (ENVIRONMENT)
 {
 	case 'development':
 <<<<<<< HEAD
+<<<<<<< HEAD
 		//error_reporting(-1);
         error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 =======
 		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 >>>>>>> 4765fc75 (fix: update Blade Engine)
+=======
+		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+=======
+		//error_reporting(-1);
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+>>>>>>> 64e821f8 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
+>>>>>>> fd43a012 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
 		ini_set('display_errors', 1);
 	break;
 

@@ -2,6 +2,7 @@
     "require": {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         "vlucas/phpdotenv": "^5.5",
         "duncan3dc/blade": "^4.6",
         "phpmailer/phpmailer": "^6.9",
@@ -13,6 +14,16 @@
 =======
         "duncan3dc/blade": "^4.6",
 >>>>>>> d5d58390 (fix: revert duncan3dc/blade version to ^4.6 and update PHP platform version to 7.2.15; correct benefit type key in form data)
+=======
+        "duncan3dc/blade": "^4.6",
+=======
+        "vlucas/phpdotenv": "^5.5",
+        "duncan3dc/blade": "^4.6",
+        "phpmailer/phpmailer": "^6.9",
+        "guzzlehttp/guzzle": "^6.5",
+        "tecnickcom/tcpdf": "^6.10",
+>>>>>>> 64e821f8 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
+>>>>>>> fd43a012 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
         "fpdf/fpdf": "^1.86",
         "guzzlehttp/guzzle": "^6.5",
         "phpmailer/phpmailer": "^6.9",
