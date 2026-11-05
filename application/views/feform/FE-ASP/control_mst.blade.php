@@ -17,7 +17,7 @@
             <p class="text-xs text-slate-500 mt-1">จัดการรหัสเอกสาร สังกัดแผนกที่ใช้งาน และผู้รับผิดชอบการสร้างเอกสารประจำปี (Auto Job)</p>
         </div>
         <div class="mt-4 sm:mt-0 flex flex-wrap gap-2">
-            <!-- ปุ่มส่งเมลซ้ำทั้งหมด -->
+            <!-- ปุ่มส่งเมลซ้ำทั้งหมด  -->
             <button type="button" id="btnResendEmailAll"
                     class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all cursor-pointer">
                 📩 ส่งเมลแจ้งเตือนซ้ำทั้งหมด

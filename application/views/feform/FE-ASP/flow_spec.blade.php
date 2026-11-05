@@ -20,7 +20,7 @@
         <button type="button" id="DeleteBtn" class="btn btn-sm btn-error text-white rounded-lg shadow-xs hidden">
             🗑️ Delete
         </button>
-        <!-- <button type="button" id="RejectBtn" class="btn btn-sm bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-xs hidden">
+        <!-- <button type="button" id="RejectBtn"  class="btn btn-sm bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-xs hidden">
             ❌ Reject
         </button> -->
         <button type="button" id="ReturnBtn" class="btn btn-sm bg-slate-600 hover:bg-slate-700 text-white rounded-lg shadow-xs hidden">

@@ -41,7 +41,6 @@ class form extends MY_Controller {
         $data['NRUNNO'] = $this->input->get('runNo') ?? '';
         $data['EMPNO']  = (string)$empno;
 
-        // ดึงข้อมูลพนักงานเริ่มต้น (สำหรับกรณีสร้างใหม่)
         $initEmp = !empty($empno) ? $this->MainModel->getEmpName($empno) : ['empno' => '', 'name' => ''];
 
         $data['REQBY_EMPNO']   = $initEmp['empno'];
