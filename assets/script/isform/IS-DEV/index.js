@@ -17,8 +17,6 @@ import {
     totalInvestment,
     createFormIsDev,
 } from './data.js';
-    createFormIsDev,
-} from './data.js';
 select2();
 
 $(document).ready(async function () {
