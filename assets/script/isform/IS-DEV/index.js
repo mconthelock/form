@@ -15,9 +15,13 @@ import {
     totalBenefit,
     totalLabor,
     totalInvestment,
+<<<<<<< HEAD
     getFormIsDev,
     createFormIsDev,
     updateFormIsDev,
+=======
+    createFormIsDev,
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
 } from './data.js';
 select2();
 
@@ -38,6 +42,10 @@ $(document).ready(async function () {
     await setDatePicker({
         altInput: true,
         mode: 'month',
+<<<<<<< HEAD
+=======
+        //dateFormat: 'Y-M',
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
         altFormat: 'Y-M',
         dateFormat: 'Y-m-01',
         minDate: dayjs().format('YYYY-MM'),
@@ -92,6 +100,13 @@ $(document).on('click', '#change-req-employee', async function (e) {
     $('#req-by-input').focus();
 });
 
+$(document).on('click', '#change-req-employee', async function (e) {
+    e.preventDefault();
+    $('#req-by-input').removeClass('hidden');
+    $('#req-by-info').addClass('hidden');
+    $('#req-by-input').focus();
+});
+
 $(document).on('click', '.request-type', async function (e) {
     const val = $(this).val();
     if (val >= '3') {
@@ -101,6 +116,7 @@ $(document).on('click', '.request-type', async function (e) {
     } else {
         $('.form-roi').removeClass('hidden');
     }
+<<<<<<< HEAD
 });
 
 $(document).on('change', '#req-objective', function () {
@@ -109,6 +125,8 @@ $(document).on('change', '#req-objective', function () {
     } else {
         $('#req-objective-other').prop('readonly', true).val('');
     }
+=======
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
 });
 
 $(document).on('keyup', '.text-comment', async function () {
@@ -553,6 +571,7 @@ $(document).on('click', '#confirm-form', async function (e) {
 >>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
     const form = $('#form-is-dev')[0];
     //Verify form
+<<<<<<< HEAD
     const formValid = await verifyForm(form);
     if (!formValid) {
         return;
@@ -572,6 +591,23 @@ $(document).on('click', '#confirm-form', async function (e) {
     } else {
         await createFormIsDev(formdata);
     }
+=======
+    // const formValid = await verifyForm(form);
+    // if (!formValid) {
+    //     return;
+    // }
+    // //Verify ROI form
+    // if ($('.request-type:checked').val() < 3) {
+    //     const roiValid = await verifyROI(form);
+    //     if (!roiValid) {
+    //         return;
+    //     }
+    // }
+
+    const formdata = await formData();
+    await createFormIsDev(formdata);
+    //const files = $('#form-is-dev input[type="file"]');
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
 });
 
 async function verifyForm(form) {
@@ -608,7 +644,11 @@ async function verifyForm(form) {
 
 async function verifyROI(form) {
     //Verify form with ROI
+<<<<<<< HEAD
     let check = true;
+=======
+    let check2 = true;
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
     if ($('#req-objective').val() == 8) {
         $('#req-objective-other').addClass('req-2');
     } else {
@@ -623,6 +663,7 @@ async function verifyROI(form) {
             if (!$(this).val()) {
                 $(this).addClass('border-red-500');
                 $(this).closest('label.input').addClass('border-red-500');
+<<<<<<< HEAD
                 check = false;
             }
         });
@@ -632,6 +673,17 @@ async function verifyROI(form) {
             'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
         );
         return check;
+=======
+                check2 = false;
+            }
+        });
+
+    if (!check2) {
+        await showMessage(
+            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+        );
+        return check2;
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
     }
 
     //Check detail must have at least 100 characters
@@ -673,6 +725,7 @@ async function formData() {
         .find('input, textarea, select')
         .each(function () {
             const map = $(this).data('map');
+<<<<<<< HEAD
             const val = $(this).val();
             if (map) {
                 if (map === 'SPEC_CONFIRM_PLAN' && !val) return;
@@ -688,6 +741,14 @@ async function formData() {
         $('#req-by-input').val() ||
         $('#req-by-id').text().trim() ||
         $('#EMPNO').val();
+=======
+            if (map) {
+                formData.append(map, $(this).val());
+            }
+        });
+    formData.append('JOBTYPE', $('.request-type:checked').val());
+    const requestor = $('#req-by-input').val();
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
     const user = await displayEmpInfo(requestor);
     const org =
         user.SSECCODE != '00'
@@ -698,10 +759,16 @@ async function formData() {
     formData.append('REQ_ORG', org);
     formData.append('REQ_PIC', requestor);
     formData.append('REQ_DATE', dayjs().format('YYYY-MM-DD'));
+<<<<<<< HEAD
     if (intVal($('.total-benefit').val()) > 0) setBenefit(formData);
     if (intVal($('.total-labor').val()) > 0) setLabor(formData);
     if (intVal($('#total-investment-cost').val()) > 0)
         setInvestmentCost(formData);
+=======
+    if ($('.total-benefit').val() > 0) setBenefit(formData);
+    if ($('.total-labor').val() > 0) setLabor(formData);
+    if ($('.total-investment-cost').val() > 0) setInvestmentCost(formData);
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
     if ($('.attachments').length > 0) setAttachments(formData);
     return formData;
 }
@@ -710,6 +777,7 @@ function setBenefit(formData) {
     const rows = $('#table-benefit').find('tbody tr');
     let i = 0;
     for (const row of rows) {
+<<<<<<< HEAD
         if (intVal($(row).find('.subtotal-cost').val()) > 0) {
             formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
             formData.append(
@@ -719,6 +787,17 @@ function setBenefit(formData) {
             formData.append(
                 `benefit[${i}][BENEFIT_AFTER]`,
                 intVal($(row).find('.future-cost').val()) || 0,
+=======
+        if ($(row).find('.subtotal-cost').val() > 0) {
+            formData.append(`benefit[${i}][BENEFIT]`, $(row).index());
+            formData.append(
+                `benefit[${i}][BENEFIT_CURRENT]`,
+                $(row).find('.present-cost').val() || 0,
+            );
+            formData.append(
+                `benefit[${i}][BENEFIT_AFTER]`,
+                $(row).find('.future-cost').val() || 0,
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
             );
             i++;
         }
@@ -729,13 +808,18 @@ function setLabor(formData) {
     const rows = $('#table-labor').find('tbody tr');
     let i = 0;
     for (const row of rows) {
+<<<<<<< HEAD
         if (intVal($(row).find('.labor-total').val()) > 0) {
+=======
+        if ($(row).find('.labor-total').val() > 0) {
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
             formData.append(
                 `manhours[${i}][POSITION]`,
                 $(row).find('td:eq(0) select').val(),
             );
             formData.append(
                 `manhours[${i}][COST]`,
+<<<<<<< HEAD
                 intVal($(row).find('td:eq(1) input').val()) || 0,
             );
             formData.append(
@@ -745,6 +829,17 @@ function setLabor(formData) {
             formData.append(
                 `manhours[${i}][HOURS_AFTER]`,
                 intVal($(row).find('td:eq(3) input').val()) || 0,
+=======
+                $(row).find('td:eq(1) input').val() || 0,
+            );
+            formData.append(
+                `manhours[${i}][HOURS_PRESENT]`,
+                $(row).find('td:eq(2) input').val() || 0,
+            );
+            formData.append(
+                `manhours[${i}][HOURS_AFTER]`,
+                $(row).find('td:eq(3) input').val() || 0,
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
             );
             i++;
         }
@@ -755,23 +850,36 @@ function setInvestmentCost(formData) {
     const rows = $('#table-investment').find('tbody tr');
     let i = 0;
     for (const row of rows) {
+<<<<<<< HEAD
         if (intVal($(row).find('.device-total').val()) > 0) {
+=======
+        if ($(row).find('.device-total').val() > 0) {
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
             formData.append(
                 `invest[${i}][DEVICE]`,
                 $(row).find('td:eq(0) select').val(),
             );
             formData.append(
                 `invest[${i}][QTY]`,
+<<<<<<< HEAD
                 intVal($(row).find('td:eq(1) input').val()) || 0,
             );
             formData.append(
                 `invest[${i}][PRICE]`,
                 intVal($(row).find('td:eq(2) input').val()) || 0,
+=======
+                $(row).find('td:eq(1) input').val() || 0,
+            );
+            formData.append(
+                `invest[${i}][PRICE]`,
+                $(row).find('td:eq(2) input').val() || 0,
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
             );
             i++;
         }
     }
 }
+<<<<<<< HEAD
 
 function setAttachments(formData) {
     $('.attachments').each(function () {
@@ -782,3 +890,5 @@ function setAttachments(formData) {
         }
     });
 }
+=======
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)

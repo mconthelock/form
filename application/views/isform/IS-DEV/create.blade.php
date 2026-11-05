@@ -2,6 +2,7 @@
 
 @section('contents')
     <form action="" id="form-is-dev">
+<<<<<<< HEAD
         <input type="text" class="hidden" id="MODE" value="{{ $mode ?? 1 }}" />
         <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
@@ -11,6 +12,14 @@
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
         <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR2 ?? '' }}" />
         <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO ?? 0 }}" />
+=======
+        <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
+        <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
+        <input type="text" class="hidden" value="1" data-map="STATUS" />
+        <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
+        <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
+        <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
+>>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
             data-map="INPUTBY" />
         <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD=======>>>>>>> 171584cc (feat: enhance form handling by adding
