@@ -19,11 +19,11 @@ $(async function () {
                 data: [],
                 columns: [
                     { data: 'SEMPNO', title: 'Employee No.' },
-                    { data: 'WORKDATE', title: 'Date' },
+                    { data: 'WORKDATE', title: 'Date', className: 'text-nowrap' },
                     { data: 'WORKTIMEIN', title: 'Time In' },
                     { data: 'WORKTIMEOUT', title: 'Time Out' },
                     { data: 'WORKHOURS', title: 'Hour' },
-                    { data: 'WORKDESC', title: 'Detail' },
+                    { data: 'WORKDESC', title: 'Detail', className: 'text-nowrap' },
                     { data: 'WORKTYPE', title: 'Type' },
                     {
                         data: null,
