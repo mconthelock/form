@@ -99,7 +99,7 @@
 
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Section (ส่วนงาน)</label>
-            <select id="SecDrp" name="SSECCODE" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+            <select id="SecDrp"   name="SSECCODE" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
                 <option value="00">00 : No Section</option>
                 @if(!empty($sections))
                     @foreach ($sections as $s)
