@@ -1,6 +1,6 @@
 
 <script>
-    // ส่งข้อมูลไฟล์แนบตั้งแต่วินาทีแรกที่ Server โหลดหน้าเสร็จ
+    
     window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
 </script>
 

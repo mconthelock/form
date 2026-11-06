@@ -91,6 +91,31 @@
     color: #dc2626 !important;
     -webkit-text-fill-color: #dc2626;
 }
+#jig-page #jig-recheck {
+    border-color: #93c5fd;
+    background-color: #f8fbff;
+}
+#jig-page #jig-recheck h2,
+#jig-page #jig-recheck h3,
+#jig-page #jig-recheck label {
+    color: #1e3a8a;
+}
+#jig-page #jig-recheck input,
+#jig-page #jig-recheck textarea {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8;
+    border-color: #93c5fd !important;
+    font-weight: 600;
+    opacity: 1;
+}
+#jig-page #jig-recheck input:disabled,
+#jig-page #jig-recheck textarea:disabled {
+    background-color: #eff6ff !important;
+}
+#jig-page #jig-recheck .text-red-600 {
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626;
+}
 </style>
 @endsection
 @section('contents')
@@ -148,9 +173,7 @@
             <ul id="file-list" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
             <p class="mt-3 text-xs text-slate-400">แนบเอกสารเกี่ยวกับ JIG เพื่อใช้อ้างอิงในการตรวจสอบ</p>
         </section>
-        @if ($pageMode !== 'create')
-            @include('ieform/IE-JIG/checkpoint_fields')
-        @endif
+        @include('ieform/IE-JIG/checkpoint_fields')
         <section id="ng-detail" hidden class="mt-5 rounded-2xl border border-red-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="ng-heading">
             <h2 id="ng-heading" class="mb-5 font-bold text-red-700">NG Detail</h2>
             <fieldset id="ng-fields" disabled class="space-y-4">
@@ -180,10 +203,10 @@
             </div>
         </section>
         </fieldset>
-        <section id="jig-recheck" hidden class="mb-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 class="mb-4 font-bold text-slate-900">Corrective Action NG and Recheck</h2>
+        <section id="jig-recheck" hidden class="mb-5 mt-5 rounded-2xl border border-sky-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 class="mb-4 font-bold text-slate-900">Corrective Action &amp; Verification Results</h2>
             <fieldset id="recheck-fields" disabled class="space-y-4">
-                <label class="block text-xs font-semibold text-slate-700">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
+                <label class="block text-xs font-semibold text-slate-700 md:w-1/2">วันที่แก้ไขเสร็จ (Action Finish Date) <span class="text-red-600">*</span>
                     <input name="actual_finnish_date" placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white text-sm" required>
                 </label>
                 <label class="block text-xs font-semibold text-slate-700">สรุปการดำเนินงาน <span class="text-red-600">*</span>
@@ -198,14 +221,30 @@
                             <span class="text-xs text-slate-500">สูงสุด 5 ไฟล์ต่อช่อง ไฟล์ละไม่เกิน 10 MB</span>
                             <input type="file" data-recheck-input="{{ $group }}" accept=".jpg,.jpeg,.png" multiple class="file-input file-input-sm w-full">
                         </label>
-                        <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm"></ul>
+                        <ul data-recheck-list="{{ $group }}" class="mt-3 space-y-2 text-sm" aria-live="polite"></ul>
                     </div>
                     @endforeach
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-blue-200 bg-white">
+                    <table class="w-full min-w-[980px] table-fixed text-sm">
+                        <colgroup>
+                            <col style="width:4%"><col style="width:22%"><col style="width:9%"><col style="width:9%">
+                            <col style="width:12%"><col style="width:9%"><col style="width:16%"><col style="width:10%">
+                        </colgroup>
+                        <thead class="bg-blue-50 text-xs font-bold text-blue-900">
+                            <tr>
+                                <th class="p-3">#</th><th>Check Point</th><th>MIN</th><th>MAX</th>
+                                <th>Measured เดิม</th><th>ผลเดิม</th>
+                                <th>Confirm Measured <span class="text-red-600">*</span></th><th>ผลยืนยัน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confirmation-rows"></tbody>
+                    </table>
                 </div>
             </fieldset>
         </section>
         @if ($pageMode === 'create')
-            @include('ieform/IE-JIG/checkpoint_fields')
+        <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>
         @endif
     </form>
     <section id="jig-approval" hidden class="mt-6">

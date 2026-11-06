@@ -34,7 +34,6 @@ class Control_mst extends MY_Controller {
         
         $isAdmin = ($empNo === '13204') || (!empty($empNo) && $this->MainModel->isFormAdmin($this->CodeForm, $empNo));
 
-        // ดักสิทธิ์: เฉพาะ Admin เท่านั้น
         if (!$isAdmin) {
             show_error('Access Denied: เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถจัดการ Master Control No. ได้', 403, 'Forbidden');
         }
