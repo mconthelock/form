@@ -175,6 +175,11 @@ export function initFormControls() {
                         );
                         $sec.val('00');
                     }
+                    if ($('#SecDrp').val() === '00') {
+                        $('#SecDrp').hide();
+                    } else {
+                        $('#SecDrp').show();
+                    }
 
                     // 4. แสดงผลกล่อง Active Revision PDF ประจำ Control
                     renderPrevFile(res.prevFile);

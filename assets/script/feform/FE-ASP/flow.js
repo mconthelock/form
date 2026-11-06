@@ -115,6 +115,11 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         // Mode 3: View Mode
         setFormEditable(false);
     }
+    // #DeptDrp, #SecDrp
+    $('#DeptDrp, #SecDrp')
+        .prop('disabled', true)
+        .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+        .removeClass('bg-white text-slate-800');
 
     // ปุ่มฟังก์ชันเฉพาะของ 13204
     if (isSuperAdmin) {
