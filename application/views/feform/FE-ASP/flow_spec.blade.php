@@ -15,6 +15,9 @@
             <button type="button" id="ManualStampBtn" class="btn btn-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-xs cursor-pointer">
                 ⚡ Force Stamp PDF (13204)
             </button>
+            <button type="button" id="btnTestGeneratePdf" class="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs cursor-pointer">
+                📄 Test Generate Cover PDF
+            </button>
         @endif
 
         <button type="button" id="DeleteBtn" class="btn btn-sm btn-error text-white rounded-lg shadow-xs hidden">

@@ -121,6 +121,12 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
         .removeClass('bg-white text-slate-800');
 
+    if ($('#SecDrp').val() === '00') {
+        $('#SecDrp').hide();
+    } else {
+        $('#SecDrp').show();
+    }
+
     // ปุ่มฟังก์ชันเฉพาะของ 13204
     if (isSuperAdmin) {
         $('#ManualStampBtn, #DeleteBtn').removeClass('hidden');
