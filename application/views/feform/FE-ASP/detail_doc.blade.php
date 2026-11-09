@@ -19,7 +19,7 @@
         </span>
     </div>
 
-    <!-- แถวที่ 1: Doc No. & Control No. -->
+    <!-- แถวที่ 1: Doc No. & Control No.  -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Doc No.</label>

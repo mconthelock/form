@@ -73,8 +73,15 @@ export const steps = {
         return this._plannerCode;
     },
     async setInputer(value) {
+        const result = await this.setProfileCard(
+            value,
+            '#inputer-card-container',
+            'Inputer',
+        );
+        if (!result) {
+            throw new Error(`User ${value} not Authorize`);
+        }
         this._inputer = value;
-        await this.setProfileCard(value, '#inputer-card-container', 'Inputer');
     },
     get inputer() {
         return this._inputer;
@@ -83,7 +90,6 @@ export const steps = {
         this._requester = value;
     },
     async setRequester(value) {
-        this.requester = value;
         if (!value) {
             this.requester = null;
             this.plannerCode = null;
@@ -91,11 +97,14 @@ export const steps = {
             $('input[name="requester"]').val('');
             $('#requester-card-container').empty();
         } else {
-            await this.setProfileCard(
+            const result = await this.setProfileCard(
                 value,
                 '#requester-card-container',
                 'Requester',
             );
+            if (result) {
+                this.requester = value;
+            }
         }
     },
     get requester() {
@@ -200,9 +209,9 @@ export const steps = {
             },
         });
         if (isReturn) {
-            this.handlePanel(3);
+            await this.handlePanel(3);
         } else {
-            this.handlePanel(0);
+            await this.handlePanel(0);
         }
         this.bindEvents();
     },
@@ -233,7 +242,10 @@ export const steps = {
                 this.setRequester(null);
             }
             showMessage('Planner not found', 'warning');
-            return;
+            console.warn(
+                `Planner with empno ${empno} not found in K850mp data`,
+            );
+            return false;
         }
         const empnoData = await getUser(empno);
         const userImage = await getUserImage(empno);
@@ -243,7 +255,8 @@ export const steps = {
                 this.setRequester(null);
             }
             showMessage('User not found', 'warning');
-            return;
+            console.warn(`User with empno ${empno} not found`);
+            return false;
         }
         if (isRequester) {
             const enableFuncAs400 = buyers.some(
@@ -278,6 +291,7 @@ export const steps = {
             image: userImage,
             title: title,
         });
+        return true;
     },
     /**
      * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -403,7 +417,10 @@ export const steps = {
                 break;
             case 4:
                 importExcel.reset();
-                await tableComparison.init({ formNo: this.formNo });
+                await tableComparison.init({
+                    formNo: this.formNo,
+                    function: this.function,
+                });
                 btnPrevious.removeClass('hidden');
                 const submitOpt = {
                     remark: false,

@@ -4,7 +4,7 @@
 <input type="hidden" id="EMPNOHid" value="{{ $EMPNO ?? '' }}" />
 
 <div class="flex flex-col w-full px-4 my-6 font-sans max-w-7xl mx-auto">
-    <!-- Header -->
+    <!-- Header  -->
     <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">📊 รายงานเอกสาร FE Document (FeDocReport)</h1>

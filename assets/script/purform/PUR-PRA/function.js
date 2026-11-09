@@ -438,7 +438,6 @@ export async function setReturn() {
         // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
         await tableComparison.init({
             formNo: priceComparisonForms,
-            function: data.NMODE,
         });
     } else {
         // หากไม่มีฟอร์มที่ลิงก์มา ให้ตั้งค่าฟิลด์อัตโนมัติด้วยโหมดปัจจุบันเท่านั้น
@@ -685,7 +684,6 @@ export async function setView() {
         // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
         await tableComparison.init({
             formNo: data.LINK_FORM.CNO,
-            function: data.NMODE,
         });
     }
     // ตรวจสอบและตั้งค่าข้อมูล Vendor
@@ -822,3 +820,89 @@ export function handleReqFile(reasonID, isReturn) {
         //     : $('#FILE_ADDITIONAL').addClass('req');
     }
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-27
+ * @description ตัวเลือกและขั้นตอนสำหรับทัวร์แนะนำการใช้งานฟอร์ม
+ */
+export const tourOptions = {
+    showProgress: true,
+    // progressText: '{{current}} จาก {{total}}',
+    // nextBtnText: 'ถัดไป',
+    // prevBtnText: 'ย้อนกลับ',
+    // doneBtnText: 'เสร็จสิ้น',
+
+    steps: [
+        {
+            element: '#mode-selection',
+            popover: {
+                title: 'เลือกวิธีกรอกข้อมูล',
+                description:
+                    'เลือก Auto input เพื่อนำข้อมูลจาก Price Comparison หรือเลือกกรอกเองและแนบไฟล์ Price Comparison',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#document-info-section',
+            popover: {
+                title: 'ข้อมูลเอกสาร',
+                description:
+                    'กรอก Requester แล้วเลือกหรือแนบ Price Comparison ตามโหมดที่เลือกไว้',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#product-info-section',
+            popover: {
+                title: 'รายละเอียดสินค้า',
+                description:
+                    'ตรวจสอบข้อมูลที่นำเข้าอัตโนมัติ แล้วกรอกรายละเอียดสินค้า รวมถึง PCS Committee และ Group ให้ครบ',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#pricing-section',
+            popover: {
+                title: 'ข้อมูลราคา',
+                description:
+                    'ตรวจสอบราคาและผลต่าง แล้วระบุ Effective Month กับ Effective Type',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#change-reason-section',
+            popover: {
+                title: 'เหตุผลการเปลี่ยนแปลง',
+                description:
+                    'เลือกเหตุผลที่เกี่ยวข้อง และระบุรายละเอียดเพิ่มเติมในช่อง Detail contents',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#attachment-section',
+            popover: {
+                title: 'ไฟล์แนบ',
+                description:
+                    'แนบ Quotation price (จำเป็น) และเอกสารเพิ่มเติมหรือรูปภาพได้ โดยไฟล์ต้องมีขนาดไม่เกิน 10 MB',
+                side: 'left',
+                align: 'start',
+            },
+        },
+        {
+            element: '#btnRequest',
+            popover: {
+                title: 'บันทึกหรือส่งคำขอ',
+                description:
+                    'ตรวจสอบข้อมูลให้ครบ แล้วเลือกปุ่มด้านล่างเพื่อบันทึกฉบับร่าง บันทึกการแก้ไข ส่งคำขอ หรืออนุมัติตามสถานะของฟอร์ม',
+                side: 'left',
+                align: 'start',
+            },
+        },
+    ],
+};

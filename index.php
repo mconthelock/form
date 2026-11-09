@@ -70,9 +70,8 @@
  switch (ENVIRONMENT)
 {
 	case 'development':
-		// Legacy vendor libraries (illuminate, etc.) emit many PHP 8.x deprecations
-        // error_reporting(-1);
-		error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+		//error_reporting(-1);
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 		ini_set('display_errors', 1);
 	break;
 

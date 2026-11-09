@@ -27,6 +27,7 @@ $(document).ready(async function () {
         NRUNNO: formData.nrunno,
         EMPNO: empno,
         DOC_NO: formData.doc_no,
+        DOC_SUBJECT: formData.doc_subject || '',
     };
 
     $('#DOC_IDTxt').val(form.DOC_NO);
@@ -109,6 +110,13 @@ $(document).ready(async function () {
             cancelText: 'ยกเลิก',
         });
 
+        const docSubject = ($('#DOC_SUBJECTTxt').val() || '').trim();
+        // if (!docSubject) {
+        //     showMessage('กรุณาระบุหัวข้อเอกสาร (DOC SUBJECT)', 'warning');
+        //     $('#DOC_SUBJECTTxt').focus();
+        //     return;
+        // }
+
         if (!isConfirm) return;
 
         try {
@@ -117,6 +125,7 @@ $(document).ready(async function () {
 
             let headerPayload = new FormData();
             headerPayload.append('DOC_TYPE_CODE', docType);
+            headerPayload.append('DOC_SUBJECT', docSubject);
             headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
             headerPayload.append('EMPNO', userEmpNo);
             headerPayload.append('REQBY', userReq); // บันทึกเฉพาะรหัส 5 หลัก
