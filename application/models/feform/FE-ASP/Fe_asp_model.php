@@ -332,12 +332,12 @@ class Fe_asp_model extends my_model
         ])->result();
     }
 
-    public function checkFlowCompleted($nFrmNo, $vOrgNo, $cYear2, $nRunNo) {
+    public function checkFlowCompleted($nFrmNo, $vOrgNo, $cYear, $cYear2, $nRunNo) {
         $sql = "SELECT COUNT(*) AS REMAINING 
                 FROM FLOW 
-                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ? 
+                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? 
                   AND (CAPVSTNO IS NULL OR CAPVSTNO != '1')";
-        $row = $this->QuerySetBase($sql, $this->webflowBase, [(int)$nFrmNo, (string)$vOrgNo, (string)$cYear2, (int)$nRunNo])->row_array();
+        $row = $this->QuerySetBase($sql, $this->webflowBase, [(int)$nFrmNo, (string)$vOrgNo, (string)$cYear,(string)$cYear2, (int)$nRunNo])->row_array();
         return ((int)$row['REMAINING']) === 0;
     }
 
@@ -753,5 +753,102 @@ class Fe_asp_model extends my_model
 
             return $this->QuerySetBase($sql, $this->smmtBase)->result_array();
         }
+    // =================================================================
+
+
+    // =================================================================
+    // == Report FE-ASP
+    // =================================================================
+    /**
+     * ดึงข้อมูลรายงาน FE-ASP พร้อมรายการไฟล์แนบ
+     */
+    public function getReportData($filters = []) {
+        $where = "WHERE 1=1";
+        $binds = [];
+
+        if (!empty($filters['docNo'])) {
+            $where .= " AND (UPPER(H.DOC_NO) LIKE ? OR UPPER(H.CONTROL_NO) LIKE ?)";
+            $binds[] = '%' . strtoupper(trim($filters['docNo'])) . '%';
+            $binds[] = '%' . strtoupper(trim($filters['docNo'])) . '%';
+        }
+
+        if (!empty($filters['status'])) {
+            $where .= " AND H.STATUS = ?";
+            $binds[] = strtoupper(trim($filters['status']));
+        }
+
+        if (!empty($filters['divCode'])) {
+            $where .= " AND H.SDIVCODE = ?";
+            $binds[] = trim($filters['divCode']);
+        }
+
+        if (!empty($filters['depCode'])) {
+            $where .= " AND H.SDEPCODE = ?";
+            $binds[] = trim($filters['depCode']);
+        }
+
+        if (!empty($filters['startDate'])) {
+            $where .= " AND TRUNC(H.CREATE_DATE) >= TO_DATE(?, 'YYYY-MM-DD')";
+            $binds[] = $filters['startDate'];
+        }
+
+        if (!empty($filters['endDate'])) {
+            $where .= " AND TRUNC(H.CREATE_DATE) <= TO_DATE(?, 'YYYY-MM-DD')";
+            $binds[] = $filters['endDate'];
+        }
+
+        $sql = "SELECT 
+                    H.HEADER_ID,
+                    H.DOC_NO,
+                    H.CONTROL_NO,
+                    H.SDIVCODE,
+                    H.SDEPCODE,
+                    H.SSECCODE,
+                    H.NFRMNO,
+                    H.VORGNO,
+                    H.CYEAR,
+                    H.CYEAR2,
+                    H.NRUNNO,
+                    H.REVIEW_PERIOD,
+                    H.REVIEW_DETAILS,
+                    H.DETAIL_OF_CHANGE,
+                    H.EFFECT_STATUS,
+                    H.STATUS,
+                    TO_CHAR(H.CREATE_DATE, 'DD/MM/YYYY') AS REVIEWED_DATE,
+                    H.REQ_BY,
+                    U.SNAME AS REQ_NAME,
+                    V.SDIV AS DIVISION_NAME,
+                    D.SDEPT AS DEPT_NAME,
+                    S.SSEC AS SEC_NAME
+                FROM SMARTMAT.FE_ASP_HEADER H
+                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMEC.AMECUSERALL WHERE SDIVCODE IS NOT NULL) V 
+                    ON TRIM(H.SDIVCODE) = TRIM(V.SDIVCODE)
+                LEFT JOIN AMEC.PDEPARTMENT D ON TRIM(H.SDEPCODE) = TRIM(D.SDEPCODE)
+                LEFT JOIN AMEC.PSECTION S ON TRIM(H.SSECCODE) = TRIM(S.SSECCODE)
+                {$where}
+                ORDER BY H.HEADER_ID DESC";
+
+        $records = $this->QuerySetBase($sql, $this->smmtBase, $binds)->result_array();
+
+        if (empty($records)) {
+            return [];
+        }
+
+        // ดึงไฟล์แนบทั้งหมดจากตาราง FE_FILE มาผูกกับแต่ละ Header
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+        foreach ($records as &$row) {
+            $files = $dbWebflow->where([
+                'NFRMNO' => (int)$row['NFRMNO'],
+                'VORGNO' => (string)$row['VORGNO'],
+                'CYEAR2' => (string)$row['CYEAR2'],
+                'NRUNNO' => (int)$row['NRUNNO'],
+            ])->order_by('FILE_ID', 'ASC')->get('FE_FILE')->result_array();
+
+            $row['FILES'] = $files ?: [];
+        }
+
+        return $records;
+    }
     // =================================================================
 }

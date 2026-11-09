@@ -32,8 +32,8 @@ class form extends MY_Controller {
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
 
-    // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    // === http://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
+    // === http://localhost:8082/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === http://localhost:8082/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
    
     public function main() {
         $empno          = $this->input->get('empno') ?? '';
@@ -129,7 +129,7 @@ class form extends MY_Controller {
             $docHeaderId = trim((string)$this->input->post('DOC_HEADER_ID'));
             $isResubmit  = $this->input->post('IS_RESUBMIT') === '1' || !empty($docHeaderId);
             $docTypeCode = trim((string)$this->input->post('DOC_TYPE_CODE'));
-            $docSubject  = trim((string)$this->input->post('docSubject'));
+            $docSubject  = trim((string)$this->input->post('DOC_SUBJECT'));
             $remark      = trim((string)($this->input->post('REMARK') ?? ''));
             $reqByPost   = trim((string)$this->input->post('REQBY'));
             $empNoPost   = trim((string)$this->input->post('EMPNO'));
