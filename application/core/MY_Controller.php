@@ -19,6 +19,7 @@
             $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
             $this->load->database();
             $this->load->library('mail');
+            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
         }
 
         public function views($view_name, $data = array()){
