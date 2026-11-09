@@ -2,6 +2,7 @@ import Swal from 'sweetalert2';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { calendarDate } from './payload';
 import { uploadJigFiles, deleteJigFile, jigFileUrl, saveJigRecheck } from './data';
+import { buildConfirmPayload, evaluateConfirmation } from './checkpoint';
 
 export function initializeRecheck(form) {
     const section = document.querySelector('#jig-recheck');
@@ -11,13 +12,15 @@ export function initializeRecheck(form) {
     const date = form.elements.namedItem('actual_finnish_date');
     const summary = form.elements.namedItem('summary_detail');
     const groups = ['BEFORE', 'AFTER'];
-    let key, stored = [], nextSeq = 1, hasNg = false, deleting = false, saving = false;
+    const confirmationRows = section.querySelector('#confirmation-rows');
+    let key, stored = [], nextSeq = 1, hasNg = false, hasRecheckData = false, deleting = false, saving = false;
+    let details = [];
     const incoming = { BEFORE: [], AFTER: [] };
     setDatePicker({ element: '[name="actual_finnish_date"]', dateFormat: 'Y-m-d',
         altInput: true, altFormat: 'd/m/Y', disableMobile: true });
     function setNg(value) {
         hasNg = value;
-        section.hidden = !value;
+        section.hidden = !value || (!editable && !hasRecheckData);
         fields.disabled = !editable || !value;
         section.querySelectorAll('[data-recheck-upload]').forEach(el => { el.hidden = !editable; });
     }
@@ -27,14 +30,17 @@ export function initializeRecheck(form) {
             list.replaceChildren();
             for (const file of stored.filter(f => f.FILE_GROUP === group)) {
                 const li = document.createElement('li');
-                li.className = 'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2';
+                li.className = 'flex items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-blue-900';
                 const link = document.createElement('a');
-                link.textContent = file.FILE_NAME; link.href = jigFileUrl(key, file);
+                const size = Number(file.FILE_SIZE);
+                link.textContent = file.FILE_NAME + (Number.isFinite(size) ? ` (${(size / 1024 / 1024).toFixed(2)} MB)` : '');
+                link.href = jigFileUrl(key, file);
                 link.target = '_blank'; link.rel = 'noopener noreferrer';
+                link.className = 'min-w-0 break-all font-semibold text-indigo-700 underline underline-offset-2';
                 li.append(link);
                 if (editable) {
                     const remove = document.createElement('button'); remove.type = 'button';
-                    remove.className = 'btn btn-ghost btn-xs'; remove.textContent = 'ลบ';
+                    remove.className = 'btn btn-ghost btn-xs shrink-0'; remove.textContent = 'ลบ';
                     remove.onclick = async () => {
                         if (saving || deleting || fields.matches(':disabled')) return;
                         const result = await Swal.fire({ icon: 'warning', title: 'ยืนยันลบไฟล์?', text: file.FILE_NAME,
@@ -56,14 +62,76 @@ export function initializeRecheck(form) {
                 list.append(li);
             }
             incoming[group].forEach(file => {
-                const li = document.createElement('li'); li.className = 'flex justify-between gap-3 px-3 py-2';
-                const label = document.createElement('span'); label.textContent = file.name;
+                const li = document.createElement('li'); li.className = 'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-slate-600';
+                const label = document.createElement('span');
+                label.className = 'min-w-0 break-all';
+                label.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
                 const remove = document.createElement('button'); remove.type = 'button';
-                remove.className = 'btn btn-ghost btn-xs'; remove.textContent = 'ลบ';
+                remove.className = 'btn btn-ghost btn-xs shrink-0'; remove.textContent = 'ลบ';
                 remove.onclick = () => { if (saving || fields.matches(':disabled')) return; incoming[group] = incoming[group].filter(f => f !== file); render(); };
                 li.append(label, remove); list.append(li);
             });
         }
+    }
+    function resultBadge(value, emptyText = '—') {
+        const badge = document.createElement('span');
+        badge.textContent = value || emptyText;
+        badge.className = value === 'NG'
+            ? 'inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700'
+            : value === 'OK'
+              ? 'inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700'
+              : 'text-xs font-medium text-slate-400';
+        return badge;
+    }
+    function renderConfirmations() {
+        confirmationRows.replaceChildren();
+        details.forEach((detail, index) => {
+            const row = document.createElement('tr');
+            row.className = `border-t border-blue-100 ${detail.RESULT === 'NG' ? 'bg-red-50/60' : ''}`;
+            const cell = (value, className = 'p-3 text-center') => {
+                const td = document.createElement('td');
+                td.className = className;
+                td.textContent = value ?? '—';
+                return td;
+            };
+            row.append(
+                cell(index + 1),
+                cell(detail.CHECK_POINT, 'p-3 font-semibold text-blue-950'),
+                cell(detail.MIN),
+                cell(detail.MAX),
+                cell(detail.MEASURED_VALUE),
+            );
+            const originalResult = cell('');
+            originalResult.append(resultBadge(detail.RESULT));
+            row.append(originalResult);
+            const confirmCell = cell('');
+            const confirmResult = cell('');
+            if (detail.RESULT === 'NG') {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = '0.0001';
+                input.min = '-99999999.9999';
+                input.max = '99999999.9999';
+                input.className = 'input input-sm w-full border-blue-300 bg-white text-center';
+                input.setAttribute('aria-label', `Confirm Measured Check Point ${index + 1}`);
+                input.value = detail.CONFIRM_VALUE ?? '';
+                input.disabled = !editable;
+                const refreshResult = () => {
+                    detail.CONFIRM_VALUE = input.value;
+                    const result = evaluateConfirmation(detail.MIN, detail.MAX, input.value);
+                    detail.CONFIRM_RESULT = ['OK', 'NG'].includes(result) ? result : null;
+                    confirmResult.replaceChildren(resultBadge(detail.CONFIRM_RESULT));
+                };
+                input.addEventListener('input', refreshResult);
+                confirmCell.append(input);
+                refreshResult();
+            } else {
+                confirmCell.append(resultBadge(null, 'ไม่ต้องตรวจใหม่'));
+                confirmResult.append(resultBadge(null));
+            }
+            row.append(confirmCell, confirmResult);
+            confirmationRows.append(row);
+        });
     }
     async function addFiles(group, files) {
         if (saving || !editable || fields.matches(':disabled') || section.querySelector(`[data-recheck-input="${group}"]`).disabled || deleting) return;
@@ -89,6 +157,8 @@ export function initializeRecheck(form) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date.value)) errors.push('กรุณากรอกวันที่แก้ไขเสร็จ');
         if (!summary.value.trim() || summary.value.trim().length > 2000) errors.push('กรุณากรอกสรุปการดำเนินงาน ไม่เกิน 2,000 ตัวอักษร');
         for (const group of groups) if (!incoming[group].length && !stored.some(f => f.FILE_GROUP === group)) errors.push(`กรุณาแนบรูป ${group} อย่างน้อย 1 ไฟล์`);
+        try { buildConfirmPayload(details); }
+        catch (error) { errors.push(error.message); }
         if (errors.length) await Swal.fire({ icon: 'warning', title: 'ข้อมูล Recheck ยังไม่ครบถ้วน', text: errors.join('\n') });
         return !errors.length;
     }
@@ -97,10 +167,12 @@ export function initializeRecheck(form) {
         hydrate(snapshot, formKey) {
             key = formKey;
             stored = (snapshot.FILES || []).filter(f => groups.includes(f.FILE_GROUP));
+            details = (snapshot.DETAILS || []).map(detail => ({ ...detail }));
             nextSeq = Math.max(0, ...(snapshot.FILES || []).map(f => Number(f.FILE_SEQ))) + 1;
+            hasRecheckData = Boolean(snapshot.NG?.ACTUAL_FINNISH_DATE);
             date._flatpickr?.setDate(calendarDate(snapshot.NG?.ACTUAL_FINNISH_DATE), false, 'Y-m-d');
             summary.value = snapshot.NG?.SUMMARY_DETAIL || '';
-            setNg(Boolean(snapshot.NG)); render();
+            setNg(Boolean(snapshot.NG)); render(); renderConfirmations();
         },
         async persist() {
             if (saving || !(await validate())) return false;
@@ -113,7 +185,8 @@ export function initializeRecheck(form) {
                 incoming[group] = []; render();
             }
             await saveJigRecheck(key, { UPDATE_BY: context.empno, ACTUAL_FINNISH_DATE: date.value,
-                SUMMARY_DETAIL: summary.value.trim(), FILES: stored.map(({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE, FILE_GROUP }) =>
+                SUMMARY_DETAIL: summary.value.trim(), CONFIRMS: buildConfirmPayload(details),
+                FILES: stored.map(({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE, FILE_GROUP }) =>
                     ({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE, FILE_GROUP })) });
             stored.forEach(file => { delete file.pending; });
             return true;

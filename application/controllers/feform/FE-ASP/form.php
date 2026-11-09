@@ -42,7 +42,6 @@ class Form extends MY_Controller {
         $data['NRUNNO'] = $this->input->get('runNo') ?? '';
         $data['EMPNO']  = (string)$empno;
 
-        // 1. ดึงชื่อพนักงานตั้งต้น
         $initEmp = !empty($empno) ? $this->MainModel->getEmpName($empno) : ['empno' => '', 'name' => ''];
         $data['REQBY_EMPNO']   = $initEmp['empno'];
         $data['REQBY_NAME']    = $initEmp['name'];

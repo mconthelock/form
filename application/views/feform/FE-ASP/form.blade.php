@@ -31,7 +31,7 @@
     @include('feform.FE-ASP.flow_spec')
 </div>
 
-<!-- Webflow Flow Progress Bar -->
+<!-- Webflow Flow Progress Bar  -->
 <div class="flow mb-4"></div>
 @endsection
 

@@ -11,7 +11,7 @@
 
     <!-- ปุ่ม Action สำหรับควบคุม Webflow -->
     <div class="flex flex-wrap justify-end items-center gap-2.5">
-        <!-- ปุ่มฉุกเฉินสำหรับทดสอบ / ซ่อมแซม เฉพาะรหัส 13204 -->
+        <!-- ปุ่มฉุกเฉินสำหรับทดสอบ / ซ่อมแซม เฉพาะรหัส 13204  -->
         @if(isset($EMPNO) && (string)$EMPNO === '13204')
             <button type="button" id="ManualStampBtn" class="btn btn-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-xs cursor-pointer">
                 ⚡ Force Stamp PDF (13204)
