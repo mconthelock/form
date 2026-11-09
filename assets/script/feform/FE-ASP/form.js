@@ -16,10 +16,14 @@ export function getCurrentPrevFiles() {
 export function toggleChangeBox() {
     const selectedVal = $('input[name="REVIEW_DETAILS"]:checked').val();
     const $box = $('#change-detail-box');
+    const $spanRequired = $('#spanFileRequired');
+
     if (selectedVal === 'CHANGE') {
         $box.removeClass('hidden').show();
+        $spanRequired.removeClass('hidden'); // กรณี CHANGE จะมีดอกจันสีแดงบังคับแนบ Revision PDF
     } else {
         $box.addClass('hidden').hide();
+        $spanRequired.addClass('hidden'); // กรณี NO CHANGE ไม่บังคับไฟล์ Revision
     }
 }
 
@@ -388,8 +392,66 @@ export async function loadSectionDropdown(depCode, selectedSec = '00') {
         console.error('Load Sections Error:', e);
     }
 }
-
 export function applyReviewPeriodRules() {
+    const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
+        .toUpperCase()
+        .trim();
+    const isManual = createMode === 'MANUAL';
+    const isAdmin = Boolean(window.IS_ADMIN || window.IS_SUPER_ADMIN);
+    const hasExistingDoc = Boolean(
+        $('#DocHeaderIDHid').val() || $('#NRUNNOHid').val(),
+    );
+
+    const $radioYearly = $('#radio_yearly');
+    const $radioChanging = $('#radio_changing');
+
+    // ตรวจสอบค่าที่เลือกอยู่เดิมก่อน
+    let currentVal = $('input[name="REVIEW_PERIOD"]:checked').val();
+
+    if (isManual) {
+        if (isAdmin) {
+            $radioChanging.prop('disabled', false);
+            $radioYearly.prop('disabled', false);
+            $radioChanging
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+            $radioYearly
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+
+            // ถ้าเป็นเอกสารสร้างใหม่ และยังไม่มีการเลือกค่า ให้ default CHANGING
+            if (!hasExistingDoc && !currentVal) {
+                $radioChanging.prop('checked', true);
+            }
+        } else {
+            // ถ้าเป็นเอกสารสร้างใหม่เท่านั้น ถึงจะบังคับ CHANGING
+            // แต่ถ้าเป็นเอกสารเดิมที่มีอยู่แล้ว (เช่น เปิดดูใบงาน) ห้ามไปแก้ค่าเดิมของเขา
+            if (!hasExistingDoc) {
+                $radioChanging.prop('checked', true).prop('disabled', false);
+                $radioYearly.prop('checked', false).prop('disabled', true);
+            }
+
+            $radioYearly
+                .closest('label')
+                .addClass('opacity-40 cursor-not-allowed pointer-events-none')
+                .removeClass('cursor-pointer');
+        }
+    } else {
+        // โหมด AUTO (Yearly Job): บังคับเลือก YEARLY เสมอ
+        $radioYearly.prop('checked', true).prop('disabled', false);
+        $radioChanging.prop('checked', false).prop('disabled', true);
+    }
+
+    // เรียก Toggle ตาราง Confirmation ทันทีตามค่าจริง
+    toggleConfirmationTable();
+}
+export function applyReviewPeriodRules0() {
     const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
         .toUpperCase()
         .trim();
@@ -460,7 +522,7 @@ export function applyReviewPeriodRules() {
 }
 /**
  * ซ่อน/แสดงตาราง Confirmation:
- * แสดงเฉพาะกรณี YEARLY (Auto Job) เท่านั้น
+ * แสดงเมื่อเป็น YEARLY
  */
 export function toggleConfirmationTable() {
     const period = $('input[name="REVIEW_PERIOD"]:checked').val();

@@ -489,7 +489,8 @@ class Form extends MY_Controller {
                     'CYEAR'         => $cyear,
                     'CYEAR2'        => $cyear2,
                     'NRUNNO'        => $nrunno,
-                    'DOC_HEADER_ID' => $headerId
+                    'DOC_HEADER_ID' => $headerId,
+                    'DOC_NO'        => $docNo
                 ]
             ]));
         } catch (\Throwable $e) {
@@ -503,6 +504,7 @@ class Form extends MY_Controller {
         try {
             $nfrmno   = (int)$this->input->post('NFRMNO');
             $vorgno   = (string)$this->input->post('VORGNO');
+            $cyear   = (string)$this->input->post('CYEAR');
             $cyear2   = (string)$this->input->post('CYEAR2');
             $nrunno   = (int)$this->input->post('NRUNNO');
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
@@ -521,13 +523,19 @@ class Form extends MY_Controller {
 
             $status = 'PROCESS';
             if ($action === 'APPROVE') {
-                if ($extdata === '05' || $this->MainModel->checkFlowCompleted($nfrmno, $vorgno, $cyear2, $nrunno)) {
+                // ส่งครบ 5 พารามิเตอร์: NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO
+                $isCompleted = $this->MainModel->checkFlowCompleted($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+                
+                if ($extdata === '05' || $isCompleted) {
                     $status = 'APPROVE';
                 }
-            } elseif ($action === 'RETURN') {
+            } elseif ($action === 'RETURN' || $action === 'RETURNP' ) {
                 $status = 'DRAFT';
+                $this->deleteCoverFile($nfrmno, $vorgno,$cyear, $cyear2, $nrunno);
+
             } elseif ($action === 'REJECT') {
                 $status = 'REJECT';
+                $this->deleteCoverFile($nfrmno, $vorgno,$cyear,$cyear2, $nrunno);
             }
 
             $dbSmmt->where('HEADER_ID', $headerId);
@@ -543,6 +551,50 @@ class Form extends MY_Controller {
             ]));
         } catch (\Throwable $e) {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+        }
+    }
+    public function deleteCoverFile($nfrmno, $vorgno,$cyear, $cyear2, $nrunno)
+    {
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+
+        // ค้นหาเฉพาะไฟล์ Cover Sheet ของเอกสารใบนี้
+        $coverFiles = $dbWebflow->where([
+            'NFRMNO' => (int)$nfrmno,
+            'VORGNO' => (string)$vorgno,
+            'CYEAR' => (string)$cyear,
+            'CYEAR2' => (string)$cyear2,
+            'NRUNNO' => (int)$nrunno,
+        ])
+        ->like('FILE_ONAME', 'CoverSheet.pdf') // ตัด Underscore เพื่อเลี่ยงปัญหา Wildcard ของ SQL
+        ->get('FE_FILE')
+        ->result();
+
+        if (empty($coverFiles)) {
+            return;
+        }
+
+        foreach ($coverFiles as $cFile) {
+            // 1. ลบไฟล์จริงบน Path / Network Drive NAS
+            if (!empty($cFile->FILE_PATH) && !empty($cFile->FILE_FNAME)) {
+                $baseDir = rtrim($cFile->FILE_PATH, '/\\');
+                // จัดรูปแบบ slash ให้ตรงกับ OS
+                $fullPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $baseDir . DIRECTORY_SEPARATOR . $cFile->FILE_FNAME);
+                
+                if (file_exists($fullPath) && is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
+
+            // 2. ลบไฟล์สำรองชั่วคราวในโฟลเดอร์ upload (ถ้ามี)
+            if (!empty($cFile->FILE_FNAME)) {
+                $tempPath = FCPATH . 'assets/upload/fe_asp/' . $cFile->FILE_FNAME;
+                if (file_exists($tempPath) && is_file($tempPath)) {
+                    @unlink($tempPath);
+                }
+            }
+
+            // 3. ลบ Record จากตาราง FE_FILE โดยอิงจาก FILE_ID รายแถวโดยตรง
+            $dbWebflow->where('FILE_ID', $cFile->FILE_ID)->delete('FE_FILE');
         }
     }
 
@@ -692,7 +744,7 @@ class Form extends MY_Controller {
     }
 
     /**
-     * Logic วาดหน้า Cover PDF ด้วย TCPDF (ปรับปรุงตัดบรรทัดและระยะขอบไม่ให้ล้น)
+     * Logic วาดหน้า Cover PDF ด้วย TCPDF (ขยับระยะหัวกระดาษหลบตรายาง Stamp ด้านบน)
      */
     protected function generateCoverPdfInternal($data, $outputDest = 'I', $saveFilePath = '') {
         require_once APPPATH . 'libraries/PDF/TCPDF/tcpdf.php';
@@ -704,17 +756,19 @@ class Form extends MY_Controller {
         $pdf->SetTitle('Review Table - ' . $data['controlNo']);
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-        $pdf->SetMargins(15, 15, 15);
+        // เผื่อขอบบนเป็น 27 เพื่อเว้นที่ให้ตรายางด้านบนสุด
+        $pdf->SetMargins(15, 27, 15);
         $pdf->SetAutoPageBreak(false);
 
         $pdf->AddPage();
 
         $fontName = 'thsarabunnew';
-        $pdf->SetFont($fontName, 'B', 15);
+        $pdf->SetFont($fontName, 'B', 14);
 
-        // 1. Header Title
-        $pdf->Cell(180, 8, 'Review table of Environmental aspect evaluation and Environmental Risk', 0, 1, 'C');
-        $pdf->Ln(2);
+        // 1. Header Title (เริ่มที่ Y = 27 พ้นจากโซนตรายางด้านบน)
+        $pdf->SetY(27);
+        $pdf->Cell(180, 7, 'Review table of Environmental aspect evaluation and Environmental Risk', 0, 1, 'C');
+        $pdf->Ln(1.5);
 
         $ts = strtotime(str_replace('/', '-', $data['dateStr']));
         $day   = date('d', $ts);
@@ -722,33 +776,33 @@ class Form extends MY_Controller {
         $year  = date('Y', $ts);
 
         // 2. Control No Box
-        $pdf->SetFont($fontName, 'B', 12);
+        $pdf->SetFont($fontName, 'B', 11.5);
         $y = $pdf->GetY();
-        $pdf->Rect(15, $y, 180, 13);
-        $pdf->SetXY(17, $y + 1);
-        $pdf->Write(7, 'Control no.  :  ' . $data['controlNo']);
-        $pdf->SetXY(17, $y + 7);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->Rect(15, $y, 180, 12);
+        $pdf->SetXY(17, $y + 0.5);
+        $pdf->Write(6.5, 'Control no.  :  ' . $data['controlNo']);
+        $pdf->SetXY(17, $y + 6.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(90, 90, 90);
         $pdf->Write(5, '(Details in Table control record number of Environmental aspect evaluation and Environmental Risk)');
         $pdf->SetTextColor(0, 0, 0);
 
         // 3. Review Date Box
-        $pdf->SetY($y + 13);
+        $pdf->SetY($y + 12);
         $yDate = $pdf->GetY();
-        $pdf->Rect(15, $yDate, 180, 8);
-        $pdf->SetFont($fontName, 'B', 12);
-        $pdf->SetXY(17, $yDate + 1.5);
-        $pdf->Write(6, "Review date  :   DD   {$day}      MM   {$month}      YY   {$year}");
+        $pdf->Rect(15, $yDate, 180, 7.5);
+        $pdf->SetFont($fontName, 'B', 11.5);
+        $pdf->SetXY(17, $yDate + 1);
+        $pdf->Write(5.5, "Review date  :   DD   {$day}      MM   {$month}      YY   {$year}");
 
         // 4. Review Period Bar
-        $pdf->SetY($yDate + 8);
+        $pdf->SetY($yDate + 7.5);
         $yBar = $pdf->GetY();
         $pdf->SetFillColor(230, 230, 230);
-        $pdf->Rect(15, $yBar, 180, 7, 'DF');
-        $pdf->SetXY(17, $yBar + 1);
-        $pdf->SetFont($fontName, 'B', 12);
-        $pdf->Write(6, 'Review period');
+        $pdf->Rect(15, $yBar, 180, 6.5, 'DF');
+        $pdf->SetXY(17, $yBar + 0.8);
+        $pdf->SetFont($fontName, 'B', 11.5);
+        $pdf->Write(5.5, 'Review period');
 
         $textX = 26;
         $textW = 165;
@@ -762,47 +816,47 @@ class Form extends MY_Controller {
         // ==========================================
         // 5. Section 1: Yearly Review
         // ==========================================
-        $pdf->SetY($yBar + 7);
+        $pdf->SetY($yBar + 6.5);
         $ySec1 = $pdf->GetY();
-        $sec1Height = 82;
+        $sec1Height = 77;
         $pdf->Rect(15, $ySec1, 180, $sec1Height);
 
         $pdf->SetFillColor(245, 245, 245);
-        $pdf->Rect(15, $ySec1, 180, 6, 'DF');
-        $pdf->SetXY(20, $ySec1 + 0.5);
-        $pdf->SetFont($fontName, 'B', 11);
+        $pdf->Rect(15, $ySec1, 180, 5.5, 'DF');
+        $pdf->SetXY(20, $ySec1 + 0.3);
+        $pdf->SetFont($fontName, 'B', 10.5);
         $pdf->Write(5, '1.Yearly review / ทบทวนตามวาระทุก 1 ปี');
 
         // 1.1 No change checkbox
         $chk1_1 = ($isYearlyPeriod && $isNoChange) ? '[ / ]' : '[   ]';
-        $pdf->SetXY(17, $ySec1 + 9);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetXY(17, $ySec1 + 8);
+        $pdf->SetFont('helvetica', 'B', 9.5);
         $pdf->Write(5, $chk1_1);
 
-        $pdf->SetXY($textX, $ySec1 + 8.5);
-        $pdf->SetFont($fontName, 'B', 10.5);
-        $pdf->MultiCell($textW, 4.5, "No change in AMEC's activities, products and services which effect to environmental aspects and environmental risks, in this year. *Refer {$data['controlNo']} (Revision *), No revise detail", 0, 'L');
+        $pdf->SetXY($textX, $ySec1 + 7.5);
+        $pdf->SetFont($fontName, 'B', 10);
+        $pdf->MultiCell($textW, 4.2, "No change in AMEC's activities, products and services which effect to environmental aspects and environmental risks, in this year. *Refer {$data['controlNo']} (Revision *), No revise detail", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "ไม่พบการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC ที่มีผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อมและความเสี่ยงด้านสิ่งแวดล้อม", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "ไม่พบการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC ที่มีผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อมและความเสี่ยงด้านสิ่งแวดล้อม", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         // 1.2 Change checkbox
         $chk1_2 = ($isYearlyPeriod && $isChangeSelected) ? '[ / ]' : '[   ]';
-        $pdf->SetXY(17, $ySec1 + 33);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetXY(17, $ySec1 + 31);
+        $pdf->SetFont('helvetica', 'B', 9.5);
         $pdf->Write(5, $chk1_2);
 
-        $pdf->SetXY($textX, $ySec1 + 32.5);
-        $pdf->SetFont($fontName, 'B', 10.5);
-        $pdf->MultiCell($textW, 4.5, "Change in AMEC's activities, products and services which effect to environmental aspects and environmental risks, in this year.\nShall be updated details in \"Environmental aspect evaluation and Environmental Risk form\"", 0, 'L');
+        $pdf->SetXY($textX, $ySec1 + 30.5);
+        $pdf->SetFont($fontName, 'B', 10);
+        $pdf->MultiCell($textW, 4.2, "Change in AMEC's activities, products and services which effect to environmental aspects and environmental risks, in this year.\nShall be updated details in \"Environmental aspect evaluation and Environmental Risk form\"", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "พบการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC และส่งผลกระทบต่อประเด็นปัญหาและความเสี่ยง ด้านสิ่งแวดล้อม จะต้องเปลี่ยนแปลงรายละเอียดในแบบฟอร์ม \"Environmental aspect evaluation and Environmental Risk\"", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "พบการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC และส่งผลกระทบต่อประเด็นปัญหาและความเสี่ยง ด้านสิ่งแวดล้อม จะต้องเปลี่ยนแปลงรายละเอียดในแบบฟอร์ม \"Environmental aspect evaluation and Environmental Risk\"", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         // ==========================================
@@ -810,84 +864,83 @@ class Form extends MY_Controller {
         // ==========================================
         $pdf->SetY($ySec1 + $sec1Height);
         $ySec2 = $pdf->GetY();
-        $sec2Height = 98;
+        $sec2Height = 94;
         $pdf->Rect(15, $ySec2, 180, $sec2Height);
 
         $pdf->SetFillColor(245, 245, 245);
-        $pdf->Rect(15, $ySec2, 180, 6, 'DF');
-        $pdf->SetXY(20, $ySec2 + 0.5);
-        $pdf->SetFont($fontName, 'B', 11);
+        $pdf->Rect(15, $ySec2, 180, 5.5, 'DF');
+        $pdf->SetXY(20, $ySec2 + 0.3);
+        $pdf->SetFont($fontName, 'B', 10.5);
         $pdf->Write(5, '2. Review on changing / ทบทวนเมื่อมีการเปลี่ยนแปลง');
 
-        // ตรวจสอบว่ามี Change (ไม่ว่าจะมาจาก Changing หรือ Yearly ที่เลือก Change)
         $hasChangeCondition = $isChangingPeriod || ($isYearlyPeriod && $isChangeSelected);
 
         // Checkbox Change in (Identify)
         $chk2_1 = $hasChangeCondition ? '[ / ]' : '[   ]';
-        $pdf->SetXY(17, $ySec2 + 8);
-        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->SetXY(17, $ySec2 + 7.5);
+        $pdf->SetFont('helvetica', 'B', 9.5);
         $pdf->Write(5, $chk2_1);
 
-        $pdf->SetXY($textX, $ySec2 + 7.5);
-        $pdf->SetFont($fontName, 'B', 10.5);
+        $pdf->SetXY($textX, $ySec2 + 7);
+        $pdf->SetFont($fontName, 'B', 10);
         $detailTxt = !empty($data['detailChange']) ? $data['detailChange'] : '...............................................................................................................................';
-        $pdf->MultiCell($textW, 4.5, "Change in (Identify) :  {$detailTxt}", 0, 'L');
+        $pdf->MultiCell($textW, 4.2, "Change in (Identify) :  {$detailTxt}", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "พบการเปลี่ยนแปลง (ระบุรายละเอียด)", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "พบการเปลี่ยนแปลง (ระบุรายละเอียด)", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         // Detail of change description
-        $pdf->Ln(2);
+        $pdf->Ln(1.5);
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, 'B', 10);
-        $pdf->Write(4.5, "Detail of change : ");
-        $pdf->SetFont($fontName, '', 10);
-        $pdf->MultiCell($textW - 25, 4.5, "New developments, and or new modified activities, products and services including abnormal conditions and reasonably foreseeable emergency situations.", 0, 'L');
+        $pdf->SetFont($fontName, 'B', 9.5);
+        $pdf->Write(4.2, "Detail of change : ");
+        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->MultiCell($textW - 25, 4.2, "New developments, and or new modified activities, products and services including abnormal conditions and reasonably foreseeable emergency situations.", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "รายละเอียดการเปลี่ยนแปลง : การเปลี่ยนแปลงหรือการพัฒนาใหม่ๆ หรือกิจกรรมใหม่ที่เกิดขึ้น ผลิตภัณฑ์ และบริการ รวมถึงสถานการณ์ผิดปกติ และสถานการณ์ฉุกเฉินที่มีโอกาสเกิดขึ้นได้", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "รายละเอียดการเปลี่ยนแปลง : การเปลี่ยนแปลงหรือการพัฒนาใหม่ๆ หรือกิจกรรมใหม่ที่เกิดขึ้น ผลิตภัณฑ์ และบริการ รวมถึงสถานการณ์ผิดปกติ และสถานการณ์ฉุกเฉินที่มีโอกาสเกิดขึ้นได้", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         // 2.1 No Effect Radio
         $isNoEffect = ($data['effectStatus'] === 'NO_EFFECT');
         $rad2_1 = ($hasChangeCondition && $isNoEffect) ? '( O )' : '(   )';
-        $pdf->Ln(2);
+        $pdf->Ln(1.5);
         $yRad1 = $pdf->GetY();
-        $pdf->SetXY(17, $yRad1 + 0.5);
-        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetXY(17, $yRad1 + 0.3);
+        $pdf->SetFont('helvetica', 'B', 8.5);
         $pdf->Write(5, $rad2_1);
 
         $pdf->SetXY($textX, $yRad1);
-        $pdf->SetFont($fontName, 'B', 10.5);
-        $pdf->MultiCell($textW, 4.5, "No effect, change in AMEC's activities, products and services but no effect to environmental aspects and environmental risks.", 0, 'L');
+        $pdf->SetFont($fontName, 'B', 10);
+        $pdf->MultiCell($textW, 4.2, "No effect, change in AMEC's activities, products and services but no effect to environmental aspects and environmental risks.", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "ไม่มีผลกระทบ, มีการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC แต่ไม่มีผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อม และความเสี่ยงด้านสิ่งแวดล้อม", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "ไม่มีผลกระทบ, มีการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC แต่ไม่มีผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อม และความเสี่ยงด้านสิ่งแวดล้อม", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         // 2.2 Effect Radio
         $rad2_2 = ($hasChangeCondition && !$isNoEffect) ? '( O )' : '(   )';
-        $pdf->Ln(2);
+        $pdf->Ln(1.5);
         $yRad2 = $pdf->GetY();
-        $pdf->SetXY(17, $yRad2 + 0.5);
-        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetXY(17, $yRad2 + 0.3);
+        $pdf->SetFont('helvetica', 'B', 8.5);
         $pdf->Write(5, $rad2_2);
 
         $pdf->SetXY($textX, $yRad2);
-        $pdf->SetFont($fontName, 'B', 10.5);
-        $pdf->MultiCell($textW, 4.5, "Effect, change in AMEC's activities, products and services and effect to environmental aspects and environmental risks.\nShall be updated details in \"Environmental aspect evaluation and Environmental Risk form\"", 0, 'L');
+        $pdf->SetFont($fontName, 'B', 10);
+        $pdf->MultiCell($textW, 4.2, "Effect, change in AMEC's activities, products and services and effect to environmental aspects and environmental risks.\nShall be updated details in \"Environmental aspect evaluation and Environmental Risk form\"", 0, 'L');
         
         $pdf->SetX($textX);
-        $pdf->SetFont($fontName, '', 9.5);
+        $pdf->SetFont($fontName, '', 9);
         $pdf->SetTextColor(100, 100, 100);
-        $pdf->MultiCell($textW, 4.2, "มีผลกระทบ, มีการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC และส่งผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อม และความเสี่ยงด้านสิ่งแวดล้อม\nจะต้องเปลี่ยนแปลงรายละเอียดในแบบฟอร์ม \"Environmental aspect evaluation and Environmental Risk\"", 0, 'L');
+        $pdf->MultiCell($textW, 3.8, "มีผลกระทบ, มีการเปลี่ยนแปลงของกิจกรรม, ผลิตภัณฑ์และบริการของ AMEC และส่งผลกระทบต่อประเด็นปัญหาสิ่งแวดล้อม และความเสี่ยงด้านสิ่งแวดล้อม\nจะต้องเปลี่ยนแปลงรายละเอียดในแบบฟอร์ม \"Environmental aspect evaluation and Environmental Risk\"", 0, 'L');
         $pdf->SetTextColor(0, 0, 0);
 
         if ($outputDest === 'F') {

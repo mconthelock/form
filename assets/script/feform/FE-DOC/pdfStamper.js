@@ -109,7 +109,6 @@ export async function stampFormAttachedFiles(
         } catch (e) {
             console.warn('Delete DB file warning:', e);
         }
-
         // อัปโหลดไฟล์ที่ประทับตราแล้วกลับเข้าสู่ Storage
         let nestJsData = new FormData();
         nestJsData.append('NFRMNO', formKeys.NFRMNO);
@@ -119,6 +118,9 @@ export async function stampFormAttachedFiles(
         nestJsData.append('NRUNNO', formKeys.NRUNNO);
         nestJsData.append('CREATEBY', formKeys.EMPNO);
         nestJsData.append('FORM_TYPE', formKeys.FORM_TYPE || 'FE');
+        if (formKeys.PATH) {
+            nestJsData.append('PATH', `${formKeys.PATH}`);
+        }
 
         const stampedBlob = new Blob([stampedBytes], {
             type: 'application/pdf',

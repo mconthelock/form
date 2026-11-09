@@ -256,7 +256,7 @@
             $isChangeDetail = (($REVIEW_DETAILS ?? 'NO_CHANGE') === 'CHANGE');
         @endphp
 
-        <!-- กล่องสำหรับกรอกเมื่อเลือก CHANGE -->
+        <!-- กล่องสำหรับกรอกเมื่อเลือก CHANGE (คงไว้เฉพาะ Detail of Change และ Effect Status) -->
         <div id="change-detail-box" 
              class="p-4 bg-white border border-slate-200 rounded-xl space-y-3 {{ $isChangeDetail ? '' : 'hidden' }}"
              style="{{ $isChangeDetail ? '' : 'display: none;' }}">
@@ -279,25 +279,28 @@
                     </label>
                 </div>
             </div>
+        </div>
 
-            <!-- แนบไฟล์ Revision ใหม่ -->
-            <div class="pt-2">
-                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-                    Upload New Revision PDF <span class="text-rose-500">*</span>
-                </label>
-                <input type="file" id="files" class="hidden" accept=".pdf,application/pdf">
-                <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 rounded-xl p-5 text-center cursor-pointer transition-all">
-                    <p class="text-xs font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์ PDF มาวางที่นี่</p>
-                    <p class="text-[11px] text-slate-400">รองรับเฉพาะไฟล์ PDF (.pdf) สำหรับประทับตรายาง</p>
-                </div>
+        <!-- ========================================================= -->
+        <!-- แยกโซนแนบไฟล์ออกมาด้านนอก (แสดงผลทั้ง CHANGE และ NO CHANGE) -->
+        <!-- ========================================================= -->
+        <div id="attachment-zone" class="p-4 bg-white border border-slate-200 rounded-xl">
+            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
+                Attached Files & New Revision PDF <span id="spanFileRequired" class="text-rose-500 {{ $isChangeDetail ? '' : 'hidden' }}">*</span>
+            </label>
+            <input type="file" id="files" class="hidden" accept=".pdf,application/pdf">
+            <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 rounded-xl p-5 text-center cursor-pointer transition-all">
+                <p class="text-xs font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์ PDF มาวางที่นี่</p>
+                <p class="text-[11px] text-slate-400">รองรับเฉพาะไฟล์ PDF (.pdf) สำหรับประทับตรายาง</p>
+            </div>
 
-                <div id="file-list-container" class="mt-2 hidden">
-                    <ul id="selected-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-lg bg-white p-2 text-xs"></ul>
-                </div>
+            <div id="file-list-container" class="mt-2 hidden">
+                <ul id="selected-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-lg bg-white p-2 text-xs"></ul>
+            </div>
 
-                <div id="download-zone" class="mt-2 hidden">
-                    <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-lg bg-white p-2 shadow-xs text-xs"></ul>
-                </div>
+            <!-- กล่องแสดงไฟล์ที่บันทึกแล้ว (Cover Sheet และไฟล์แนบอื่นๆ จะแสดงตรงนี้เสมอ) -->
+            <div id="download-zone" class="mt-2 hidden">
+                <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-lg bg-white p-2 shadow-xs text-xs"></ul>
             </div>
         </div>
     </div>

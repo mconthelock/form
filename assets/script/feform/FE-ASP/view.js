@@ -20,6 +20,8 @@ import {
     populateSavedDetails,
     buildSavePayload,
     renderPrevFile,
+    toggleConfirmationTable,
+    toggleChangeBox,
 } from './form';
 let empno = '';
 let selectedFilesArray = [];
@@ -41,16 +43,20 @@ $(document).ready(async function () {
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
 
-    // ผูก Event คอนโทรลหน้าจอ
+    // 1. ผูก Event คอนโทรลหน้าจอ
     bindEmpSearchEvent();
     initFormControls();
-    applyReviewPeriodRules();
 
-    // เติมคำตอบตารางประเมินเดิม (ถ้ามี)
+    // 2. เติมข้อมูลคำตอบที่บันทึกไว้ในตาราง
     populateSavedDetails(window.INITIAL_SAVED_DETAILS || []);
 
-    // เริ่มต้นระบบ Flow
+    // 3. เริ่มต้นระบบ Flow (จะคำนวณสิทธิ์และ Mode)
     await initFlow(form, formData.status);
+
+    // 4. บังคับใช้กฎ Review Period และ Toggle ตารางหลัง Flow เซ็ตสิทธิ์เสร็จ
+    applyReviewPeriodRules();
+    toggleConfirmationTable();
+    toggleChangeBox();
 
     if (form.NRUNNO) {
         loadExistingFiles();
@@ -340,12 +346,15 @@ async function executeSaveProcess(form, isDraft = false) {
         }
 
         const createdDoc = resHeader.data || {};
+        const actualDocNo = resHeader.docNo || form.DOC_NO || '';
+        // alert(actualDocNo);
         const targetForm = {
             NFRMNO: createdDoc.NFRMNO || form.NFRMNO,
             VORGNO: createdDoc.VORGNO || form.VORGNO,
             CYEAR: createdDoc.CYEAR || form.CYEAR,
             CYEAR2: createdDoc.CYEAR2 || form.CYEAR2,
             NRUNNO: createdDoc.NRUNNO || form.NRUNNO,
+            DOC_NO: createdDoc.DOC_NO || form.DOC_NO,
         };
 
         $('#DocHeaderIDHid').val(createdDoc.DOC_HEADER_ID);
@@ -377,7 +386,7 @@ async function executeSaveProcess(form, isDraft = false) {
             }
         }
 
-        // 4. ส่งไฟล์ทั้งหมดผ่าน NestJS API (uploadDocFiles) ส่วนกลาง
+        // 4. ส่งไฟล์ทั้งหมดผ่าน NestJS API (uploadDocFiles) ส่วนกลาง   `\\amecnas\AMECWEB\File\development\Form\FE\AMEC-AR\${actualDocNo}`
         if (filesToUpload.length > 0) {
             let nestJsData = new FormData();
             nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -389,8 +398,7 @@ async function executeSaveProcess(form, isDraft = false) {
             nestJsData.append('FORM_TYPE', 'FE');
             nestJsData.append(
                 'PATH',
-                '\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\AMEC-AR\\' +
-                    form.DOC_NO,
+                `\\\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\AMEC-AR\\${actualDocNo}`,
             );
 
             filesToUpload.forEach((file) => nestJsData.append('files', file));
@@ -400,7 +408,7 @@ async function executeSaveProcess(form, isDraft = false) {
                 throw new Error(resFile?.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
             }
 
-            // 5. ✅ เมื่อบันทึกเข้าส่วนกลางสำเร็จแล้ว ลบไฟล์ Cover Sheet ออกจาก assets/upload/fe_asp/ ทันที
+            // 5. เมื่อบันทึกเข้าส่วนกลางสำเร็จแล้ว ลบไฟล์ Cover Sheet ออกจาก assets/upload/fe_asp/ ทันที
             if (hasCoverFile && resHeader.coverFile?.fileName) {
                 try {
                     await $.ajax({
