@@ -1,4 +1,5 @@
 <?php
+
 // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
 // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
 
@@ -6,6 +7,10 @@
 // === http://localhost:8082/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     
 use GuzzleHttp\Client;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_form.php';
@@ -13,6 +18,8 @@ require_once APPPATH . 'controllers/api/webform/form.php';
 require_once APPPATH . 'controllers/api/webform/flow.php';
 require_once APPPATH . 'controllers/api/webform/formmst.php';
 require_once APPPATH . 'controllers/_file.php';
+
+
 
 class Form extends MY_Controller {
     use formApi, flow, formmst;
@@ -34,6 +41,88 @@ class Form extends MY_Controller {
         
         $this->SmmtBase    = 'SMMT';    
         $this->webflowBase = 'DEFAULT'; 
+    }
+
+    /**
+     * ดึงข้อมูล Form Master พื้นฐาน (NNO, VORGNO, CYEAR)
+     */
+    private function getFormMasterInfo()
+    {
+        $formMst = $this->getFormMasterByVaname($this->CodeForm);
+
+        return [
+            'no'    => $formMst['data']['NNO'] ?? $formMst[0]->NNO ?? '',
+            'orgNo' => $formMst['data']['VORGNO'] ?? $formMst[0]->VORGNO ?? '',
+            'y'     => $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR ?? '',
+        ];
+    }
+
+    /**
+     * Helper Function สำหรับประกอบ URL และทำการ Redirect ไปยัง main
+     * 
+     * @param array $extraParams พารามิเตอร์เพิ่มเติมที่ต้องการส่งไปกับ URL
+     * @param bool  $trailingSlash เลือกว่าปลายทางต้องการปิดท้ายด้วย / ก่อน ? หรือไม่ (default: true)
+     */
+    private function redirectToFeAspMain(array $extraParams = [], $trailingSlash = true)
+    {
+        $baseParams = $this->getFormMasterInfo();
+
+        // รวม parameters และกรองค่า null / ค่าว่างออก
+        $allParams = array_merge($baseParams, $extraParams);
+        $filteredParams = array_filter($allParams, function($val) {
+            return $val !== null && $val !== '';
+        });
+
+        $path = $trailingSlash ? 'main/' : 'main';
+        $queryString = http_build_query($filteredParams);
+        $redirectUrl = "{$this->http}://{$this->host}/form/feform/FE-ASP/form/{$path}?" . $queryString;
+
+        redirect($redirectUrl, 'location', 302);
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspcreate/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-ASP/form/feaspcreate/13204/
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://localhost:8082/form/feform/FE-ASP/form/main/?no=26&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+   
+    public function feaspcreate($empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $defaultBp = 'http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp';
+
+        $this->redirectToFeAspMain([
+            'empno' => $empno,
+            'bp'    => $this->input->get('bp') ?: $defaultBp,
+        ], true); // true = main/?...
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspform/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-ASP/form/feaspform/2026/1/13204/
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    // === https://localhost:8082/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+   
+    public function feaspform($y2= null, $runNo = null,$empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $runNo = !empty($runNo) ? $runNo : $this->input->get('runNo');
+        $y2 = !empty($y2) ? $y2 : $this->input->get('y2');
+        $m    = $this->input->get('m') ?? '3';
+        $bp   = $this->input->get('bp') ?? '/formtest/workflow/mineList.asp';
+        $menu = $this->input->get('menu') ?? '1';
+        $this->redirectToFeAspMain([
+            'y2'    => $y2 ,
+            'runNo' => $runNo,
+            'm'     => $m,
+            'empno' => $empno,
+            'bp'    => $bp,
+            'menu'  => $menu,
+        ], false); // false = main?...
     }
 
     public function main() {
@@ -192,6 +281,7 @@ class Form extends MY_Controller {
 
         $this->views('feform/FE-ASP/form', $data);
     }
+    
 
     public function ajaxGetEmpFullContext() {
         $this->output->set_content_type('application/json');
@@ -523,11 +613,32 @@ class Form extends MY_Controller {
 
             $status = 'PROCESS';
             if ($action === 'APPROVE') {
-                // ส่งครบ 5 พารามิเตอร์: NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO
                 $isCompleted = $this->MainModel->checkFlowCompleted($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
                 
                 if ($extdata === '05' || $isCompleted) {
                     $status = 'APPROVE';
+
+                    // 1. จัดการเดิน Revision (* -> A -> B... หรือคงเดิม)
+                    $this->MainModel->updateDocRevision(
+                        $headerId, 
+                        $header->CONTROL_NO, 
+                        $header->REVIEW_DETAILS, 
+                        $header->DOC_REVISION ?? '*'
+                    );
+
+                    // 2. ถ้าเป็น Yearly ให้ตรวจดูว่าครบ Fiscal Year หรือยัง
+                    if ($header->REVIEW_PERIOD === 'YEARLY') {
+                        // คำนวณ Fiscal Year (ม.ค.-มี.ค. = ปีก่อนหน้า, เม.ย.-ธ.ค. = ปีปัจจุบัน)
+                        $docTime = !empty($header->CREATE_DATE) ? strtotime($header->CREATE_DATE) : time();
+                        $docMonth = (int)date('n', $docTime);
+                        $docYear  = (int)date('Y', $docTime);
+                        $fiscalYear = ($docMonth < 4) ? ($docYear - 1) : $docYear;
+
+                        $batchStatus = $this->MainModel->checkYearlyBatchCompleted($fiscalYear);
+                        if ($batchStatus['isCompleted']) {
+                            $this->generateYearlySummaryExcel($fiscalYear);
+                        }
+                    }
                 }
             } elseif ($action === 'RETURN' || $action === 'RETURNP' ) {
                 $status = 'DRAFT';
@@ -948,5 +1059,74 @@ class Form extends MY_Controller {
         } else {
             return $pdf->Output('FE-ASP-Cover.pdf', 'I');
         }
+    }
+
+
+    public function generateYearlySummaryExcel($year) {
+        $records = $this->MainModel->getYearlyApprovedRecordsForSummary($year);
+        if (empty($records)) return null;
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle("FY{$year}");
+
+        // Title Header
+        $sheet->setCellValue('A1', 'List of Review Environmental aspect evaluation and Environmental Risk record');
+        $sheet->setCellValue('A2', 'Date: ' . date('d-M-Y'));
+
+        // Table Header
+        $headers = [
+            'A4' => 'No.',
+            'B4' => 'Div.',
+            'C4' => 'Sec. or Dept.',
+            'D4' => 'Control no.',
+            'E4' => 'Review period',
+            'F4' => 'Review detail',
+            'G4' => 'Revision',
+            'H4' => 'Reviewed Date',
+            'I4' => 'In charge',
+            'J4' => 'Main Envi. impact',
+            'K4' => 'Rule/Procedure for control'
+        ];
+
+        foreach ($headers as $cell => $val) {
+            $sheet->setCellValue($cell, $val);
+            $sheet->getStyle($cell)->getFont()->setBold(true);
+            $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+
+        $rowIdx = 5;
+        foreach ($records as $i => $r) {
+            $periodTxt = ($r['REVIEW_PERIOD'] === 'YEARLY') ? 'Yearly Review By term' : 'Changing review';
+            $detailTxt = ($r['REVIEW_DETAILS'] === 'NO_CHANGE') ? 'No change' : 'Change, ' . ($r['DETAIL_OF_CHANGE'] ?? '');
+
+            $sheet->setCellValue("A{$rowIdx}", $i + 1);
+            $sheet->setCellValue("B{$rowIdx}", $r['SDIVCODE'] ?? '');
+            $sheet->setCellValue("C{$rowIdx}", !empty($r['SSECCODE']) && $r['SSECCODE'] !== '00' ? $r['SSECCODE'] : $r['SDEPCODE']);
+            $sheet->setCellValue("D{$rowIdx}", $r['CONTROL_NO'] ?? '');
+            $sheet->setCellValue("E{$rowIdx}", $periodTxt);
+            $sheet->setCellValue("F{$rowIdx}", $detailTxt);
+            $sheet->setCellValue("G{$rowIdx}", $r['DOC_REVISION'] ?? 'A');
+            $sheet->setCellValue("H{$rowIdx}", $r['REVIEWED_DATE'] ?? '');
+            $sheet->setCellValue("I{$rowIdx}", $r['REQ_NAME'] ?? $r['REQ_BY']);
+            
+            // คอลัมน์ J เป็นต้นไป เว้นไว้ให้ E/P เติมต่อตามเงื่อนไข
+            $sheet->setCellValue("J{$rowIdx}", '');
+            $sheet->setCellValue("K{$rowIdx}", '');
+            $rowIdx++;
+        }
+
+        // เซ็ตขอบตาราง (Border)
+        $sheet->getStyle("A4:K" . ($rowIdx - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        $fileName = "List_of_Review_Environmental_Aspect_FY{$year}.xlsx";
+        $savePath = FCPATH . 'assets/upload/fe_asp/' . $fileName;
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($savePath);
+
+        return [
+            'fileName' => $fileName,
+            'fileUrl'  => base_url('assets/upload/fe_asp/' . $fileName)
+        ];
     }
 }

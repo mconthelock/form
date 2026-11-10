@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class FeDocReport extends MY_Controller
+class Report extends MY_Controller
 {
     public function __construct()
     {
@@ -36,7 +36,7 @@ class FeDocReport extends MY_Controller
         $data['EMPNO'] = (string)$empno;
         $data['docTypes'] = $this->MainModel->getActiveDocTypes();
 
-        $this->views('feform/FE-DOC/report/index', $data);
+        $this->views('feform/FE-DOC/Report', $data);
     }
 
     /**

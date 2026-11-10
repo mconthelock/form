@@ -1,7 +1,10 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-<input type="hidden" id="EMPNOHid" value="{{ $EMPNO ?? '' }}" />
+
+<!-- <div class="load flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+</div> -->
 
 <div class="flex flex-col w-full px-4 my-6 font-sans max-w-7xl mx-auto">
     <!-- Header  -->
@@ -9,6 +12,7 @@
         <div>
             <h1 class="text-2xl font-bold text-slate-800">📊 รายงานเอกสาร FE Document (FeDocReport)</h1>
             <p class="text-xs text-slate-500">ค้นหา ติดตามสถานะ และเปิดดูเอกสารพร้อมไฟล์แนบ</p>
+            <input type="hidden" id="EMPNOHid" value="{{ $EMPNO ?? '' }}" />
         </div>
     </div>
 

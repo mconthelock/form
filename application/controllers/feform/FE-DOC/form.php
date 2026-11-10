@@ -12,6 +12,7 @@ require_once APPPATH . 'controllers/_file.php';
 class form extends MY_Controller {
     use formApi, flow, formmst;
 
+    public $CodeForm = 'FE-DOC';
     public function __construct() {
         parent::__construct();
         $this->client = new Client(['verify' => false]);
@@ -35,6 +36,91 @@ class form extends MY_Controller {
     // === http://localhost:8082/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === http://localhost:8082/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
    
+
+
+    /**
+     * ดึงข้อมูล Form Master พื้นฐาน (NNO, VORGNO, CYEAR)
+     */
+    private function getFormMasterInfo()
+    {
+        $formMst = $this->getFormMasterByVaname($this->CodeForm);
+
+        return [
+            'no'    => $formMst['data']['NNO'] ?? $formMst[0]->NNO ?? '',
+            'orgNo' => $formMst['data']['VORGNO'] ?? $formMst[0]->VORGNO ?? '',
+            'y'     => $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR ?? '',
+        ];
+    }
+
+    /**
+     * Helper Function สำหรับประกอบ URL และทำการ Redirect ไปยัง main
+     * 
+     * @param array $extraParams พารามิเตอร์เพิ่มเติมที่ต้องการส่งไปกับ URL
+     * @param bool  $trailingSlash เลือกว่าปลายทางต้องการปิดท้ายด้วย / ก่อน ? หรือไม่ (default: true)
+     */
+    private function redirectToFeAspMain(array $extraParams = [], $trailingSlash = true)
+    {
+        $baseParams = $this->getFormMasterInfo();
+
+        // รวม parameters และกรองค่า null / ค่าว่างออก
+        $allParams = array_merge($baseParams, $extraParams);
+        $filteredParams = array_filter($allParams, function($val) {
+            return $val !== null && $val !== '';
+        });
+
+        $path = $trailingSlash ? 'main/' : 'main';
+        $queryString = http_build_query($filteredParams);
+        $redirectUrl = "{$this->http}://{$this->host}/form/feform/FE-DOC/form/{$path}?" . $queryString;
+
+        redirect($redirectUrl, 'location', 302);
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspcreate/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-DOC/form/fedoccreate/13204/
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://localhost:8082/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+   
+    public function fedoccreate($empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $defaultBp = 'http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp';
+
+        $this->redirectToFeAspMain([
+            'empno' => $empno,
+            'bp'    => $this->input->get('bp') ?: $defaultBp,
+        ], true); // true = main/?...
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspform/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-DOC/form/fedocform/2026/1/13204/
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    // === https://localhost:8082/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
+   
+    public function fedocform($y2= null, $runNo = null,$empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $runNo = !empty($runNo) ? $runNo : $this->input->get('runNo');
+        $y2 = !empty($y2) ? $y2 : $this->input->get('y2');
+        $m    = $this->input->get('m') ?? '3';
+        $bp   = $this->input->get('bp') ?? '/formtest/workflow/mineList.asp';
+        $menu = $this->input->get('menu') ?? '1';
+        $this->redirectToFeAspMain([
+            'y2'    => $y2 ,
+            'runNo' => $runNo,
+            'm'     => $m,
+            'empno' => $empno,
+            'bp'    => $bp,
+            'menu'  => $menu,
+        ], false); // false = main?...
+    }
+
+
     public function main() {
         $empno          = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
@@ -61,7 +147,7 @@ class form extends MY_Controller {
             $data['VORGNO'] = $this->input->get('orgNo');
             $data['CYEAR']  = $this->input->get('y');
         } else {
-            $formMst        = $this->getFormMasterByVaname('FE-DOC');
+            $formMst        = $this->getFormMasterByVaname($this->CodeForm);
             $data['NFRMNO'] = $formMst['data']['NNO'] ?? $formMst[0]->NNO;
             $data['VORGNO'] = $formMst['data']['VORGNO'] ?? $formMst[0]->VORGNO;
             $data['CYEAR']  = $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR;
@@ -106,7 +192,7 @@ class form extends MY_Controller {
             ])->get('FE_FILE')->result();
         }
 
-        $data['isAdmin'] = $this->MainModel->isFormAdmin('FE-DOC', $data['EMPNO']);
+        $data['isAdmin'] = $this->MainModel->isFormAdmin($this->CodeForm, $data['EMPNO']);
 
         $this->views('feform/FE-DOC/form', $data);
     }
@@ -179,7 +265,7 @@ class form extends MY_Controller {
             // ----------------------------------------------------
             // กรณี CREATE ครั้งแรกสุด: สร้าง Flow และบันทึก Creator + เวลาสร้าง
             // ----------------------------------------------------
-            $formMst  = $this->getFormMasterByVaname('FE-DOC');
+            $formMst  = $this->getFormMasterByVaname($this->CodeForm);
             $formData = $formMst['data'];
 
             $flowData = [
@@ -491,7 +577,7 @@ class form extends MY_Controller {
         $this->output->set_content_type('application/json');
         try {
             $currentEmp = (string)($this->input->post('EMPNO') ?: $this->input->get('empno'));
-            if (!$this->MainModel->isFormAdmin('FE-DOC', $currentEmp)) {
+            if (!$this->MainModel->isFormAdmin($this->CodeForm, $currentEmp)) {
                 throw new Exception('คุณไม่มีสิทธิ์จัดการ Master');
             }
 
@@ -519,7 +605,7 @@ class form extends MY_Controller {
         $this->output->set_content_type('application/json');
         try {
             $currentEmp = (string)($this->input->post('EMPNO') ?: $this->input->get('empno'));
-            if (!$this->MainModel->isFormAdmin('FE-DOC', $currentEmp)) {
+            if (!$this->MainModel->isFormAdmin($this->CodeForm, $currentEmp)) {
                 throw new Exception('คุณไม่มีสิทธิ์ดำเนินการ');
             }
 

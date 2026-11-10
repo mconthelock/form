@@ -787,6 +787,15 @@ class Fe_asp_model extends my_model
             $binds[] = trim($filters['depCode']);
         }
 
+        // กรองตาม Fiscal Year (01 เม.ย. ปีที่เลือก ถึง 31 มี.ค. ปีถัดไป)
+        if (!empty($filters['fiscalYear'])) {
+            $range = $this->getFiscalYearRange($filters['fiscalYear']);
+            $where .= " AND H.CREATE_DATE >= TO_DATE(?, 'YYYY-MM-DD') 
+                        AND H.CREATE_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1";
+            $binds[] = $range['start'];
+            $binds[] = $range['end'];
+        }
+
         if (!empty($filters['startDate'])) {
             $where .= " AND TRUNC(H.CREATE_DATE) >= TO_DATE(?, 'YYYY-MM-DD')";
             $binds[] = $filters['startDate'];
@@ -801,6 +810,7 @@ class Fe_asp_model extends my_model
                     H.HEADER_ID,
                     H.DOC_NO,
                     H.CONTROL_NO,
+                    H.DOC_REVISION,
                     H.SDIVCODE,
                     H.SDEPCODE,
                     H.SSECCODE,
@@ -835,7 +845,7 @@ class Fe_asp_model extends my_model
             return [];
         }
 
-        // ดึงไฟล์แนบทั้งหมดจากตาราง FE_FILE มาผูกกับแต่ละ Header
+        // ดึงไฟล์แนบจาก FE_FILE
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
         foreach ($records as &$row) {
             $files = $dbWebflow->where([
@@ -851,4 +861,175 @@ class Fe_asp_model extends my_model
         return $records;
     }
     // =================================================================
+
+   /**
+     * คำนวณ Revision ตัวถัดไป (* -> A -> B -> ... -> Z)
+     */
+    public function getNextRevisionChar($currentRev) {
+        $rev = strtoupper(trim((string)$currentRev));
+
+        // 1. กรณีฉบับแรกเริ่มที่เป็น * หรือยังไม่มีค่า เมื่อ Change จะเริ่มเป็น Revision A
+        if (empty($rev) || $rev === '*' || $rev === '-') {
+            return 'A';
+        }
+
+        // 2. ถ้าเป็นตัวอักษร A-Y ให้เดินไปยังตัวถัดไป (เช่น A -> B, B -> C)
+        if (preg_match('/^[A-Y]$/', $rev)) {
+            return chr(ord($rev) + 1);
+        }
+
+        // 3. ป้องกันกรณีเกิน Z
+        if ($rev === 'Z') {
+            return 'AA';
+        }
+
+        return $rev;
+    }
+
+    /**
+     * อัปเดต Revision ของเอกสารและ Master Control
+     * - NO_CHANGE: เก็บ Revision เดิม
+     * - CHANGE: เดิน Revision ถัดไป (* -> A -> B ...)
+     */
+    public function updateDocRevision($headerId, $controlNo, $reviewDetails, $currentRev) {
+        $finalRev = (!empty($currentRev) && $currentRev !== '') ? $currentRev : '*';
+
+        if ($reviewDetails === 'CHANGE') {
+            $finalRev = $this->getNextRevisionChar($finalRev);
+
+            // อัปเดต Revision ใหม่ลงตาราง Master Control
+            $this->db->where('CONTROL_NO', $controlNo)
+                     ->set('REVISION', $finalRev)
+                     ->set('UPDATE_DATE', 'SYSDATE', FALSE)
+                     ->update('FE_ASP_CONTROL_MST');
+        }
+
+        // บันทึก Revision ลง FE_ASP_HEADER ของใบงานนี้
+        $this->db->where('HEADER_ID', $headerId)
+                 ->set('DOC_REVISION', $finalRev)
+                 ->update('FE_ASP_HEADER');
+
+        return $finalRev;
+    }
+
+    /**
+     * คำนวณช่วงวันที่ Fiscal Year (01/04 ถึง 31/03 ของปีถัดไป)
+     */
+    public function getFiscalYearRange($year) {
+        $startYear = (int)$year;
+        $nextYear  = $startYear + 1;
+        return [
+            'start' => "{$startYear}-04-01",
+            'end'   => "{$nextYear}-03-31"
+        ];
+    }
+
+    /**
+     * ตรวจสอบว่าเอกสาร Yearly ใน Fiscal Year นั้นอนุมัติครบทุกใบแล้วหรือยัง
+     */
+    public function checkYearlyBatchCompleted($year) {
+        $range = $this->getFiscalYearRange($year);
+
+        $sql = "SELECT 
+                    COUNT(*) AS TOTAL,
+                    COUNT(CASE WHEN STATUS = 'APPROVE' THEN 1 END) AS APPROVED_COUNT
+                FROM SMARTMAT.FE_ASP_HEADER
+                WHERE CREATE_DATE >= TO_DATE(?, 'YYYY-MM-DD')
+                  AND CREATE_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
+                  AND REVIEW_PERIOD = 'YEARLY'";
+
+        $row = $this->QuerySetBase($sql, $this->smmtBase, [
+            $range['start'], 
+            $range['end']
+        ])->row_array();
+
+        $total    = (int)($row['TOTAL'] ?? 0);
+        $approved = (int)($row['APPROVED_COUNT'] ?? 0);
+
+        return [
+            'isCompleted' => ($total > 0 && $total === $approved),
+            'total'       => $total,
+            'approved'    => $approved,
+            'remaining'   => ($total - $approved),
+            'fiscalYear'  => (string)$year
+        ];
+    }
+    /**
+     * ดึงประวัติเอกสารทั้งหมดตาม Control No. (History Modal View)
+     */
+    public function getDocHistoryByControlNo($controlNo) {
+        $sql = "SELECT 
+                    H.HEADER_ID,
+                    H.DOC_NO,
+                    H.CONTROL_NO,
+                    H.DOC_REVISION,
+                    H.REVIEW_PERIOD,
+                    H.REVIEW_DETAILS,
+                    H.DETAIL_OF_CHANGE,
+                    H.STATUS,
+                    TO_CHAR(H.CREATE_DATE, 'DD/MM/YYYY HH24:MI') AS CREATE_DATE_TXT,
+                    H.REQ_BY,
+                    U.SNAME AS REQ_NAME,
+                    H.NFRMNO,
+                    H.VORGNO,
+                    H.CYEAR,
+                    H.CYEAR2,
+                    H.NRUNNO
+                FROM SMARTMAT.FE_ASP_HEADER H
+                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                WHERE H.CONTROL_NO = ?
+                ORDER BY H.HEADER_ID DESC";
+
+        $records = $this->QuerySetBase($sql, $this->smmtBase, [trim($controlNo)])->result_array();
+
+        if (empty($records)) return [];
+
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+        foreach ($records as &$row) {
+            $files = $dbWebflow->where([
+                'NFRMNO' => (int)$row['NFRMNO'],
+                'VORGNO' => (string)$row['VORGNO'],
+                'CYEAR2' => (string)$row['CYEAR2'],
+                'NRUNNO' => (int)$row['NRUNNO'],
+            ])->order_by('FILE_ID', 'ASC')->get('FE_FILE')->result_array();
+
+            $row['FILES'] = $files ?: [];
+        }
+
+        return $records;
+    }
+
+    /**
+     * ดึงรายการเอกสารรอบปีที่ Approved แล้วทั้งหมดสำหรับสร้าง Cover Excel สรุปประจำปี
+     */
+    public function getYearlyApprovedRecordsForSummary($year) {
+        $range = $this->getFiscalYearRange($year);
+
+        $sql = "SELECT 
+                    H.HEADER_ID,
+                    H.DOC_NO,
+                    H.CONTROL_NO,
+                    NVL(H.DOC_REVISION, '*') AS DOC_REVISION,
+                    H.SDIVCODE,
+                    H.SDEPCODE,
+                    H.SSECCODE,
+                    H.REVIEW_PERIOD,
+                    H.REVIEW_DETAILS,
+                    H.DETAIL_OF_CHANGE,
+                    TO_CHAR(H.CREATE_DATE, 'DD-Mon-YY') AS REVIEWED_DATE,
+                    H.REQ_BY,
+                    U.SNAME AS REQ_NAME
+                FROM SMARTMAT.FE_ASP_HEADER H
+                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                WHERE H.CREATE_DATE >= TO_DATE(?, 'YYYY-MM-DD')
+                  AND H.CREATE_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
+                  AND H.REVIEW_PERIOD = 'YEARLY'
+                  AND H.STATUS = 'APPROVE'
+                ORDER BY H.SDIVCODE ASC, H.SDEPCODE ASC, H.CONTROL_NO ASC";
+
+        return $this->QuerySetBase($sql, $this->smmtBase, [
+            $range['start'], 
+            $range['end']
+        ])->result_array();
+    }
 }
