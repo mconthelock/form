@@ -17,13 +17,16 @@ export function toggleChangeBox() {
     const selectedVal = $('input[name="REVIEW_DETAILS"]:checked').val();
     const $box = $('#change-detail-box');
     const $spanRequired = $('#spanFileRequired');
+    const $btnTemplate = $('#btnDownloadAspectTemplate');
 
     if (selectedVal === 'CHANGE') {
         $box.removeClass('hidden').show();
-        $spanRequired.removeClass('hidden'); // กรณี CHANGE จะมีดอกจันสีแดงบังคับแนบ Revision PDF
+        $spanRequired.removeClass('hidden');
+        $btnTemplate.removeClass('hidden').show(); // แสดงปุ่มดาวน์โหลด Template ทันที
     } else {
         $box.addClass('hidden').hide();
-        $spanRequired.addClass('hidden'); // กรณี NO CHANGE ไม่บังคับไฟล์ Revision
+        $spanRequired.addClass('hidden');
+        $btnTemplate.addClass('hidden').hide(); // ซ่อนปุ่มดาวน์โหลด Template
     }
 }
 
@@ -33,11 +36,11 @@ export function renderPrevFile(prevData) {
     const $docNoTxt = $('#prev-doc-no');
     const $container = $('#prev-file-list').empty();
 
-    // เช็คว่ามีข้อมูล header หรือไม่
     const header = prevData?.header;
     const files = prevData?.files || [];
 
-    if (header) {
+    // ต้องมี header และมีเลขที่เอกสาร DOC_NO จริงๆ ถึงจะถือว่ามี Revision ก่อนหน้า
+    if (header && header.DOC_NO) {
         const empno = (
             $('#EMPNOHid').val() ||
             $('#REQUEST_BY_EMPNO').val() ||
@@ -62,12 +65,16 @@ export function renderPrevFile(prevData) {
         baseHost = baseHost.replace(/\/+$/, '');
         const backPath = encodeURIComponent('/formtest/workflow/mineList.asp');
 
-        // 1. อัปเดตลิงก์เปิดฟอร์มเอกสารล่าสุด
+        // 1. อัปเดตข้อมูล Revision เดิม
+        const rev = header.DOC_REVISION || '*';
+        $('#prev-rev-txt').text(rev);
+        $docNoTxt.text(`${header.DOC_NO} (Rev.${rev})`);
+
+        // 2. ลิงก์เปิดเอกสารเดิม
         const docUrl = `${baseHost}/feform/FE-ASP/form/main?no=${header.NFRMNO}&orgNo=${header.VORGNO}&y=${header.CYEAR}&y2=${header.CYEAR2}&runNo=${header.NRUNNO}&m=3&empno=${empno}&bp=${backPath}&menu=1`;
         $btnDoc.attr('href', docUrl).removeClass('hidden');
-        $docNoTxt.text(header.DOC_NO || '');
 
-        // 2. เรนเดอร์ไฟล์ หรือ แสดงข้อความถ้าไม่มีไฟล์
+        // 3. แสดงรายการไฟล์แนบเดิม
         if (Array.isArray(files) && files.length > 0) {
             files.forEach((file) => {
                 const formattedBaseDir = (file.FILE_PATH || '').replace(
@@ -98,9 +105,10 @@ export function renderPrevFile(prevData) {
             `);
         }
 
-        // แสดงกล่อง Active Revision ออกมา
+        // แสดงกล่องเมื่อมีเอกสาร Approved ก่อนหน้าจริง
         $zone.removeClass('hidden').show();
     } else {
+        // กรณีเป็นฉบับแรกเริ่มที่ไม่มี Approved ก่อนหน้า -> ซ่อนกล่องทั้งหมดทิ้งไป
         $btnDoc.attr('href', '#').addClass('hidden');
         $zone.addClass('hidden').hide();
     }
@@ -392,6 +400,7 @@ export async function loadSectionDropdown(depCode, selectedSec = '00') {
         console.error('Load Sections Error:', e);
     }
 }
+
 export function applyReviewPeriodRules() {
     const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
         .toUpperCase()
@@ -451,6 +460,7 @@ export function applyReviewPeriodRules() {
     // เรียก Toggle ตาราง Confirmation ทันทีตามค่าจริง
     toggleConfirmationTable();
 }
+
 export function applyReviewPeriodRules0() {
     const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
         .toUpperCase()
@@ -520,6 +530,7 @@ export function applyReviewPeriodRules0() {
 
     $('input[name="REVIEW_PERIOD"]:checked').trigger('change');
 }
+
 /**
  * ซ่อน/แสดงตาราง Confirmation:
  * แสดงเมื่อเป็น YEARLY

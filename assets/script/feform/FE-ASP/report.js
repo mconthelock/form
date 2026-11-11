@@ -39,7 +39,7 @@ $(document).ready(function () {
                         </button>
                     </div>
                     <div class="flex items-center gap-1 text-[10px] text-slate-400">
-                        <span>Rev.${row.DOC_REVISION || '*'}</span>
+                        <span>${row.DOC_REVISION ? 'Rev.' + row.DOC_REVISION : ''}</span>
                         <span>•</span>
                         <span>${row.DOC_NO || ''}</span>
                     </div>
@@ -214,6 +214,7 @@ $(document).ready(function () {
             docNo: $('#filter_docNo').val() || '',
             divCode: $('#filter_divCode').val() || '',
             depCode: $('#filter_depCode').val() || '',
+            reviewPeriod: $('#filter_reviewPeriod').val() || '',
             status: $('#filter_status').val() || '',
             startDate: $('#filter_startDate').val() || '',
             endDate: $('#filter_endDate').val() || '',
@@ -327,6 +328,8 @@ $(document).ready(function () {
                     );
                     $('#btnDownloadCoverExcel').addClass('hidden');
                 }
+
+                $('#btnDownloadCoverExcel').removeClass('hidden');
             }
         } catch (e) {
             console.error('Update banner error:', e);
@@ -401,6 +404,66 @@ $(document).ready(function () {
             `${host}feform/FE-ASP/report/exportYearlyCoverExcel?fiscalYear=${fy}`,
             '_blank',
         );
+    });
+
+    // คลิกปุ่ม "ตรวจสอบรอบปี & สร้าง FE-DOC"
+    // ใน report.js เมื่อคลิกปุ่ม #btnCheckAndCreateFeDoc
+    $('#btnCheckAndCreateFeDoc').on('click', async function () {
+        const fy = $('#filter_fiscalYear').val() || '2026';
+
+        try {
+            await showLoader({ show: true });
+
+            // 1. สร้าง Form FE-DOC และสร้าง Excel บน Temp
+            const res = await $.post(
+                `${host}feform/FE-ASP/report/ajaxTriggerYearlyReviewAndFeDoc`,
+                {
+                    fiscalYear: fy,
+                    empno: currentEmp,
+                },
+                'json',
+            );
+
+            if (res && res.status) {
+                // 2. ถ้ามีไฟล์ Excel ให้ดึง Blob แล้วยิงเข้า NestJS API กลาง
+                if (res.excelFile && res.feDocKeys) {
+                    const response = await fetch(
+                        res.excelFile.fileUrl + '?t=' + Date.now(),
+                    );
+                    const blob = await response.blob();
+                    const fileObj = new File([blob], res.excelFile.fileName, {
+                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    });
+
+                    let nestJsData = new FormData();
+                    nestJsData.append('NFRMNO', res.feDocKeys.NFRMNO);
+                    nestJsData.append('VORGNO', res.feDocKeys.VORGNO);
+                    nestJsData.append('CYEAR', res.feDocKeys.CYEAR);
+                    nestJsData.append('CYEAR2', res.feDocKeys.CYEAR2);
+                    nestJsData.append('NRUNNO', res.feDocKeys.NRUNNO);
+                    nestJsData.append('CREATEBY', currentEmp);
+                    nestJsData.append('FORM_TYPE', 'FE');
+                    nestJsData.append(
+                        'PATH',
+                        `\\\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\FE-DOC\\${res.docNo}`,
+                    );
+                    nestJsData.append('files', fileObj);
+
+                    await uploadDocFiles(nestJsData); // เรียก API กลาง
+                }
+
+                alert(`${res.message}\nกด ตกลง เพื่อเปิดไปยังฟอร์ม FE-DOC`);
+                window.open(res.docUrl, '_blank');
+                updateFiscalYearBanner(fy);
+            } else {
+                showErrorMessage(res.message || 'ไม่สามารถดำเนินการได้');
+            }
+        } catch (err) {
+            console.error('Trigger FeDoc Error:', err);
+            showErrorMessage('เกิดข้อผิดพลาดในการดำเนินการ');
+        } finally {
+            await showLoader({ show: false });
+        }
     });
 
     // 5. เริ่มต้นทำงาน (ตัด initDataTable() เปล่าๆ ออก ให้ดึงข้อมูลมาสร้าง DataTables ทันที)

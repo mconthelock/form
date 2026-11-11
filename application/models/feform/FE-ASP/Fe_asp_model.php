@@ -231,6 +231,8 @@ class Fe_asp_model extends my_model
         return array_merge([$defaultSec], $dbSections ?: []);
     }
 
+
+
     public function getLatestApprovedFile($controlNo, $currentYear2 = '', $currentRunNo = '') {
         $controlNo    = trim((string)$controlNo);
         $currentYear2 = trim((string)$currentYear2);
@@ -239,7 +241,8 @@ class Fe_asp_model extends my_model
         if (empty($controlNo)) return null;
 
         $binds = [$controlNo];
-        $whereSql = "WHERE CONTROL_NO = ? AND STATUS = 'APPROVE'";
+        // 1. ดึงเอกสารล่าสุดที่ APPROVED (ทั้ง CHANGE และ NO CHANGE เพื่อให้ได้ไฟล์ที่ ACTIVE จริงล่าสุด)
+        $whereSql = "WHERE CONTROL_NO = ? AND STATUS = 'APPROVE' and REVIEW_DETAILS = 'CHANGE' ";
 
         if (!empty($currentYear2) && !empty($currentRunNo)) {
             $whereSql .= " AND (
@@ -251,9 +254,9 @@ class Fe_asp_model extends my_model
             $binds[] = (int)$currentRunNo;
         }
 
-        $sqlHeader = "SELECT DOC_NO, CONTROL_NO, NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO 
+        $sqlHeader = "SELECT DOC_NO, CONTROL_NO, NVL(DOC_REVISION, '*') AS DOC_REVISION, NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO 
                       FROM (
-                          SELECT DOC_NO, CONTROL_NO, NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO 
+                          SELECT DOC_NO, CONTROL_NO, DOC_REVISION, NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO 
                           FROM SMARTMAT.FE_ASP_HEADER 
                           {$whereSql}
                           ORDER BY TO_NUMBER(CYEAR2) DESC, TO_NUMBER(NRUNNO) DESC
@@ -262,8 +265,12 @@ class Fe_asp_model extends my_model
         
         $header = $this->QuerySetBase($sqlHeader, $this->smmtBase, $binds)->row_array();
 
-        if (empty($header)) return null;
+        // 2. ถ้าไม่พบประวัติ Approved เลย (เป็นเอกสารสร้างใหม่ครั้งแรกสุดของระบบ)
+        if (empty($header)) {
+            return null;
+        }
 
+        // 3. ดึงไฟล์แนบของเอกสาร Approved ฉบับล่าสุดนั้น
         $sqlFile = "SELECT FILE_ID, FILE_ONAME, FILE_FNAME, FILE_PATH
                     FROM FE_FILE 
                     WHERE NFRMNO = ? 
@@ -777,6 +784,12 @@ class Fe_asp_model extends my_model
             $binds[] = strtoupper(trim($filters['status']));
         }
 
+        // เพิ่มเงื่อนไขกรอง Review period
+        if (!empty($filters['reviewPeriod'])) {
+            $where .= " AND H.REVIEW_PERIOD = ?";
+            $binds[] = strtoupper(trim($filters['reviewPeriod']));
+        }
+
         if (!empty($filters['divCode'])) {
             $where .= " AND H.SDIVCODE = ?";
             $binds[] = trim($filters['divCode']);
@@ -887,27 +900,47 @@ class Fe_asp_model extends my_model
     }
 
     /**
+     * ดึง Revision ปัจจุบันจาก FE_ASP_CONTROL_MST
+     */
+    public function getCurrentRevisionFromMaster($controlNo) {
+        $controlNo = trim((string)$controlNo);
+        if (empty($controlNo)) return '*';
+
+        $sql = "SELECT NVL(REVISION, '*') AS CURRENT_REV 
+                FROM SMARTMAT.FE_ASP_CONTROL_MST 
+                WHERE CONTROL_NO = ? AND ACTIVE_FLAG = 'Y'";
+        $row = $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->row_array();
+        
+        $rev = trim((string)($row['CURRENT_REV'] ?? '*'));
+        return (!empty($rev) && $rev !== '') ? $rev : '*';
+    }
+
+    /**
      * อัปเดต Revision ของเอกสารและ Master Control
-     * - NO_CHANGE: เก็บ Revision เดิม
-     * - CHANGE: เดิน Revision ถัดไป (* -> A -> B ...)
+     * - NO_CHANGE: คง Revision เดิมไว้
+     * - CHANGE: เดิน Revision ถัดไป (* -> A -> B ...) และอัปเดตทั้ง Header และ Master Control
      */
     public function updateDocRevision($headerId, $controlNo, $reviewDetails, $currentRev) {
         $finalRev = (!empty($currentRev) && $currentRev !== '') ? $currentRev : '*';
 
+        $db = $this->load->database($this->smmtBase, TRUE);
+
         if ($reviewDetails === 'CHANGE') {
+            // คำนวณ Revision ถัดไป (* -> A -> B ...)
             $finalRev = $this->getNextRevisionChar($finalRev);
 
-            // อัปเดต Revision ใหม่ลงตาราง Master Control
-            $this->db->where('CONTROL_NO', $controlNo)
-                     ->set('REVISION', $finalRev)
-                     ->set('UPDATE_DATE', 'SYSDATE', FALSE)
-                     ->update('FE_ASP_CONTROL_MST');
-        }
+            // 1. อัปเดต Revision ใหม่ลง Master Control บน SMARTMAT
+            $db->where('CONTROL_NO', $controlNo)
+               ->set('REVISION', $finalRev)
+               ->set('UPDATE_DATE', 'SYSDATE', FALSE)
+               ->update('SMARTMAT.FE_ASP_CONTROL_MST');
 
-        // บันทึก Revision ลง FE_ASP_HEADER ของใบงานนี้
-        $this->db->where('HEADER_ID', $headerId)
-                 ->set('DOC_REVISION', $finalRev)
-                 ->update('FE_ASP_HEADER');
+            // 2. อัปเดต Revision ใหม่ลงใน FE_ASP_HEADER ของใบงานนี้
+            $db->where('HEADER_ID', $headerId)
+               ->set('DOC_REVISION', $finalRev)
+               ->set('UPDATE_DATE', 'SYSDATE', FALSE)
+               ->update('SMARTMAT.FE_ASP_HEADER');
+        }
 
         return $finalRev;
     }
@@ -958,11 +991,14 @@ class Fe_asp_model extends my_model
      * ดึงประวัติเอกสารทั้งหมดตาม Control No. (History Modal View)
      */
     public function getDocHistoryByControlNo($controlNo) {
+        $controlNo = trim((string)$controlNo);
+        if (empty($controlNo)) return [];
+
         $sql = "SELECT 
                     H.HEADER_ID,
                     H.DOC_NO,
                     H.CONTROL_NO,
-                    H.DOC_REVISION,
+                    NVL(H.DOC_REVISION, '*') AS DOC_REVISION,
                     H.REVIEW_PERIOD,
                     H.REVIEW_DETAILS,
                     H.DETAIL_OF_CHANGE,
@@ -976,27 +1012,14 @@ class Fe_asp_model extends my_model
                     H.CYEAR2,
                     H.NRUNNO
                 FROM SMARTMAT.FE_ASP_HEADER H
-                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                LEFT JOIN AMEC.AMECUSERALL U 
+                    ON H.REQ_BY = U.SEMPNO
                 WHERE H.CONTROL_NO = ?
                 ORDER BY H.HEADER_ID DESC";
 
-        $records = $this->QuerySetBase($sql, $this->smmtBase, [trim($controlNo)])->result_array();
+        $records = $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->result_array();
 
-        if (empty($records)) return [];
-
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        foreach ($records as &$row) {
-            $files = $dbWebflow->where([
-                'NFRMNO' => (int)$row['NFRMNO'],
-                'VORGNO' => (string)$row['VORGNO'],
-                'CYEAR2' => (string)$row['CYEAR2'],
-                'NRUNNO' => (int)$row['NRUNNO'],
-            ])->order_by('FILE_ID', 'ASC')->get('FE_FILE')->result_array();
-
-            $row['FILES'] = $files ?: [];
-        }
-
-        return $records;
+        return $records ?: [];
     }
 
     /**
@@ -1031,5 +1054,57 @@ class Fe_asp_model extends my_model
             $range['start'], 
             $range['end']
         ])->result_array();
+    }
+
+
+    /**
+     * ดึงรหัสพนักงาน Admin หรือ PIC ของฝ่ายสิ่งแวดล้อม (E/P) สำหรับเป็นผู้สร้าง FE-DOC
+     */
+    public function getEpAdminEmpNo() {
+        $sql = "SELECT EMPNO FROM SMARTMAT.FE_FORM_ADMIN 
+                WHERE (FORM_CODE = 'FE-ASP' OR FORM_CODE = 'ALL') AND IS_ACTIVE = 1 
+                ORDER BY EMPNO ASC";
+        $row = $this->QuerySetBase($sql, $this->smmtBase)->row_array();
+        return $row['EMPNO'] ?? '13204';
+    }
+
+    /**
+     * ตรวจสอบว่ามีเอกสาร FE-DOC สำหรับรอบปีนี้ถูกสร้างไปแล้วหรือยัง (ป้องกันสร้างซ้ำ)
+     */
+    public function getExistingFeDocForYear($fiscalYear) {
+        $subject = "ทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) FY{$fiscalYear}";
+        $sql = "SELECT DOC_NO, NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, STATUS 
+                FROM SMARTMAT.FE_DOC_HEADER 
+                WHERE DOC_SUBJECT = ? 
+                  AND STATUS NOT IN ('REJECT', 'CANCEL')
+                ORDER BY DOC_HEADER_ID DESC";
+        return $this->QuerySetBase($sql, $this->smmtBase, [$subject])->row_array();
+    }
+
+    /**
+     * คัดลอกและบันทึกไฟล์ Excel เข้าตาราง FE_FILE ของเอกสาร FE-DOC
+     */
+    public function attachExcelToFeDoc($feDocKeys, $excelFileName, $excelFilePath) {
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+
+        // ดึง NEXT FILE_ID
+        $q = $dbWebflow->query("SELECT NVL(MAX(FILE_ID), 0) + 1 AS NEXT_ID FROM FE_FILE");
+        $nextFileId = (int)$q->row_array()['NEXT_ID'];
+
+        $fileData = [
+            'FILE_ID'    => $nextFileId,
+            'NFRMNO'     => (int)$feDocKeys['NFRMNO'],
+            'VORGNO'     => (string)$feDocKeys['VORGNO'],
+            'CYEAR'      => (string)$feDocKeys['CYEAR'],
+            'CYEAR2'     => (string)$feDocKeys['CYEAR2'],
+            'NRUNNO'     => (int)$feDocKeys['NRUNNO'],
+            'FILE_ONAME' => $excelFileName,
+            'FILE_FNAME' => $excelFileName,
+            'FILE_PATH'  => dirname($excelFilePath),
+            'FILE_SIZE'  => file_exists($excelFilePath) ? filesize($excelFilePath) : 0,
+        ];
+
+        $dbWebflow->set('DUPDATE', 'SYSDATE', FALSE);
+        return $dbWebflow->insert('FE_FILE', $fileData);
     }
 }

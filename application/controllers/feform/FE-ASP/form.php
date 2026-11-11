@@ -7,10 +7,18 @@
 // === http://localhost:8082/form/feform/FE-ASP/form/main?no=26&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=95147&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     
 use GuzzleHttp\Client;
+
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+use PhpOffice\PhpSpreadsheet\Style\Color;
+
+
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_form.php';
@@ -471,9 +479,13 @@ class Form extends MY_Controller {
                 $nrunno = $rsf['data']['NRUNNO'];
                 $docNo  = $this->CodeForm . "-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
 
+                // ดึง Revision ปัจจุบันจากตาราง FE_ASP_CONTROL_MST
+                $baseRev = $this->MainModel->getCurrentRevisionFromMaster($controlNo);
+                
                 $headerData = [
                     'DOC_NO'           => $docNo,
                     'CONTROL_NO'       => $controlNo,
+                    'DOC_REVISION'     => $baseRev, // บันทึก Revision ล่าสุดตั้งแต่ตอนสร้างใบงาน
                     'SDIVCODE'         => $sDivCode,
                     'SDEPCODE'         => $sDepCode,
                     'SSECCODE'         => $sSecCode,
@@ -615,11 +627,11 @@ class Form extends MY_Controller {
             if ($action === 'APPROVE') {
                 $isCompleted = $this->MainModel->checkFlowCompleted($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
                 
-                if ($extdata === '05' || $isCompleted) {
+                if ($isCompleted) {
                     $status = 'APPROVE';
 
-                    // 1. จัดการเดิน Revision (* -> A -> B... หรือคงเดิม)
-                    $this->MainModel->updateDocRevision(
+                    // 1. จัดการ Revision: ถ้าเป็น CHANGE จะขยับตัวอักษรและอัปเดตลง Master + Header
+                    $newRev = $this->MainModel->updateDocRevision(
                         $headerId, 
                         $header->CONTROL_NO, 
                         $header->REVIEW_DETAILS, 
@@ -628,7 +640,6 @@ class Form extends MY_Controller {
 
                     // 2. ถ้าเป็น Yearly ให้ตรวจดูว่าครบ Fiscal Year หรือยัง
                     if ($header->REVIEW_PERIOD === 'YEARLY') {
-                        // คำนวณ Fiscal Year (ม.ค.-มี.ค. = ปีก่อนหน้า, เม.ย.-ธ.ค. = ปีปัจจุบัน)
                         $docTime = !empty($header->CREATE_DATE) ? strtotime($header->CREATE_DATE) : time();
                         $docMonth = (int)date('n', $docTime);
                         $docYear  = (int)date('Y', $docTime);
@@ -664,6 +675,8 @@ class Form extends MY_Controller {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
+
+
     public function deleteCoverFile($nfrmno, $vorgno,$cyear, $cyear2, $nrunno)
     {
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
@@ -1106,7 +1119,7 @@ class Form extends MY_Controller {
             $sheet->setCellValue("D{$rowIdx}", $r['CONTROL_NO'] ?? '');
             $sheet->setCellValue("E{$rowIdx}", $periodTxt);
             $sheet->setCellValue("F{$rowIdx}", $detailTxt);
-            $sheet->setCellValue("G{$rowIdx}", $r['DOC_REVISION'] ?? 'A');
+            $sheet->setCellValue("G{$rowIdx}", $r['DOC_REVISION'] ?? '*');
             $sheet->setCellValue("H{$rowIdx}", $r['REVIEWED_DATE'] ?? '');
             $sheet->setCellValue("I{$rowIdx}", $r['REQ_NAME'] ?? $r['REQ_BY']);
             
@@ -1128,5 +1141,28 @@ class Form extends MY_Controller {
             'fileName' => $fileName,
             'fileUrl'  => base_url('assets/upload/fe_asp/' . $fileName)
         ];
+    }
+
+    /**
+     * ดาวน์โหลดไฟล์ Template สำหรับ Environmental Aspect & Risk
+     */
+    public function downloadAspectTemplate() {
+        $fileName = 'Environmental_aspect_evaluation_and_Risk.xls';
+        $filePath = APPPATH . 'controllers/feform/FE-ASP/' . $fileName;
+
+        if (!file_exists($filePath)) {
+            // สำรองกรณีเป็นนามสกุล .xlsx
+            $filePathXlsx = APPPATH . 'controllers/feform/FE-ASP/Environmental_aspect_evaluation_and_Risk.xlsx';
+            if (file_exists($filePathXlsx)) {
+                $filePath = $filePathXlsx;
+                $fileName = 'Environmental_aspect_evaluation_and_Risk.xlsx';
+            } else {
+                show_error("ไม่พบไฟล์ Template: {$fileName}", 404);
+                return;
+            }
+        }
+
+        $this->load->helper('download');
+        force_download($fileName, file_get_contents($filePath));
     }
 }

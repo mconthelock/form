@@ -59,20 +59,32 @@
                     </div>
                 </div>
 
-                <!-- ปุ่มดาวน์โหลด Cover Excel -->
-                <button type="button" id="btnDownloadCoverExcel" 
-                        class="hidden px-4 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
-                        style="background-color: #059669;">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/></svg>
-                    Download Cover Yearly (Excel)
-                </button>
+                <!-- Action Buttons บน Banner -->
+                <div class="flex items-center gap-2">
+                    <!-- ปุ่มตรวจความครบถ้วนและสั่งสร้าง FE-DOC -->
+                    <button type="button" id="btnCheckAndCreateFeDoc" 
+                            class="px-3.5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover:brightness-110"
+                            style="background-color: #2563eb;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        ตรวจสอบรอบปี & สร้าง FE-DOC
+                    </button>
+
+                    <!-- ปุ่มดาวน์โหลด Cover Excel -->
+                    <button type="button" id="btnDownloadCoverExcel" 
+                            class="hidden px-3.5 py-2 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer hover:brightness-110"
+                            style="background-color: #059669;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/></svg>
+                        Download Cover (Excel)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    
     <!-- 2. Filter Form Card -->
     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-        <form id="formFilter" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+        <form id="formFilter" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 items-end">
             <div>
                 <label class="text-[11px] font-bold text-slate-600 block mb-1">FISCAL YEAR (รอบปี)</label>
                 <select id="filter_fiscalYear" class="w-full h-9 px-2 border border-slate-200 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50/30">
@@ -106,6 +118,16 @@
                     @foreach ($departments as $dept)
                         <option value="{{ $dept['SDEPCODE'] }}">{{ $dept['SDEPCODE'] }} : {{ $dept['DEPT_NAME'] }}</option>
                     @endforeach
+                </select>
+            </div>
+
+            <!-- เพิ่ม Review period Dropdown -->
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">REVIEW PERIOD</label>
+                <select id="filter_reviewPeriod" class="w-full h-9 px-2 border border-slate-200 rounded-lg text-xs">
+                    <option value="">-- ทั้งหมด (All) --</option>
+                    <option value="YEARLY">Yearly review</option>
+                    <option value="CHANGING">Review on changing</option>
                 </select>
             </div>
 
