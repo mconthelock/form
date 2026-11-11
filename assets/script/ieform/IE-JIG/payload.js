@@ -97,7 +97,9 @@ export function collectJigPayload(form, rows, files, hasNg) {
           }
         : null;
     if (hasNg) {
-        payload.PICCODE = form.elements.namedItem('location').selectedOptions[0]?.dataset.piccode || null;
+        payload.PICCODE =
+            form.elements.namedItem('location').selectedOptions[0]?.dataset
+                .piccode || null;
     }
     return payload;
 }

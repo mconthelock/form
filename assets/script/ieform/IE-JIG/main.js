@@ -92,11 +92,18 @@ $(document).ready(function () {
         },
 
         initNgActions() {
-            document.querySelector('#generate-ng-pdf').addEventListener('click', (event) => {
-                if (storedKey) return;
-                event.preventDefault();
-                void Swal.fire({icon: 'info', title: 'กรุณาบันทึกฟอร์มก่อน', text: 'ต้องมีเลขฟอร์มที่บันทึกแล้วจึงจะสร้าง NG Tag PDF ได้', confirmButtonText: 'ตกลง'});
-            });
+            document
+                .querySelector('#generate-ng-pdf')
+                .addEventListener('click', (event) => {
+                    if (storedKey) return;
+                    event.preventDefault();
+                    void Swal.fire({
+                        icon: 'info',
+                        title: 'กรุณาบันทึกฟอร์มก่อน',
+                        text: 'ต้องมีเลขฟอร์มที่บันทึกแล้วจึงจะสร้าง NG Tag PDF ได้',
+                        confirmButtonText: 'ตกลง',
+                    });
+                });
             ngActions = Array.from(
                 form.querySelectorAll('[name="ng_action[]"]'),
             );
@@ -196,17 +203,22 @@ $(document).ready(function () {
         loadMaster() {
             // ie-pics filters active employees, department and position on the server.
             picReady = JIG.loadSelect('pic_empno', getJigPics, (data) =>
-                [...data].sort((a, b) =>
-                    String(a.SNAME ?? '').trim().localeCompare(
-                        String(b.SNAME ?? '').trim(),
-                        'th',
-                        { sensitivity: 'base' },
-                    ),
-                ).map((u) => ({
-                    value: String(u.SEMPNO).trim(),
-                    label:
-                        '(' + String(u.SEMPNO).trim() + ') ' + (u.SNAME || ''),
-                })),
+                [...data]
+                    .sort((a, b) =>
+                        String(a.SNAME ?? '')
+                            .trim()
+                            .localeCompare(String(b.SNAME ?? '').trim(), 'th', {
+                                sensitivity: 'base',
+                            }),
+                    )
+                    .map((u) => ({
+                        value: String(u.SEMPNO).trim(),
+                        label:
+                            '(' +
+                            String(u.SEMPNO).trim() +
+                            ') ' +
+                            (u.SNAME || ''),
+                    })),
             );
             processReady = JIG.loadSelect(
                 'process_code',
@@ -512,20 +524,51 @@ $(document).ready(function () {
                     remove.className = 'btn btn-ghost btn-xs';
                     remove.textContent = 'ลบ';
                     remove.onclick = async () => {
-                        const confirmed = await Swal.fire({icon:'warning', title:'ยืนยันลบไฟล์?', text:file.FILE_NAME, showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก'});
+                        const confirmed = await Swal.fire({
+                            icon: 'warning',
+                            title: 'ยืนยันลบไฟล์?',
+                            text: file.FILE_NAME,
+                            showCancelButton: true,
+                            confirmButtonText: 'ลบ',
+                            cancelButtonText: 'ยกเลิก',
+                        });
                         if (!confirmed.isConfirmed) return;
-                        const controls = Array.from(document.querySelectorAll('#jig-form button, #jig-approval button'));
-                        const disabled = controls.map(control => control.disabled);
-                        controls.forEach(control => { control.disabled = true; });
+                        const controls = Array.from(
+                            document.querySelectorAll(
+                                '#jig-form button, #jig-approval button',
+                            ),
+                        );
+                        const disabled = controls.map(
+                            (control) => control.disabled,
+                        );
+                        controls.forEach((control) => {
+                            control.disabled = true;
+                        });
                         try {
-                            const result = await deleteJigFile(storedKey, file.FILE_SEQ);
-                            storedFiles = storedFiles.filter(saved => saved !== file);
+                            const result = await deleteJigFile(
+                                storedKey,
+                                file.FILE_SEQ,
+                            );
+                            storedFiles = storedFiles.filter(
+                                (saved) => saved !== file,
+                            );
                             JIG.renderFiles();
-                            if (result.warning) await Swal.fire({icon:'warning', title:'ลบรายการแล้ว', text:result.warning});
+                            if (result.warning)
+                                await Swal.fire({
+                                    icon: 'warning',
+                                    title: 'ลบรายการแล้ว',
+                                    text: result.warning,
+                                });
                         } catch (error) {
-                            await Swal.fire({icon:'error', title:'ลบไฟล์ไม่สำเร็จ', text:error.message});
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'ลบไฟล์ไม่สำเร็จ',
+                                text: error.message,
+                            });
                         } finally {
-                            controls.forEach((control, i) => { control.disabled = disabled[i]; });
+                            controls.forEach((control, i) => {
+                                control.disabled = disabled[i];
+                            });
                         }
                     };
                     item.append(remove);
@@ -590,7 +633,9 @@ $(document).ready(function () {
 
         async hydrate(snapshot, webform, key) {
             const typeBadge = document.querySelector('#jig-form-type');
-            const formType = String(snapshot.FORM_TYPE ?? '').trim().toUpperCase();
+            const formType = String(snapshot.FORM_TYPE ?? '')
+                .trim()
+                .toUpperCase();
             typeBadge.textContent = formType;
             typeBadge.dataset.type = formType;
             typeBadge.hidden = !['CREATE', 'INSPECTION'].includes(formType);
@@ -655,13 +700,21 @@ $(document).ready(function () {
             JIG.validateNgActions();
             JIG.summarize();
             storedKey = key;
-            document.querySelector('#generate-ng-pdf').href = jigNgTagPdfUrl(key);
-            storedFiles = (snapshot.FILES || []).filter(f => (f.FILE_GROUP || 'REFERENCE') === 'REFERENCE');
-            nextFileSeq = Math.max(0, ...(snapshot.FILES || []).map(f => Number(f.FILE_SEQ))) + 1;
+            document.querySelector('#generate-ng-pdf').href =
+                jigNgTagPdfUrl(key);
+            storedFiles = (snapshot.FILES || []).filter(
+                (f) => (f.FILE_GROUP || 'REFERENCE') === 'REFERENCE',
+            );
+            nextFileSeq =
+                Math.max(
+                    0,
+                    ...(snapshot.FILES || []).map((f) => Number(f.FILE_SEQ)),
+                ) + 1;
             JIG.renderFiles();
             document.querySelector('#jig-fields').disabled =
                 pageMode !== 'edit';
-            document.querySelector('#checkpoint-fields').disabled = pageMode !== 'edit';
+            document.querySelector('#checkpoint-fields').disabled =
+                pageMode !== 'edit';
             recheck.hydrate(snapshot, key);
             form.elements.namedItem('pic_empno').disabled = pageMode !== 'edit';
             if (pageMode === 'view') {
@@ -681,8 +734,20 @@ $(document).ready(function () {
                 pageMode,
                 validate: JIG.validate,
                 hydrate: JIG.hydrate,
-                files: () => ({ stored: storedFiles, incoming: attachments, nextSeq: nextFileSeq }),
-                filesSaved: (saved) => { storedFiles = saved; attachments = []; nextFileSeq = Math.max(nextFileSeq, ...saved.map(f => Number(f.FILE_SEQ) + 1)); JIG.renderFiles(); },
+                files: () => ({
+                    stored: storedFiles,
+                    incoming: attachments,
+                    nextSeq: nextFileSeq,
+                }),
+                filesSaved: (saved) => {
+                    storedFiles = saved;
+                    attachments = [];
+                    nextFileSeq = Math.max(
+                        nextFileSeq,
+                        ...saved.map((f) => Number(f.FILE_SEQ) + 1),
+                    );
+                    JIG.renderFiles();
+                },
                 recheck,
                 ready: Promise.all([picReady, processReady, locationReady]),
             });
