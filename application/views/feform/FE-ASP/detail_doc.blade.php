@@ -151,6 +151,8 @@
         $hasPrevDoc = !empty($prevApprovedFile) && !empty($prevApprovedFile['header']);
         $prevHeader = $hasPrevDoc ? $prevApprovedFile['header'] : null;
         $prevFiles  = $hasPrevDoc ? ($prevApprovedFile['files'] ?? []) : [];
+        $prevRev    = $prevHeader['DOC_REVISION'] ?? '*';
+        $prevDocNo  = $prevHeader['DOC_NO'] ?? '';
 
         $docFormUrl = '';
         if ($prevHeader) {
@@ -159,26 +161,27 @@
         }
     @endphp
 
-    <!-- กล่อง Active Revision: จะแสดงผลตั้งแต่ตอนโหลดหน้าทันทีถ้า $hasPrevDoc เป็นจริง ไม่ต้องรอ JS -->
-    <div id="prev-revision-zone" class="mt-5 p-4 rounded-xl bg-blue-50/70 border border-blue-200 {{ $hasPrevDoc ? '' : 'hidden' }}">
-        <!-- ส่วนหัว: แสดงเลขที่เอกสาร และปุ่มเปิดเอกสารคำขอล่าสุด -->
+    <!-- ซ่อนตั้งแต่เริ่มต้นถ้าเป็นฉบับแรกเริ่ม ($hasPrevDoc เป็น false) -->
+    <div id="prev-revision-zone" class="mt-5 p-4 rounded-xl bg-blue-50/70 border border-blue-200 {{ $hasPrevDoc ? '' : 'hidden' }}" style="{{ $hasPrevDoc ? '' : 'display: none;' }}">
         <div class="flex items-center justify-between pb-2 mb-3 border-b border-blue-200/60">
-            <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                📑 ACTIVE REVISION (เอกสารเวอร์ชันล่าสุดที่ได้รับอนุมัติแล้ว: <span id="prev-doc-no" class="text-blue-700">{{ $prevHeader['DOC_NO'] ?? '' }}</span>)
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-600 text-white shadow-2xs">
+                    Rev.<span id="prev-rev-txt">{{ $prevRev }}</span>
+                </span>
+                <span class="text-xs font-bold text-blue-900">
+                    ACTIVE REVISION (Revision ที่มีการเปลี่ยนแปลง: <span id="prev-doc-no" class="text-blue-700 font-semibold">{{ $prevHeader['DOC_NO'] ?? '' }}</span>)
+                </span>
+            </div>
+
             <a id="btn-open-prev-doc" href="{{ $docFormUrl }}" target="_blank" rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 px-3 py-1 bg-white hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs {{ empty($docFormUrl) ? 'hidden' : '' }}">
+               class="inline-flex items-center gap-1 px-3 py-1 bg-white hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs">
                 📂 เปิดเอกสารคำขอล่าสุด
             </a>
         </div>
 
-        <!-- รายการไฟล์แนบ -->
         <div id="prev-file-list" class="space-y-2">
-            @if(!empty($prevFiles) && count($prevFiles) > 0)
+            @if(!empty($prevFiles))
                 @foreach ($prevFiles as $file)
-                    @php
-                        $baseDir = str_replace('\\', '/', $file['FILE_PATH'] ?? '');
-                    @endphp
                     <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-blue-100 shadow-xs">
                         <div class="flex items-center gap-2 truncate">
                             <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
@@ -186,17 +189,13 @@
                         </div>
                         <button type="button" 
                                 class="btn-open-prev-file bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-all shadow-xs cursor-pointer shrink-0"
-                                data-base-dir="{{ $baseDir }}" 
+                                data-base-dir="{{ str_replace('\\', '/', $file['FILE_PATH'] ?? '') }}" 
                                 data-stored-name="{{ $file['FILE_FNAME'] ?? '' }}" 
                                 data-original-name="{{ $file['FILE_ONAME'] ?? 'document.pdf' }}">
                             📄 Open / Download
                         </button>
                     </div>
                 @endforeach
-            @else
-                <div class="text-center py-2 text-xs text-slate-500 bg-white/60 rounded-lg border border-dashed border-blue-200 no-file-msg">
-                    (ไม่มีไฟล์แนบในเอกสารฉบับนี้)
-                </div>
             @endif
         </div>
     </div>
@@ -285,9 +284,20 @@
         <!-- แยกโซนแนบไฟล์ออกมาด้านนอก (แสดงผลทั้ง CHANGE และ NO CHANGE) -->
         <!-- ========================================================= -->
         <div id="attachment-zone" class="p-4 bg-white border border-slate-200 rounded-xl">
-            <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
-                Attached Files & New Revision PDF <span id="spanFileRequired" class="text-rose-500 {{ $isChangeDetail ? '' : 'hidden' }}">*</span>
-            </label>
+            <div class="flex items-center justify-between mb-2">
+                <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                    Attached Files & New Revision PDF <span id="spanFileRequired" class="text-rose-500 {{ $isChangeDetail ? '' : 'hidden' }}">*</span>
+                </label>
+
+                <!-- ปุ่มดาวน์โหลด Template แสดงเฉพาะกรณี CHANGE -->
+                <a href="{{ site_url('feform/FE-ASP/form/downloadAspectTemplate') }}" 
+                   id="btnDownloadAspectTemplate"
+                   class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-all {{ $isChangeDetail ? '' : 'hidden' }}">
+                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.5L19 7.5V19a2 2 0 01-2 2z"/></svg>
+                    📊 Download Template (Excel)
+                </a>
+            </div>
+            
             <input type="file" id="files" class="hidden" accept=".pdf,application/pdf">
             <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50/50 rounded-xl p-5 text-center cursor-pointer transition-all">
                 <p class="text-xs font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์ PDF มาวางที่นี่</p>

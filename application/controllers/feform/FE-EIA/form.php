@@ -19,6 +19,8 @@ class form extends MY_Controller{
     use formApi, flow, formmst;
     protected $title;
     protected $client;
+    
+    public $CodeForm = 'FE-EIA';
     function __construct(){
 		parent::__construct();
         $this->client = new Client(['verify' => false]);
@@ -29,15 +31,103 @@ class form extends MY_Controller{
         $this->load->model('form_model', 'frm');
         $this->load->model('feform/FE-EIA/eia_model', 'MainModel');
         
+
+        $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
+        
+        $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+            || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+        $this->http = "http" . ($isHttps ? "s" : "");
+
         $this->mimsBase = 'MIMS';
         $this->webflowBase = "DEFAULT";
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/FE/FE_EIA/";
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb'; // เช่น localhost, amecwebtest, amecweb , case !isset($_SERVER['HTTP_HOST'])  run job
         
     }
-    //https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=13&orgNo=051001&y=26&y2=2026&runNo=5&m=3&empno=13204&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1
-    //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
-    // http://localhost:8080/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+
+    
+    /**
+     * ดึงข้อมูล Form Master พื้นฐาน (NNO, VORGNO, CYEAR)
+     */
+    private function getFormMasterInfo()
+    {
+        $formMst = $this->getFormMasterByVaname($this->CodeForm);
+
+        return [
+            'no'    => $formMst['data']['NNO'] ?? $formMst[0]->NNO ?? '',
+            'orgNo' => $formMst['data']['VORGNO'] ?? $formMst[0]->VORGNO ?? '',
+            'y'     => $formMst['data']['CYEAR'] ?? $formMst[0]->CYEAR ?? '',
+        ];
+    }
+
+    /**
+     * Helper Function สำหรับประกอบ URL และทำการ Redirect ไปยัง main
+     * 
+     * @param array $extraParams พารามิเตอร์เพิ่มเติมที่ต้องการส่งไปกับ URL
+     * @param bool  $trailingSlash เลือกว่าปลายทางต้องการปิดท้ายด้วย / ก่อน ? หรือไม่ (default: true)
+     */
+    private function redirectToFeAspMain(array $extraParams = [], $trailingSlash = true)
+    {
+        $baseParams = $this->getFormMasterInfo();
+
+        // รวม parameters และกรองค่า null / ค่าว่างออก
+        $allParams = array_merge($baseParams, $extraParams);
+        $filteredParams = array_filter($allParams, function($val) {
+            return $val !== null && $val !== '';
+        });
+
+        $path = $trailingSlash ? 'main/' : 'main';
+        $queryString = http_build_query($filteredParams);
+        $redirectUrl = "{$this->http}://{$this->host}/form/feform/FE-EIA/form/{$path}?" . $queryString;
+
+        redirect($redirectUrl, 'location', 302);
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspcreate/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-EIA/form/feeiacreate/13204/
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main/?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    // === https://localhost:8082/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    public function feeiacreate($empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $defaultBp = 'http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp';
+
+        $this->redirectToFeAspMain([
+            'empno' => $empno,
+            'bp'    => $this->input->get('bp') ?: $defaultBp,
+        ], true); // true = main/?...
+    }
+
+    /**
+     * Endpoint: /form/feform/FE-ASP/form/feaspform/{empno}
+     */
+    
+    // == http://localhost:8082/form/feform/FE-EIA/form/feeiaform/2026/1/13204/
+    //=== https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=13&orgNo=051001&y=26&y2=2026&runNo=5&m=3&empno=13204&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1
+    //=== https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+   
+    public function feeiaform($y2= null, $runNo = null,$empno = null)
+    {
+        $empno = !empty($empno) ? $empno : $this->input->get('empno');
+        $runNo = !empty($runNo) ? $runNo : $this->input->get('runNo');
+        $y2 = !empty($y2) ? $y2 : $this->input->get('y2');
+        $m    = $this->input->get('m') ?? '3';
+        $bp   = $this->input->get('bp') ?? '/formtest/workflow/mineList.asp';
+        $menu = $this->input->get('menu') ?? '1';
+        $this->redirectToFeAspMain([
+            'y2'    => $y2 ,
+            'runNo' => $runNo,
+            'm'     => $m,
+            'empno' => $empno,
+            'bp'    => $bp,
+            'menu'  => $menu,
+        ], false); // false = main?...
+    }
+
     public function main(){
         
         /*
@@ -64,7 +154,7 @@ class form extends MY_Controller{
             $data['VORGNO'] = $_GET['orgNo'];
             $data['CYEAR']  = $_GET['y'];
         } else {
-            $form = $this->getFormMasterByVaname('FE-EIA');
+            $form = $this->getFormMasterByVaname($this->CodeForm);
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,
@@ -165,7 +255,7 @@ class form extends MY_Controller{
             $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1 and GROUPTYPE = 'REQ' ";
             $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
             
-            $form = $this->getFormMasterByVaname('FE-EIA');
+            $form = $this->getFormMasterByVaname($this->CodeForm);
             
             if (!empty($form) && (isset($form['status']) && $form['status'] === 'true')) {
                 
