@@ -671,6 +671,23 @@ function renderFileList(files) {
         $('#download-zone').removeClass('hidden');
 
         files.forEach(function (file) {
+            const fileName = file.FILE_ONAME || file.FILE_FNAME || '';
+            const isExcel = /\.(xlsx|xls|csv)$/i.test(fileName);
+
+            const fileBadge = isExcel
+                ? `<span class="inline-flex items-center gap-1 text-emerald-600 font-bold text-xs bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-300">
+                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8-1.7-2.6-1.7 2.6H11l2.4-3.5L11.1 9.8h1.4l1.6 2.5 1.6-2.5h1.4l-2.3 3.5 2.4 3.5h-1.4zM13 9V3.5L18.5 9H13z"/>
+                     </svg>
+                     XLS
+                   </span>`
+                : `<span class="inline-flex items-center gap-1 text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 9h-2v2h2v-2zm-2 4h-1v-4h1v4zm4-4h-1.5v4H15v-1.5h1.5v-1H15V12h1.5v-1zM13 9V3.5L18.5 9H13z"/>
+                     </svg>
+                     PDF
+                   </span>`;
+
             const formattedBaseDir = (file.FILE_PATH || '').replace(/\\/g, '/');
             let fullFilePath = (
                 (file.FILE_PATH || '').replace(/\\/g, '/') +
@@ -702,7 +719,7 @@ function renderFileList(files) {
             let itemHtml = `
                 <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors" id="uploaded-file-${file.FILE_ID}">
                     <div class="flex items-center gap-2.5 truncate">
-                        <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
+                        ${fileBadge}
                         <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
                     </div>
                     <div class="flex items-center gap-2">

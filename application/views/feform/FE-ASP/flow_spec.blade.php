@@ -6,7 +6,7 @@
         </label>
         <textarea id="RemarkTxt" name="RemarkTxt" rows="2" 
                   class="w-full text-sm p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none" 
-                  placeholder="พิมพ์ความเห็นหรือเหตุผลประกอบการพิจารณา...">{{ $REMARK ?? '' }}</textarea>
+                  placeholder="พิมพ์ความเห็นหรือเหตุผลประกอบการพิจารณา...">{{ '' }}</textarea>
     </div>
 
     <!-- ปุ่ม Action ควบคุมสายอนุมัติ -->

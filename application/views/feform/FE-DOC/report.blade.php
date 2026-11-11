@@ -57,14 +57,14 @@
             </div>
 
             <div class="flex gap-2">
+                <button type="button" id="resetReport" class="h-10 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold cursor-pointer">
+                    รีเซ็ต
+                </button>
                 <button type="submit" class="flex-1 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
                     🔍 ค้นหา
                 </button>
                 <button type="button" id="exportReport" class="h-10 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
                     📥 Excel
-                </button>
-                <button type="button" id="resetReport" class="h-10 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold cursor-pointer">
-                    รีเซ็ต
                 </button>
             </div>
         </form>

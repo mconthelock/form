@@ -59,6 +59,7 @@
                     </div>
                 </div>
 
+                @if(isset($EMPNO) && (string)$EMPNO === '13204')
                 <!-- Action Buttons บน Banner -->
                 <div class="flex items-center gap-2">
                     <!-- ปุ่มตรวจความครบถ้วนและสั่งสร้าง FE-DOC -->
@@ -77,6 +78,15 @@
                         Download Cover (Excel)
                     </button>
                 </div>
+                @endif
+                <!-- ปุ่มเปิดเอกสาร FE-DOC ประจำรอบปี (แสดงเมื่อถูกสร้างแล้ว) -->
+                <a href="#" id="btnOpenFeDocYearly" target="_blank"
+                class="hidden inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-all">
+                    <svg class="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span><span id="lblFeDocRev">Rev.*</span></span>
+                </a>
             </div>
         </div>
     </div>
@@ -141,12 +151,15 @@
                 </select>
             </div>
 
-            <div class="flex justify-end gap-2 pt-1">
-                <button type="button" id="btnResetFilter" class="px-3.5 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer">
+            <div class="flex justify-end gap-2 pt-1 lg:col-span-1">
+                <button type="button" id="btnResetFilter" class="px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer">
                     รีเซ็ต
                 </button>
-                <button type="button" id="btnSearch" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-2xs cursor-pointer flex items-center gap-1">
+                <button type="button" id="btnSearch" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-2xs cursor-pointer flex items-center gap-1">
                     🔍 ค้นหา
+                </button>
+                <button type="button" id="exportReport" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1 cursor-pointer">
+                    📥 Excel
                 </button>
             </div>
         </form>
