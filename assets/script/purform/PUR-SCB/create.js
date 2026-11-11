@@ -32,6 +32,12 @@ $(async function () {
         const numericValue = Number(String(value).replace(/,/g, '').trim());
         return Number.isFinite(numericValue) ? numericValue.toFixed(2) : normalizeTextValue(value);
     };
+    const normalizeGuaranteeValue = (value) => {
+        const normalized = normalizeTextValue(value).toLowerCase();
+        if (['1', 'yes', 'true'].includes(normalized)) return '1';
+        if (['0', 'no', 'false'].includes(normalized)) return '0';
+        return null;
+    };
 
     setLoadingState(true);
 
@@ -155,7 +161,7 @@ $(async function () {
         _HAS_IMPORTED_CHANGES: false,
         _HAS_QUOTATION_CHANGE: false,
     }));
-
+    // console.log(data);
     const table = await createTable({
         data: data,
         order : [[2, 'asc'],[0, 'asc']], // order by QUOTATION then SCRAP_ID
@@ -168,9 +174,9 @@ $(async function () {
                     const exportData = rows.filter(row => row._UPDATE_TYPE !== 'carry-over').map((row) => ({
                         ...row,
                         BOI: row.BOI === "1" ? "BOI" : "Non-BOI",
-                        B_GUARANTEE: row.B_GUARANTEE === "1" ? "Yes" : "No",
+                        IS_BG: row.IS_BG === "1" ? "Yes" : "No",
                     }));
-                    const winnerCols = [6, 7, 10]; // New Vendor, New Price
+                    const winnerCols = [6, 7, 10, 11]; // New Vendor, New Price, Effective Date, Guarantee
                     const workbook = await defaultExcel({
                         data: exportData,
                         sheetName: "Price Data",
@@ -185,7 +191,7 @@ $(async function () {
                             { key: "UNIT", header: "Unit" },
                             { key: "BOI", header: "BOI" },
                             { key: "_EFFECTIVE_DATE", header: "Effective Date", type: "date" },
-                            { key: "B_GUARANTEE", header: "Guarantee" },
+                            { key: "IS_BG", header: "Guarantee" },
                         ],
                         manual: true,
                         manualActions: (sheet) => {
@@ -221,7 +227,7 @@ $(async function () {
             { data: "UNIT" },
             { data: "BOI", render: function (data, type, row) { return data === '1' ? 'BOI' : 'Non-BOI'; } },
             { data: null, className: "bg-amber-100", render: function (data, type, row) { return row._EFFECTIVE_DATE || ''; } },
-            { data: "B_GUARANTEE", render: function (data, type, row) { return data === '1' ? 'Yes' : 'No'; } },
+            { data: "IS_BG", className: "bg-amber-100", render: function (data, type, row) { return data === '1' ? 'Yes' : 'No'; } },
             // {
             //     data: "_UPDATE_TYPE", className: "text-center", render: function (data) {
             //         return data === 'carry-over'
@@ -490,10 +496,16 @@ $(async function () {
         // Column layout (1-based, matches exported format):
         // 1=Scrap ID, 2=Scrap Name, 3=Quotation, 4=Old Vendor, 5=Price,
         // 6=New Vendor, 7=New Price, 8=Unit, 9=BOI, 10=Effective Date, 11=Guarantee
+        const invalidGuaranteeRows = [];
         sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
             if (rowNumber <= 1) return; // skip 2 header rows
             const scrapId = row.getCell(1).value;
             if (!scrapId) return;
+            const guarantee = normalizeGuaranteeValue(row.getCell(11).value);
+            if (guarantee === null) {
+                invalidGuaranteeRows.push(rowNumber);
+                return;
+            }
 
             const rawDate = row.getCell(10).value;
             let effectiveDate = '';
@@ -509,8 +521,18 @@ $(async function () {
                 _NEW_VENDOR: row.getCell(6).value ?? '',
                 _NEW_PRICE: normalizePriceValue(rawPrice),
                 _EFFECTIVE_DATE: normalizeTextValue(effectiveDate),
+                IS_BG: guarantee,
             };
         });
+
+        if (invalidGuaranteeRows.length > 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ค่า Guarantee ไม่ถูกต้อง',
+                text: `กรุณาระบุ Yes หรือ No ในแถว: ${invalidGuaranteeRows.join(', ')}`,
+            });
+            return;
+        }
 
         let updated = 0;
         let changed = 0;
@@ -523,6 +545,7 @@ $(async function () {
                 const nextNewVendor = normalizeTextValue(match._NEW_VENDOR);
                 const nextNewPrice = normalizePriceValue(match._NEW_PRICE);
                 const nextEffectiveDate = normalizeTextValue(match._EFFECTIVE_DATE);
+                const nextGuarantee = match.IS_BG;
 
                 const hasQuotationChange = normalizeTextValue(rowData.QUOTATION) !== nextQuotation;
 
@@ -531,6 +554,7 @@ $(async function () {
                     normalizeTextValue(rowData._NEW_VENDOR) !== nextNewVendor,
                     normalizePriceValue(rowData._NEW_PRICE) !== nextNewPrice,
                     normalizeTextValue(rowData._EFFECTIVE_DATE) !== nextEffectiveDate,
+                    normalizeGuaranteeValue(rowData.IS_BG) !== nextGuarantee,
                 ].some(Boolean);
                 rowData._HAS_QUOTATION_CHANGE = hasQuotationChange;
 
@@ -538,6 +562,7 @@ $(async function () {
                 rowData._NEW_VENDOR = nextNewVendor;
                 rowData._NEW_PRICE = nextNewPrice;
                 rowData._EFFECTIVE_DATE = nextEffectiveDate;
+                rowData.IS_BG = nextGuarantee;
                 this.data(rowData);
                 updated++;
                 if (rowData._HAS_IMPORTED_CHANGES) changed++;

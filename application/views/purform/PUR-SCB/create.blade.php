@@ -138,7 +138,7 @@
                                 <th rowspan="2" class="align-middle text-center">U/M</th>
                                 <th rowspan="2" class="align-middle text-center">BOI / Non-BOI</th>
                                 <th rowspan="2" class="align-middle text-center bg-primary/15 text-primary">Effective Date</th>
-                                <th rowspan="2" class="align-middle text-center">Bank Guarantee</th>
+                                <th rowspan="2" class="align-middle text-center bg-primary/15">Bank Guarantee</th>
                                 {{-- <th rowspan="2" class="align-middle text-center">Status</th> --}}
                             </tr>
                             <tr>

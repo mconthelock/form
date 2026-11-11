@@ -26,7 +26,7 @@ const TABLE_COLUMNS = [
     { data: "UNIT" },
     { data: "BOI", render: (data) => data === "1" ? "BOI" : "Non-BOI" },
     { data: null, className: "bg-amber-100", render: (_, __, row) => row.EFFECTIVE_DATE ?? "" },
-    { data: "B_GUARANTEE", render: (data) => data === "1" ? "Yes" : "No" },
+    { data: "IS_BG", render: (data) => data === "1" ? "Yes" : "No" },
 ];
 
 const EXCEL_COLUMNS = [
@@ -40,7 +40,7 @@ const EXCEL_COLUMNS = [
     { key: "UNIT", header: "Unit" },
     { key: "BOI", header: "BOI" },
     { key: "EFFECTIVE_DATE", header: "Effective Date", type: "date" },
-    { key: "B_GUARANTEE", header: "Guarantee" },
+    { key: "IS_BG", header: "Guarantee" },
 ];
 
 function formatApprovalDate(isoDate) {
@@ -231,7 +231,7 @@ $(async function () {
                     const exportData = rows.map(row => ({
                         ...row,
                         BOI: row.BOI === "1" ? "BOI" : "Non-BOI",
-                        B_GUARANTEE: row.B_GUARANTEE === "1" ? "Yes" : "No",
+                        IS_BG: row.IS_BG === "1" ? "Yes" : "No",
                     }));
 
                     const workbook = await defaultExcel({
