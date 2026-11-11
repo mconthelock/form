@@ -128,10 +128,20 @@ class Report extends MY_Controller {
             $fy = $this->input->get('fiscalYear') ?: date('Y');
             $summary = $this->MainModel->checkYearlyBatchCompleted($fy);
 
-            return $this->output->set_output(json_encode([
-                'status' => true,
-                'data'   => $summary
-            ]));
+            // ดึงเอกสาร FE-DOC ใบที่มี Max Revision ของรอบปีนี้
+            $feDoc = $this->MainModel->getExistingFeDocForYear($fy);
+            if (!empty($feDoc)) {
+                $summary['feDocInfo'] = [
+                    'docNo'       => $feDoc['DOC_NO'],
+                    'docRevision' => $feDoc['DOC_REVISION'] ?? '*',
+                    'status'      => $feDoc['STATUS'],
+                    'docUrl'      => base_url("feform/FE-DOC/form/main?no={$feDoc['NFRMNO']}&orgNo={$feDoc['VORGNO']}&y={$feDoc['CYEAR']}&y2={$feDoc['CYEAR2']}&runNo={$feDoc['NRUNNO']}&m=3")
+                ];
+            } else {
+                $summary['feDocInfo'] = null;
+            }
+
+            return $this->output->set_output(json_encode(['status' => true, 'data' => $summary]));
         } catch (\Throwable $e) {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
@@ -154,6 +164,9 @@ class Report extends MY_Controller {
         }
     }
     
+
+
+
     /**
      * AJAX Endpoint: เรียกจากหน้า Report (ปุ่มตรวจสอบรอบปี & สร้าง FE-DOC)
      */
@@ -177,7 +190,7 @@ class Report extends MY_Controller {
             // }
 
             // 2. เรียกใช้ฟังก์ชันแกนกลางตัวเดียวกัน
-            $resData = $this->createFeDocAndExcelInternal($fiscalYear, $currentEmp);
+            $resData = $this->createFeDocAndExcelInternal($fiscalYear, '');
 
             return $this->output->set_output(json_encode([
                 'status'    => true,
@@ -199,24 +212,32 @@ class Report extends MY_Controller {
     /**
      * ฟังก์ชันแกนกลางสร้าง FE-DOC และ Excel จาก Template (ใช้ร่วมกันทั้ง Report และ Form ตอน Approve)
      */
-    public function createFeDocAndExcelInternal($fiscalYear, $currentEmp) {
-        // 1. สร้างไฟล์สรุป Cover Excel ลงโฟลเดอร์ชั่วคราว
-        $excelInfo = $this->generateYearlySummaryExcel($fiscalYear);
+    public function createFeDocAndExcelInternal($fiscalYear, $currentEmp = '') {
+        // 1. คำนวณ Revision ถัดไป
+        $nextRevision = $this->MainModel->getNextYearlySummaryRevision();
+
+        // 2. ส่ง Revision เข้าไปหยอดที่ช่อง C4 ของ Excel
+        $excelInfo = $this->generateYearlySummaryExcel($fiscalYear, $nextRevision);
         if (!$excelInfo || empty($excelInfo['fileName'])) {
-            throw new Exception("ไม่สามารถสร้างไฟล์ Excel สรุปประจำปีได้");
+            throw new Exception("ไม่มีทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) รอบปี FY{$fiscalYear} หรือไม่สามารถสร้างไฟล์ Excel ได้");
         }
 
-        // 2. ดึง Master Form ของ FE-DOC
+        // 3. ดึง Master Form ของ FE-DOC
         $formmst = $this->getFormMasterByVaname('FE-DOC');
         $data['NFRMNO'] = $formmst['data']['NNO'] ?? $formmst[0]->NNO;
         $data['VORGNO'] = $formmst['data']['VORGNO'] ?? $formmst[0]->VORGNO;
         $data['CYEAR']  = $formmst['data']['CYEAR'] ?? $formmst[0]->CYEAR;
 
-        $docTypeCode    = 'AMEC-AS';
-        $docSubject     = "ทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) FY{$fiscalYear}";
-        $requesterEmpNo = !empty($currentEmp) ? $currentEmp : $this->MainModel->getEpAdminEmpNo();
+        $docTypeCode = 'AMEC-AS';
+        $docSubject  = "ทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) FY{$fiscalYear}";
 
-        // 3. รัน Webflow สร้าง Form FE-DOC
+        // ดึง EMPNO จาก FE_FORM_ADMIN (FE-ASP-COVERYEARLY) เป็น Requester ของฟอร์ม FE-DOC
+        $requesterEmpNo = $this->MainModel->getYearlyCoverAdminEmpNo();
+        if (empty($requesterEmpNo)) {
+            $requesterEmpNo = !empty($currentEmp) ? $currentEmp : '24010';
+        }
+
+        // 4. รัน Webflow สร้าง Form FE-DOC
         $flowData = [
             'NFRMNO'  => $data['NFRMNO'],
             'VORGNO'  => $data['VORGNO'],
@@ -237,7 +258,7 @@ class Report extends MY_Controller {
         $docNo       = "FE-DOC-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
         $docHeaderId = date('Ymd') . str_pad($nrunno, 4, '0', STR_PAD_LEFT);
 
-        // 4. กรอง Flow Step ตาม Logic ของ FE-DOC
+        // 5. กรอง Flow Step ตาม Logic ของ FE-DOC
         $activeSteps = $this->DocModel->getStepsByDocType($docTypeCode);
         $validExtDataList = [];
         foreach ($activeSteps as $st) {
@@ -305,7 +326,7 @@ class Report extends MY_Controller {
             }
         }
 
-        // 5. บันทึก Header เข้า SMARTMAT.FE_DOC_HEADER
+        // 6. บันทึก Header เข้า SMARTMAT.FE_DOC_HEADER
         $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
         $headerData = [
             'DOC_HEADER_ID' => $docHeaderId,
@@ -315,6 +336,7 @@ class Report extends MY_Controller {
             'CYEAR2'        => $cyear2,
             'NRUNNO'        => $nrunno,
             'DOC_NO'        => $docNo,
+            'DOC_REVISION'  => $nextRevision,
             'DOC_TYPE_CODE' => $docTypeCode,
             'DOC_SUBJECT'   => $docSubject,
             'REMARK'        => "Auto Generate from FE-ASP Report",
@@ -328,16 +350,17 @@ class Report extends MY_Controller {
         $docUrl = base_url("feform/FE-DOC/form/main?no={$data['NFRMNO']}&orgNo={$data['VORGNO']}&y={$data['CYEAR']}&y2={$cyear2}&runNo={$nrunno}&m=3");
 
         return [
-            'docNo'     => $docNo,
-            'docUrl'    => $docUrl,
-            'feDocKeys' => [
+            'docNo'       => $docNo,
+            'docRevision' => $nextRevision,
+            'docUrl'      => $docUrl,
+            'feDocKeys'   => [
                 'NFRMNO' => $data['NFRMNO'],
                 'VORGNO' => $data['VORGNO'],
                 'CYEAR'  => $data['CYEAR'],
                 'CYEAR2' => $cyear2,
                 'NRUNNO' => $nrunno
             ],
-            'excelFile' => [
+            'excelFile'   => [
                 'fileName' => $excelInfo['fileName'],
                 'fileUrl'  => $excelInfo['fileUrl']
             ]
@@ -356,7 +379,8 @@ class Report extends MY_Controller {
         //     return;
         // }
 
-        $res = $this->generateYearlySummaryExcel($fy);
+        $nextRevision = $this->MainModel->getNextYearlySummaryRevision();
+        $res = $this->generateYearlySummaryExcel($fy,$nextRevision);
         if ($res && !empty($res['fileUrl'])) {
             redirect($res['fileUrl']);
         } else {
@@ -364,7 +388,7 @@ class Report extends MY_Controller {
         }
     }
 
-    public function generateYearlySummaryExcel($year) {
+    public function generateYearlySummaryExcel($year, $nextRev = '*') {
         $records = $this->MainModel->getYearlyApprovedRecordsForSummary($year);
         if (empty($records)) return null;
 
@@ -380,10 +404,11 @@ class Report extends MY_Controller {
             $sheet = $spreadsheet->getActiveSheet();
         }
 
-        // 1. หัวกระดาษ: Issue Date ที่ C2 และ Update Date ที่ C3
+        // หัวกระดาษ: หยอด Issue Date, Update Date และ Revision ที่ช่อง C4
         $firstIssueDate = !empty($records[0]['ISSUE_DATE']) ? $records[0]['ISSUE_DATE'] : date('d-M-y');
-        $sheet->setCellValue('C2', $firstIssueDate); // Issue Date
-        $sheet->setCellValue('C3', date('d-M-y'));   // Update Date
+        $sheet->setCellValue('C2', $firstIssueDate);
+        $sheet->setCellValue('C3', date('d-M-y'));
+        $sheet->setCellValue('C4', $nextRev); // <-- ระบุ Revision ที่กำลังจะเกิดขึ้น
 
         // 2. หยอดข้อมูลตารางตั้งแต่แถวที่ 9 เป็นต้นไป
         $startRow = 9;
@@ -525,6 +550,138 @@ class Report extends MY_Controller {
                 'message' => $e->getMessage()
             ]));
         }
+    }
+
+    
+    /**
+     * Export รายการเอกสารตามเงื่อนไข Filter ออกมาเป็นไฟล์ Excel
+     */
+    /**
+     * Export รายการเอกสารตามเงื่อนไข Filter ออกมาเป็นไฟล์ Excel (พร้อม Header ระบุปี)
+     */
+    public function exportReportExcel() {
+        $fiscalYear = $this->input->get('fiscalYear') ?: date('Y');
+        $nextYear   = (int)$fiscalYear + 1;
+
+        $filter = [
+            'fiscalYear'   => $fiscalYear,
+            'docNo'        => $this->input->get('docNo'),
+            'divCode'      => $this->input->get('divCode'),
+            'depCode'      => $this->input->get('depCode'),
+            'reviewPeriod' => $this->input->get('reviewPeriod'),
+            'status'       => $this->input->get('status'),
+            'startDate'    => $this->input->get('startDate'),
+            'endDate'      => $this->input->get('endDate'),
+        ];
+
+        $dataList = $this->MainModel->getReportData($filter);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle("FY{$fiscalYear}");
+
+        // ==========================================
+        // 1. Title Header ด้านบน
+        // ==========================================
+        $sheet->setCellValue('A1', "รายงานเอกสาร Environmental Aspect & Risk (AMEC-AR Report)");
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        $sheet->setCellValue('A2', "Fiscal Year: FY{$fiscalYear} (1 เม.ย. {$fiscalYear} – 31 มี.ค. {$nextYear})    |    Export Date: " . date('d/m/Y H:i'));
+        $sheet->getStyle('A2')->getFont()->setSize(10)->setColor(new Color('FF475569'));
+
+        // ==========================================
+        // 2. Table Header (แถวที่ 4)
+        // ==========================================
+        $headers = [
+            'A4' => 'No.',
+            'B4' => 'Control no.',
+            'C4' => 'Doc No.',
+            'D4' => 'Revision',
+            'E4' => 'Division',
+            'F4' => 'Department',
+            'G4' => 'Section',
+            'H4' => 'Review period',
+            'I4' => 'Review details',
+            'J4' => 'Detail of change',
+            'K4' => 'Status',
+            'L4' => 'Reviewed date',
+            'M4' => 'Requester',
+        ];
+
+        foreach ($headers as $cell => $title) {
+            $sheet->setCellValue($cell, $title);
+        }
+
+        // จัด Style เฉพาะแถว Header (A4:M4) เท่านั้น
+        $sheet->getStyle('A4:M4')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['argb' => 'FF1E293B']],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical'   => Alignment::VERTICAL_CENTER
+            ],
+            'fill' => [
+                'fillType'   => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FFE2E8F0'] // สีเทาอ่อนสวยงามเฉพาะหัวตาราง
+            ]
+        ]);
+        $sheet->getRowDimension(4)->setRowHeight(25);
+
+        // ==========================================
+        // 3. หยอดแถวข้อมูล (เริ่มที่แถว 5)
+        // ==========================================
+        $rowIdx = 5;
+        foreach ($dataList as $i => $row) {
+            $sheet->setCellValue("A{$rowIdx}", $i + 1);
+            $sheet->setCellValue("B{$rowIdx}", $row['CONTROL_NO'] ?? '');
+            $sheet->setCellValue("C{$rowIdx}", $row['DOC_NO'] ?? '');
+            $sheet->setCellValue("D{$rowIdx}", $row['DOC_REVISION'] ?? '*');
+            $sheet->setCellValue("E{$rowIdx}", $row['DIVISION_NAME'] ?? $row['SDIVCODE'] ?? '');
+            $sheet->setCellValue("F{$rowIdx}", $row['DEPT_NAME'] ?? $row['SDEPCODE'] ?? '');
+            $sheet->setCellValue("G{$rowIdx}", (!empty($row['SSECCODE']) && $row['SSECCODE'] !== '00') ? ($row['SEC_NAME'] ?? $row['SSECCODE']) : '-');
+            $sheet->setCellValue("H{$rowIdx}", ($row['REVIEW_PERIOD'] === 'YEARLY') ? 'Yearly review' : 'Review on changing');
+            $sheet->setCellValue("I{$rowIdx}", ($row['REVIEW_DETAILS'] === 'NO_CHANGE') ? 'No change' : 'Change');
+            $sheet->setCellValue("J{$rowIdx}", $row['DETAIL_OF_CHANGE'] ?? '-');
+            $sheet->setCellValue("K{$rowIdx}", $row['STATUS'] ?? 'DRAFT');
+            $sheet->setCellValue("L{$rowIdx}", $row['REVIEWED_DATE'] ?? '');
+            $sheet->setCellValue("M{$rowIdx}", $row['REQ_NAME'] ?? $row['REQ_BY'] ?? '');
+
+            // จัดกึ่งกลางเฉพาะคอลัมน์โค้ดและวันที่
+            $sheet->getStyle("A{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("D{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("H{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("I{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("K{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle("L{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // ความสูงแถวข้อมูล
+            $sheet->getRowDimension($rowIdx)->setRowHeight(20);
+
+            $rowIdx++;
+        }
+
+        // ==========================================
+        // 4. จัดขนาดคอลัมน์ (แก้คอลัมน์ A ไม่ให้ยาวตาม Title)
+        // ==========================================
+        $sheet->getColumnDimension('A')->setWidth(7); // ฟิกขนาดคอลัมน์ No. ให้แคบพอดี
+
+        foreach (range('B', 'M') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // เส้นขอบตารางเฉพาะช่วง A4 ถึงแถวข้อมูลสุดท้าย
+        $endRow = ($rowIdx > 5) ? ($rowIdx - 1) : 4;
+        $sheet->getStyle("A4:M{$endRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+
+        // ส่งออกไฟล์
+        $fileName = "Environmental_Aspect_Report_FY{$fiscalYear}_" . date('Ymd_His') . ".xlsx";
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"{$fileName}\"");
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
 }

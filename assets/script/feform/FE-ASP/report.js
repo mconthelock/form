@@ -322,15 +322,35 @@ $(document).ready(function () {
                     $('#banner-status-desc').html(
                         '<span class="text-emerald-400 font-bold">✓ อนุมัติครบถ้วน 100% แล้ว</span> — สามารถดาวน์โหลดเอกสาร Cover ประจำปีได้',
                     );
-                    $('#btnDownloadCoverExcel').removeClass('hidden');
+                    // $('#btnDownloadCoverExcel').removeClass('hidden');
                 } else {
                     $('#banner-status-desc').text(
                         `ยังอยู่ระหว่างดำเนินการ (คงเหลืออีก ${d.remaining} ใบที่ยังไม่อนุมัติ)`,
                     );
-                    $('#btnDownloadCoverExcel').addClass('hidden');
+                    // $('#btnDownloadCoverExcel').addClass('hidden');
                 }
 
-                $('#btnDownloadCoverExcel').removeClass('hidden');
+                // ตรวจสอบเอกสาร FE-DOC ล่าสุดของรอบปีนั้น
+                if (d.feDocInfo) {
+                    $('#btnOpenFeDocYearly')
+                        .attr('href', d.feDocInfo.docUrl)
+                        .removeClass('hidden');
+                    $('#lblFeDocRev').text(
+                        `Rev.${d.feDocInfo.docRevision} - ${d.feDocInfo.docNo}`,
+                    );
+
+                    // ปล่อยให้ปุ่มคงสภาพเดิม ไม่ต้องเปลี่ยนข้อความและไม่ต้อง disable
+                    $('#btnCheckAndCreateFeDoc').removeClass(
+                        'hidden opacity-50 pointer-events-none',
+                    );
+                } else {
+                    $('#btnOpenFeDocYearly').addClass('hidden');
+                    $('#btnCheckAndCreateFeDoc')
+                        .removeClass('opacity-50 pointer-events-none')
+                        .html(
+                            '<i class="icofont-check-circled mr-1"></i> ตรวจสอบรอบปี & สร้าง FE-DOC',
+                        );
+                }
             }
         } catch (e) {
             console.error('Update banner error:', e);
@@ -340,7 +360,15 @@ $(document).ready(function () {
     // เมื่อเปลี่ยน Fiscal Year ใน Dropdown
     $('#filter_fiscalYear').on('change', function () {
         const fy = $(this).val();
+
+        // 1. ซ่อนและเคลียร์ปุ่มเดิมก่อนโหลดข้อมูลใหม่
+        $('#btnOpenFeDocYearly').addClass('hidden').attr('href', '#');
+        $('#lblFeDocRev').text('');
+
+        // 2. เรียกอัปเดต Banner ประจำปีนั้น
         updateFiscalYearBanner(fy);
+
+        // 3. โหลดข้อมูลตารางใหม่
         loadReportData();
     });
 
@@ -450,6 +478,25 @@ $(document).ready(function () {
         } finally {
             await showLoader({ show: false });
         }
+    });
+
+    // ปุ่ม Export Excel ข้อมูลในตารางรายงาน
+    $('#exportReport').on('click', function () {
+        const queryParams = $.param({
+            fiscalYear: $('#filter_fiscalYear').val() || '',
+            docNo: $('#filter_docNo').val() || '',
+            divCode: $('#filter_divCode').val() || '',
+            depCode: $('#filter_depCode').val() || '',
+            reviewPeriod: $('#filter_reviewPeriod').val() || '',
+            status: $('#filter_status').val() || '',
+            startDate: $('#filter_startDate').val() || '',
+            endDate: $('#filter_endDate').val() || '',
+        });
+
+        window.open(
+            `${host}feform/FE-ASP/report/exportReportExcel?${queryParams}`,
+            '_blank',
+        );
     });
 
     // 5. เริ่มต้นทำงาน (ตัด initDataTable() เปล่าๆ ออก ให้ดึงข้อมูลมาสร้าง DataTables ทันที)
