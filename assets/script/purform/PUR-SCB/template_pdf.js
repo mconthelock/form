@@ -39,7 +39,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
 
     const rows = data.map((row, i) => {
         const boi = row.BOI === "1" ? "BOI" : "Non-BOI";
-        const guarantee = row.B_GUARANTEE === "1" ? "YES" : "NO";
+        const guarantee = row.IS_BG === "1" ? "YES" : "NO";
         return `
             <tr>
                 <td class="center">${i + 1}</td>
@@ -67,7 +67,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
     } else {
         const vendorMap = {};
         data.forEach(row => {
-            if (!row.NEW_VENDOR || row.B_GUARANTEE !== "1") return;
+            if (!row.NEW_VENDOR || row.IS_BG !== "1") return;
             vendorMap[row.NEW_VENDOR] = (vendorMap[row.NEW_VENDOR] || 0) + 1;
         });
         const vendorKeys = Object.keys(vendorMap);
