@@ -14,7 +14,7 @@ import {
     showConfirm,
 } from '@amec/webasset/utils';
 import { host } from '../../utils';
-import { deleteDraftDoc } from './data';
+import { deleteDraftDoc, handleAutoFeDocUpload } from './data';
 import { stampFormAttachedFiles } from '../FE-DOC/pdfStamper';
 import {
     applyReviewPeriodRules,
@@ -293,8 +293,21 @@ export async function actionFlow(actionType, form) {
                 await executeFinalStamping(form);
             }
 
-            showMessage('ดำเนินการสำเร็จ', 'success');
-            setTimeout(() => redirectWebflow(), 1200);
+            // ตรวจสอบกรณีเอกสาร Yearly ครบ 100% แล้วมีการ Trigger สร้าง FE-DOC อัตโนมัติ
+            if (resActionFlow?.feDocTriggered && resActionFlow?.feDocData) {
+                await handleAutoFeDocUpload(
+                    resActionFlow.feDocData,
+                    form.EMPNO,
+                );
+                showMessage(
+                    `อนุมัติสำเร็จ และระบบได้สร้างเอกสารสรุปรอบปี FE-DOC (${resActionFlow.feDocData.docNo}) พร้อมแนบไฟล์ Excel เรียบร้อยแล้ว`,
+                    'success',
+                );
+            } else {
+                showMessage('ดำเนินการสำเร็จ', 'success');
+            }
+
+            setTimeout(() => redirectWebflow(), 1400);
         } else {
             showErrorMessage(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
         }

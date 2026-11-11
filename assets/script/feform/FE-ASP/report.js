@@ -6,6 +6,7 @@ import { host } from '../../utils';
 
 import 'datatables.net-dt';
 import 'datatables.net-dt/css/dataTables.dataTables.min.css';
+import { uploadDocFiles, handleAutoFeDocUpload } from './data';
 
 $(document).ready(function () {
     let dtInstance = null;
@@ -407,60 +408,45 @@ $(document).ready(function () {
     });
 
     // คลิกปุ่ม "ตรวจสอบรอบปี & สร้าง FE-DOC"
-    // ใน report.js เมื่อคลิกปุ่ม #btnCheckAndCreateFeDoc
+
     $('#btnCheckAndCreateFeDoc').on('click', async function () {
         const fy = $('#filter_fiscalYear').val() || '2026';
+        const empNoToSend = (
+            window.CURRENT_EMPNO ||
+            $('#EMPNOHid').val() ||
+            '13204'
+        ).trim();
 
         try {
             await showLoader({ show: true });
 
-            // 1. สร้าง Form FE-DOC และสร้าง Excel บน Temp
+            // 1. สร้าง Form FE-DOC และหยอดข้อมูลลง Excel Template
             const res = await $.post(
                 `${host}feform/FE-ASP/report/ajaxTriggerYearlyReviewAndFeDoc`,
                 {
                     fiscalYear: fy,
-                    empno: currentEmp,
+                    empno: empNoToSend,
                 },
                 'json',
             );
 
             if (res && res.status) {
-                // 2. ถ้ามีไฟล์ Excel ให้ดึง Blob แล้วยิงเข้า NestJS API กลาง
+                // 2. ถ้ามีไฟล์ Excel ให้เรียกใช้งานฟังก์ชันกลาง
                 if (res.excelFile && res.feDocKeys) {
-                    const response = await fetch(
-                        res.excelFile.fileUrl + '?t=' + Date.now(),
-                    );
-                    const blob = await response.blob();
-                    const fileObj = new File([blob], res.excelFile.fileName, {
-                        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    });
-
-                    let nestJsData = new FormData();
-                    nestJsData.append('NFRMNO', res.feDocKeys.NFRMNO);
-                    nestJsData.append('VORGNO', res.feDocKeys.VORGNO);
-                    nestJsData.append('CYEAR', res.feDocKeys.CYEAR);
-                    nestJsData.append('CYEAR2', res.feDocKeys.CYEAR2);
-                    nestJsData.append('NRUNNO', res.feDocKeys.NRUNNO);
-                    nestJsData.append('CREATEBY', currentEmp);
-                    nestJsData.append('FORM_TYPE', 'FE');
-                    nestJsData.append(
-                        'PATH',
-                        `\\\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\FE-DOC\\${res.docNo}`,
-                    );
-                    nestJsData.append('files', fileObj);
-
-                    await uploadDocFiles(nestJsData); // เรียก API กลาง
+                    await handleAutoFeDocUpload(res, empNoToSend);
                 }
 
                 alert(`${res.message}\nกด ตกลง เพื่อเปิดไปยังฟอร์ม FE-DOC`);
                 window.open(res.docUrl, '_blank');
                 updateFiscalYearBanner(fy);
             } else {
-                showErrorMessage(res.message || 'ไม่สามารถดำเนินการได้');
+                showErrorMessage(res?.message || 'ไม่สามารถดำเนินการได้');
             }
         } catch (err) {
             console.error('Trigger FeDoc Error:', err);
-            showErrorMessage('เกิดข้อผิดพลาดในการดำเนินการ');
+            showErrorMessage(
+                'เกิดข้อผิดพลาดในการดำเนินการ: ' + (err.message || ''),
+            );
         } finally {
             await showLoader({ show: false });
         }

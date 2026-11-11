@@ -155,7 +155,7 @@ class Report extends MY_Controller {
     }
     
     /**
-     * AJAX Endpoint: ตรวจสอบความครบถ้วนของ Yearly + สร้าง Excel + สร้างฟอร์ม FE-DOC อัตโนมัติ
+     * AJAX Endpoint: เรียกจากหน้า Report (ปุ่มตรวจสอบรอบปี & สร้าง FE-DOC)
      */
     public function ajaxTriggerYearlyReviewAndFeDoc() {
         $this->output->set_content_type('application/json');
@@ -163,7 +163,7 @@ class Report extends MY_Controller {
             $fiscalYear = trim((string)($this->input->post('fiscalYear') ?: date('Y')));
             $currentEmp = trim((string)($this->input->post('empno') ?: '13204'));
 
-            // // 1. ตรวจสอบว่าเคยสร้างฟอร์ม FE-DOC ไปแล้วหรือไม่
+            // // 1. ตรวจสอบว่าเคยสร้างเอกสาร FE-DOC ประจำรอบปีนี้ไปแล้วหรือไม่
             // $existingDoc = $this->MainModel->getExistingFeDocForYear($fiscalYear);
             // if (!empty($existingDoc)) {
             //     $docUrl = base_url("feform/FE-DOC/form/main?no={$existingDoc['NFRMNO']}&orgNo={$existingDoc['VORGNO']}&y={$existingDoc['CYEAR']}&y2={$existingDoc['CYEAR2']}&runNo={$existingDoc['NRUNNO']}&m=3");
@@ -176,150 +176,16 @@ class Report extends MY_Controller {
             //     ]));
             // }
 
-            // 2. สร้างไฟล์สรุป Cover Excel ลงในโฟลเดอร์ชั่วคราว
-            $excelInfo = $this->generateYearlySummaryExcel($fiscalYear);
-            if (!$excelInfo || empty($excelInfo['fileName'])) {
-                throw new Exception("ไม่สามารถสร้างไฟล์ Excel สรุปประจำปีได้");
-            }
+            // 2. เรียกใช้ฟังก์ชันแกนกลางตัวเดียวกัน
+            $resData = $this->createFeDocAndExcelInternal($fiscalYear, $currentEmp);
 
-            // 3. ดึง Master Form ของ FE-DOC
-            $formmst = $this->getFormMasterByVaname('FE-DOC');
-            
-            $data['NFRMNO'] = $formmst['data']['NNO'] ?? $formmst[0]->NNO;
-            $data['VORGNO'] = $formmst['data']['VORGNO'] ?? $formmst[0]->VORGNO;
-            $data['CYEAR']  = $formmst['data']['CYEAR'] ?? $formmst[0]->CYEAR;
-
-            $docTypeCode    = 'AMEC-AS'; // รหัสประเภทเอกสารของ FE-DOC สำหรับงาน FE-ASP
-            $docSubject     = "ทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) FY{$fiscalYear}";
-            $requesterEmpNo = !empty($currentEmp) ? $currentEmp : $this->MainModel->getEpAdminEmpNo();
-
-            // 4. รัน Webflow สร้าง Form FE-DOC เข้า Flow
-            $flowData = [
-                'NFRMNO'  => $data['NFRMNO'],
-                'VORGNO'  => $data['VORGNO'],
-                'CYEAR'   => $data['CYEAR'],
-                'REQBY'   => $requesterEmpNo,
-                'INPUTBY' => $requesterEmpNo,
-                'REMARK'  => "ระบบสร้างเอกสารทบทวนรอบปี FY{$fiscalYear} อัตโนมัติ พร้อมไฟล์สรุป Excel เพื่อส่งผู้รับผิดชอบดำเนินการ",
-            ];
-
-            $rsf = $this->createForm($flowData);
-            if (!$rsf || empty($rsf['status'])) {
-                throw new Exception("สร้างเอกสาร Webflow FE-DOC ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
-            }
-
-            $cyear2      = $rsf['data']['CYEAR2'];
-            $nrunno      = $rsf['data']['NRUNNO'];
-            $docNo       = "FE-DOC-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
-            $docHeaderId = date('Ymd') . str_pad($nrunno, 4, '0', STR_PAD_LEFT);
-
-            // 5. กรอง Flow Step ตาม Logic ของ FE-DOC
-            $activeSteps = $this->DocModel->getStepsByDocType($docTypeCode);
-            $validExtDataList = [];
-            foreach ($activeSteps as $st) {
-                if (!empty($st->CEXTDATA) && trim($st->CEXTDATA) !== '00') {
-                    $validExtDataList[] = trim($st->CEXTDATA);
-                }
-            }
-
-            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-            $dbWebflow->where('NFRMNO', $data['NFRMNO'])
-                      ->where('VORGNO', $data['VORGNO'])
-                      ->where('CYEAR', $data['CYEAR'])
-                      ->where('CYEAR2', $cyear2)
-                      ->where('NRUNNO', $nrunno)
-                      ->where("CEXTDATA != '00'");
-
-            if (!empty($validExtDataList)) {
-                $dbWebflow->where_not_in('CEXTDATA', $validExtDataList);
-            }
-            $dbWebflow->delete('FLOW');
-
-            // จัดเรียง Next Step
-            $approverRows = $dbWebflow->select('CSTEPNO, CEXTDATA')
-                ->where([
-                    'NFRMNO' => $data['NFRMNO'],
-                    'VORGNO' => $data['VORGNO'],
-                    'CYEAR'  => $data['CYEAR'],
-                    'CYEAR2' => $cyear2,
-                    'NRUNNO' => $nrunno,
-                    'CSTART' => 0,
-                ])
-                ->where("CEXTDATA IS NOT NULL")
-                ->order_by('CEXTDATA', 'ASC')
-                ->get('FLOW')
-                ->result();
-
-            if (!empty($approverRows)) {
-                $totalApprovers      = count($approverRows);
-                $firstApproverStepNo = trim($approverRows[0]->CSTEPNO);
-
-                $dbWebflow->where([
-                    'NFRMNO' => $data['NFRMNO'],
-                    'VORGNO' => $data['VORGNO'],
-                    'CYEAR'  => $data['CYEAR'],
-                    'CYEAR2' => $cyear2,
-                    'NRUNNO' => $nrunno,
-                    'CSTART' => 1,
-                ])->update('FLOW', ['CSTEPNEXTNO' => $firstApproverStepNo]);
-
-                foreach ($approverRows as $index => $row) {
-                    $newStepSt  = ($index === 0) ? '3' : (($index === 1) ? '2' : '1');
-                    $nextStepNo = ($index + 1 < $totalApprovers) ? trim($approverRows[$index + 1]->CSTEPNO) : '00';
-
-                    $dbWebflow->where([
-                        'NFRMNO'  => $data['NFRMNO'],
-                        'VORGNO'  => $data['VORGNO'],
-                        'CYEAR'   => $data['CYEAR'],
-                        'CYEAR2'  => $cyear2,
-                        'NRUNNO'  => $nrunno,
-                        'CSTEPNO' => trim($row->CSTEPNO),
-                    ])->update('FLOW', [
-                        'CSTEPST'     => $newStepSt,
-                        'CSTEPNEXTNO' => $nextStepNo
-                    ]);
-                }
-            }
-
-            // 6. บันทึก Header เข้า SMARTMAT.FE_DOC_HEADER
-            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-            $headerData = [
-                'DOC_HEADER_ID' => $docHeaderId,
-                'NFRMNO'        => $data['NFRMNO'],
-                'VORGNO'        => $data['VORGNO'],
-                'CYEAR'         => $data['CYEAR'],
-                'CYEAR2'        => $cyear2,
-                'NRUNNO'        => $nrunno,
-                'DOC_NO'        => $docNo,
-                'DOC_TYPE_CODE' => $docTypeCode,
-                'DOC_SUBJECT'   => $docSubject,
-                'REMARK'        => "Auto Generate from FE-ASP Report",
-                'STATUS'        => 'PROCESS',
-                'CREATE_BY'     => $requesterEmpNo,
-            ];
-            $dbSmmt->set('CREATE_DATE', 'SYSDATE', FALSE);
-            $dbSmmt->set('UPDATE_DATE', 'SYSDATE', FALSE);
-            $dbSmmt->insert('SMARTMAT.FE_DOC_HEADER', $headerData);
-
-            $docUrl = base_url("feform/FE-DOC/form/main?no={$data['NFRMNO']}&orgNo={$data['VORGNO']}&y={$data['CYEAR']}&y2={$cyear2}&runNo={$nrunno}&m=3");
-
-            // 7. คืนค่า JSON พร้อม feDocKeys และ excelFile เพื่อให้ JS อัปโหลดผ่าน NestJS API
             return $this->output->set_output(json_encode([
                 'status'    => true,
-                'message'   => "สร้างเอกสาร FE-DOC ({$docNo}) เรียบร้อยแล้ว กำลังอัปโหลดไฟล์สรุปผ่านระบบ...",
-                'docNo'     => $docNo,
-                'docUrl'    => $docUrl,
-                'feDocKeys' => [
-                    'NFRMNO' => $data['NFRMNO'],
-                    'VORGNO' => $data['VORGNO'],
-                    'CYEAR'  => $data['CYEAR'],
-                    'CYEAR2' => $cyear2,
-                    'NRUNNO' => $nrunno
-                ],
-                'excelFile' => [
-                    'fileName' => $excelInfo['fileName'],
-                    'fileUrl'  => $excelInfo['fileUrl']
-                ]
+                'message'   => "สร้างเอกสาร FE-DOC ({$resData['docNo']}) เรียบร้อยแล้ว กำลังอัปโหลดไฟล์สรุปผ่านระบบ...",
+                'docNo'     => $resData['docNo'],
+                'docUrl'    => $resData['docUrl'],
+                'feDocKeys' => $resData['feDocKeys'],
+                'excelFile' => $resData['excelFile']
             ]));
 
         } catch (\Throwable $e) {
@@ -329,6 +195,155 @@ class Report extends MY_Controller {
             ]));
         }
     }
+
+    /**
+     * ฟังก์ชันแกนกลางสร้าง FE-DOC และ Excel จาก Template (ใช้ร่วมกันทั้ง Report และ Form ตอน Approve)
+     */
+    public function createFeDocAndExcelInternal($fiscalYear, $currentEmp) {
+        // 1. สร้างไฟล์สรุป Cover Excel ลงโฟลเดอร์ชั่วคราว
+        $excelInfo = $this->generateYearlySummaryExcel($fiscalYear);
+        if (!$excelInfo || empty($excelInfo['fileName'])) {
+            throw new Exception("ไม่สามารถสร้างไฟล์ Excel สรุปประจำปีได้");
+        }
+
+        // 2. ดึง Master Form ของ FE-DOC
+        $formmst = $this->getFormMasterByVaname('FE-DOC');
+        $data['NFRMNO'] = $formmst['data']['NNO'] ?? $formmst[0]->NNO;
+        $data['VORGNO'] = $formmst['data']['VORGNO'] ?? $formmst[0]->VORGNO;
+        $data['CYEAR']  = $formmst['data']['CYEAR'] ?? $formmst[0]->CYEAR;
+
+        $docTypeCode    = 'AMEC-AS';
+        $docSubject     = "ทบทวนประเมินสิ่งแวดล้อมประจำปี (Environmental Aspect Yearly Review) FY{$fiscalYear}";
+        $requesterEmpNo = !empty($currentEmp) ? $currentEmp : $this->MainModel->getEpAdminEmpNo();
+
+        // 3. รัน Webflow สร้าง Form FE-DOC
+        $flowData = [
+            'NFRMNO'  => $data['NFRMNO'],
+            'VORGNO'  => $data['VORGNO'],
+            'CYEAR'   => $data['CYEAR'],
+            'REQBY'   => $requesterEmpNo,
+            'INPUTBY' => $requesterEmpNo,
+            'DRAFT'   => '1',
+            'REMARK'  => "ระบบสร้างเอกสารทบทวนรอบปี FY{$fiscalYear} อัตโนมัติ พร้อมไฟล์สรุป Excel เพื่อส่งผู้รับผิดชอบดำเนินการ",
+        ];
+
+        $rsf = $this->createForm($flowData);
+        if (!$rsf || empty($rsf['status'])) {
+            throw new Exception("สร้างเอกสาร Webflow FE-DOC ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
+        }
+
+        $cyear2      = $rsf['data']['CYEAR2'];
+        $nrunno      = $rsf['data']['NRUNNO'];
+        $docNo       = "FE-DOC-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+        $docHeaderId = date('Ymd') . str_pad($nrunno, 4, '0', STR_PAD_LEFT);
+
+        // 4. กรอง Flow Step ตาม Logic ของ FE-DOC
+        $activeSteps = $this->DocModel->getStepsByDocType($docTypeCode);
+        $validExtDataList = [];
+        foreach ($activeSteps as $st) {
+            if (!empty($st->CEXTDATA) && trim($st->CEXTDATA) !== '00') {
+                $validExtDataList[] = trim($st->CEXTDATA);
+            }
+        }
+
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+        $dbWebflow->where('NFRMNO', $data['NFRMNO'])
+                  ->where('VORGNO', $data['VORGNO'])
+                  ->where('CYEAR', $data['CYEAR'])
+                  ->where('CYEAR2', $cyear2)
+                  ->where('NRUNNO', $nrunno)
+                  ->where("CEXTDATA != '00'");
+
+        if (!empty($validExtDataList)) {
+            $dbWebflow->where_not_in('CEXTDATA', $validExtDataList);
+        }
+        $dbWebflow->delete('FLOW');
+
+        // จัดเรียง Next Step
+        $approverRows = $dbWebflow->select('CSTEPNO, CEXTDATA')
+            ->where([
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'CSTART' => 0,
+            ])
+            ->where("CEXTDATA IS NOT NULL")
+            ->order_by('CEXTDATA', 'ASC')
+            ->get('FLOW')
+            ->result();
+
+        if (!empty($approverRows)) {
+            $totalApprovers      = count($approverRows);
+            $firstApproverStepNo = trim($approverRows[0]->CSTEPNO);
+
+            $dbWebflow->where([
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'CSTART' => 1,
+            ])->update('FLOW', ['CSTEPNEXTNO' => $firstApproverStepNo]);
+
+            foreach ($approverRows as $index => $row) {
+                $newStepSt  = ($index === 0) ? '3' : (($index === 1) ? '2' : '1');
+                $nextStepNo = ($index + 1 < $totalApprovers) ? trim($approverRows[$index + 1]->CSTEPNO) : '00';
+
+                $dbWebflow->where([
+                    'NFRMNO'  => $data['NFRMNO'],
+                    'VORGNO'  => $data['VORGNO'],
+                    'CYEAR'   => $data['CYEAR'],
+                    'CYEAR2'  => $cyear2,
+                    'NRUNNO'  => $nrunno,
+                    'CSTEPNO' => trim($row->CSTEPNO),
+                ])->update('FLOW', [
+                    'CSTEPST'     => $newStepSt,
+                    'CSTEPNEXTNO' => $nextStepNo
+                ]);
+            }
+        }
+
+        // 5. บันทึก Header เข้า SMARTMAT.FE_DOC_HEADER
+        $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+        $headerData = [
+            'DOC_HEADER_ID' => $docHeaderId,
+            'NFRMNO'        => $data['NFRMNO'],
+            'VORGNO'        => $data['VORGNO'],
+            'CYEAR'         => $data['CYEAR'],
+            'CYEAR2'        => $cyear2,
+            'NRUNNO'        => $nrunno,
+            'DOC_NO'        => $docNo,
+            'DOC_TYPE_CODE' => $docTypeCode,
+            'DOC_SUBJECT'   => $docSubject,
+            'REMARK'        => "Auto Generate from FE-ASP Report",
+            'STATUS'        => 'PROCESS',
+            'CREATE_BY'     => $requesterEmpNo,
+        ];
+        $dbSmmt->set('CREATE_DATE', 'SYSDATE', FALSE);
+        $dbSmmt->set('UPDATE_DATE', 'SYSDATE', FALSE);
+        $dbSmmt->insert('SMARTMAT.FE_DOC_HEADER', $headerData);
+
+        $docUrl = base_url("feform/FE-DOC/form/main?no={$data['NFRMNO']}&orgNo={$data['VORGNO']}&y={$data['CYEAR']}&y2={$cyear2}&runNo={$nrunno}&m=3");
+
+        return [
+            'docNo'     => $docNo,
+            'docUrl'    => $docUrl,
+            'feDocKeys' => [
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno
+            ],
+            'excelFile' => [
+                'fileName' => $excelInfo['fileName'],
+                'fileUrl'  => $excelInfo['fileUrl']
+            ]
+        ];
+    }
+
     /**
      * สั่งดาวน์โหลด Cover Excel ประจำปีผ่าน Report Controller
      */
@@ -353,54 +368,115 @@ class Report extends MY_Controller {
         $records = $this->MainModel->getYearlyApprovedRecordsForSummary($year);
         if (empty($records)) return null;
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle("FY{$year}");
-
-        $sheet->setCellValue('A1', 'List of Review Environmental aspect evaluation and Environmental Risk record');
-        $sheet->setCellValue('A2', 'Date: ' . date('d-M-Y'));
-
-        $headers = [
-            'A4' => 'No.',
-            'B4' => 'Div.',
-            'C4' => 'Sec. or Dept.',
-            'D4' => 'Control no.',
-            'E4' => 'Review period',
-            'F4' => 'Review detail',
-            'G4' => 'Revision',
-            'H4' => 'Reviewed Date',
-            'I4' => 'In charge',
-            'J4' => 'Main Envi. impact',
-            'K4' => 'Rule/Procedure for control'
-        ];
-
-        foreach ($headers as $cell => $val) {
-            $sheet->setCellValue($cell, $val);
-            $sheet->getStyle($cell)->getFont()->setBold(true);
-            $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $templatePath = APPPATH . 'controllers/feform/FE-ASP/AMEC-ARYearlyTemplate.xlsx';
+        if (!file_exists($templatePath)) {
+            throw new Exception("ไม่พบไฟล์แม่แบบ: {$templatePath}");
         }
 
-        $rowIdx = 5;
-        foreach ($records as $i => $r) {
-            $periodTxt = ($r['REVIEW_PERIOD'] === 'YEARLY') ? 'Yearly Review By term' : 'Changing review';
-            $detailTxt = ($r['REVIEW_DETAILS'] === 'NO_CHANGE') ? 'No change' : 'Change, ' . ($r['DETAIL_OF_CHANGE'] ?? '');
+        $spreadsheet = IOFactory::load($templatePath);
+        
+        $sheet = $spreadsheet->getSheetByName('Template');
+        if (!$sheet) {
+            $sheet = $spreadsheet->getActiveSheet();
+        }
 
+        // 1. หัวกระดาษ: Issue Date ที่ C2 และ Update Date ที่ C3
+        $firstIssueDate = !empty($records[0]['ISSUE_DATE']) ? $records[0]['ISSUE_DATE'] : date('d-M-y');
+        $sheet->setCellValue('C2', $firstIssueDate); // Issue Date
+        $sheet->setCellValue('C3', date('d-M-y'));   // Update Date
+
+        // 2. หยอดข้อมูลตารางตั้งแต่แถวที่ 9 เป็นต้นไป
+        $startRow = 9;
+        $rowIdx   = $startRow;
+
+        foreach ($records as $i => $r) {
+            $isYearly  = ($r['REVIEW_PERIOD'] === 'YEARLY');
+            $detailTxt = ($r['REVIEW_DETAILS'] === 'NO_CHANGE') ? 'No change' : ('Change, ' . ($r['DETAIL_OF_CHANGE'] ?? ''));
+            
+            // แสดงชื่อแผนก/ส่วนงาน แทนรหัส Code
+            $secOrDeptName = (!empty($r['SSECCODE']) && $r['SSECCODE'] !== '00') 
+                ? ($r['SEC_NAME'] ?: $r['SSECCODE']) 
+                : ($r['DEPT_NAME'] ?: $r['SDEPCODE']);
+
+            $divName = $r['DIVISION_NAME'] ?: ($r['SDIVCODE'] ?? '');
+            $reqName = $r['REQ_NAME'] ?? $r['REQ_BY'];
+
+            // Col A: No.
             $sheet->setCellValue("A{$rowIdx}", $i + 1);
-            $sheet->setCellValue("B{$rowIdx}", $r['SDIVCODE'] ?? '');
-            $sheet->setCellValue("C{$rowIdx}", (!empty($r['SSECCODE']) && $r['SSECCODE'] !== '00') ? $r['SSECCODE'] : $r['SDEPCODE']);
+
+            // Col B: Div. (ชื่อฝ่าย เช่น MAR Div., D/D DIV.)
+            $sheet->setCellValue("B{$rowIdx}", $divName);
+
+            // Col C: Sec. or Dept. (ชื่อแผนก/ส่วนงาน เช่น R&D DEPT., WHI SEC.)
+            $sheet->setCellValue("C{$rowIdx}", $secOrDeptName);
+
+            // Col D: Control no.
             $sheet->setCellValue("D{$rowIdx}", $r['CONTROL_NO'] ?? '');
-            $sheet->setCellValue("E{$rowIdx}", $periodTxt);
-            $sheet->setCellValue("F{$rowIdx}", $detailTxt);
-            $sheet->setCellValue("G{$rowIdx}", $r['DOC_REVISION'] ?? '*');
-            $sheet->setCellValue("H{$rowIdx}", $r['REVIEWED_DATE'] ?? '');
-            $sheet->setCellValue("I{$rowIdx}", $r['REQ_NAME'] ?? $r['REQ_BY']);
-            $sheet->setCellValue("J{$rowIdx}", '');
-            $sheet->setCellValue("K{$rowIdx}", '');
+
+            // Col F & G: Review period
+            if ($isYearly) {
+                $sheet->setCellValue("F{$rowIdx}", 'Changing review');
+                $sheet->setCellValue("G{$rowIdx}", '✓ Yearly Review By term');
+            } else {
+                $sheet->setCellValue("F{$rowIdx}", '✓ Changing review');
+                $sheet->setCellValue("G{$rowIdx}", 'Yearly Review By term');
+            }
+
+            // Col I: Review detail
+            $sheet->setCellValue("I{$rowIdx}", $detailTxt);
+
+            // Col J: Revision
+            $sheet->setCellValue("J{$rowIdx}", $r['DOC_REVISION'] ?? '*');
+            $sheet->getStyle("J{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Col K: Reviewed Date
+            $sheet->setCellValue("K{$rowIdx}", $r['REVIEWED_DATE'] ?? '');
+            $sheet->getStyle("K{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Col L: In charge
+            $sheet->setCellValue("L{$rowIdx}", $reqName ?? '');
+
+            // Col M: Main Envi. impact (ตั้งค่า Wrap Text และขยายความกว้างให้อัตโนมัติ)
+            $sheet->setCellValue("M{$rowIdx}", "Waste control,\nPaper using");
+            $sheet->getStyle("M{$rowIdx}")->getAlignment()->setWrapText(true);
+
+            // Col N - U (Manufacturing): Default เป็น "-"
+            foreach (range('N', 'U') as $col) {
+                $sheet->setCellValue("{$col}{$rowIdx}", '-');
+                $sheet->getStyle("{$col}{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // Col V: Office working -> จุด "●"
+            $sheet->setCellValue("V{$rowIdx}", '●');
+            $sheet->getStyle("V{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // Col W - Y (Indirect): Default เป็น "-"
+            foreach (['W', 'X', 'Y'] as $col) {
+                $sheet->setCellValue("{$col}{$rowIdx}", '-');
+                $sheet->getStyle("{$col}{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // Col Z - AG (Significant items): Default เป็น "-"
+            $sigCols = ['Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG'];
+            foreach ($sigCols as $col) {
+                $sheet->setCellValue("{$col}{$rowIdx}", '-');
+                $sheet->getStyle("{$col}{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+
+            // Col AH: Rule /Procedure for control
+            $sheet->setCellValue("AH{$rowIdx}", '-');
+            $sheet->getStyle("AH{$rowIdx}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            // 3. กำหนดความสูงของแถวให้แสดงผลข้อความ 2 บรรทัดใน Col M ได้เต็ม ไม่ถูกบีบแคบ
+            $sheet->getRowDimension($rowIdx)->setRowHeight(30);
+
             $rowIdx++;
         }
 
-        $sheet->getStyle("A4:K" . ($rowIdx - 1))->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        // ปรับความกว้างคอลัมน์ M ให้พอดีกับข้อความ Waste control, Paper using
+        $sheet->getColumnDimension('M')->setWidth(18);
 
+        // 4. บันทึกไฟล์
         $tempDir = FCPATH . 'assets/upload/fe_asp/';
         if (!is_dir($tempDir)) {
             @mkdir($tempDir, 0777, true);
@@ -408,6 +484,7 @@ class Report extends MY_Controller {
 
         $fileName = "List_of_Review_Environmental_Aspect_FY{$year}.xlsx";
         $savePath = $tempDir . $fileName;
+
         $writer = new Xlsx($spreadsheet);
         $writer->save($savePath);
 
@@ -415,6 +492,39 @@ class Report extends MY_Controller {
             'fileName' => $fileName,
             'fileUrl'  => base_url('assets/upload/fe_asp/' . $fileName)
         ];
+    }
+
+    /**
+     * ลบไฟล์ Excel ชั่วคราวออกจาก assets/upload/fe_asp/ หลังจากส่งเข้า API กลางสำเร็จ
+     */
+    public function deleteTempExcelFile() {
+        $this->output->set_content_type('application/json');
+        try {
+            $fileName = trim((string)$this->input->post('fileName'));
+            
+            // ป้องกัน Path Traversal
+            $fileName = basename($fileName);
+
+            if (empty($fileName)) {
+                throw new Exception('ไม่พบชื่อไฟล์ที่ต้องการลบ');
+            }
+
+            $fullPath = FCPATH . 'assets/upload/fe_asp/' . $fileName;
+
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                @unlink($fullPath);
+            }
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'ลบไฟล์ชั่วคราวเรียบร้อยแล้ว'
+            ]));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
     }
 
 }

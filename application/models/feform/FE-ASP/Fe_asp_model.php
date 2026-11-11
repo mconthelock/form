@@ -1036,14 +1036,26 @@ class Fe_asp_model extends my_model
                     H.SDIVCODE,
                     H.SDEPCODE,
                     H.SSECCODE,
+                    -- ดึงชื่อ Division, Department, Section
+                    NVL(V.SDIV, H.SDIVCODE) AS DIVISION_NAME,
+                    NVL(D.SDEPT, H.SDEPCODE) AS DEPT_NAME,
+                    NVL(S.SSEC, H.SSECCODE) AS SEC_NAME,
                     H.REVIEW_PERIOD,
                     H.REVIEW_DETAILS,
                     H.DETAIL_OF_CHANGE,
                     TO_CHAR(H.CREATE_DATE, 'DD-Mon-YY') AS REVIEWED_DATE,
+                    TO_CHAR(H.CREATE_DATE, 'DD-Mon-YY') AS ISSUE_DATE,
                     H.REQ_BY,
                     U.SNAME AS REQ_NAME
                 FROM SMARTMAT.FE_ASP_HEADER H
-                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                LEFT JOIN AMEC.AMECUSERALL U 
+                    ON TRIM(H.REQ_BY) = TRIM(U.SEMPNO)
+                LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMEC.AMECUSERALL WHERE SDIVCODE IS NOT NULL) V 
+                    ON TRIM(H.SDIVCODE) = TRIM(V.SDIVCODE)
+                LEFT JOIN AMEC.PDEPARTMENT D 
+                    ON TRIM(H.SDEPCODE) = TRIM(D.SDEPCODE)
+                LEFT JOIN AMEC.PSECTION S 
+                    ON TRIM(H.SSECCODE) = TRIM(S.SSECCODE)
                 WHERE H.CREATE_DATE >= TO_DATE(?, 'YYYY-MM-DD')
                   AND H.CREATE_DATE < TO_DATE(?, 'YYYY-MM-DD') + 1
                   AND H.REVIEW_PERIOD = 'YEARLY'

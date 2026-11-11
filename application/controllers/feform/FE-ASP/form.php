@@ -647,7 +647,12 @@ class Form extends MY_Controller {
 
                         $batchStatus = $this->MainModel->checkYearlyBatchCompleted($fiscalYear);
                         if ($batchStatus['isCompleted']) {
-                            $this->generateYearlySummaryExcel($fiscalYear);
+                            $existingDoc = $this->MainModel->getExistingFeDocForYear($fiscalYear);
+                            if (empty($existingDoc)) {
+                                require_once APPPATH . 'controllers/feform/FE-ASP/Report.php';
+                                $reportCtrl = new Report();
+                                $feDocResult = $reportCtrl->createFeDocAndExcelInternal($fiscalYear, $empno);
+                            }
                         }
                     }
                 }
@@ -1075,7 +1080,31 @@ class Form extends MY_Controller {
     }
 
 
-    public function generateYearlySummaryExcel($year) {
+    /**
+     * ดาวน์โหลดไฟล์ Template สำหรับ Environmental Aspect & Risk
+     */
+    public function downloadAspectTemplate() {
+        $fileName = 'Environmental_aspect_evaluation_and_Risk.xls';
+        $filePath = APPPATH . 'controllers/feform/FE-ASP/' . $fileName;
+
+        if (!file_exists($filePath)) {
+            // สำรองกรณีเป็นนามสกุล .xlsx
+            $filePathXlsx = APPPATH . 'controllers/feform/FE-ASP/Environmental_aspect_evaluation_and_Risk.xlsx';
+            if (file_exists($filePathXlsx)) {
+                $filePath = $filePathXlsx;
+                $fileName = 'Environmental_aspect_evaluation_and_Risk.xlsx';
+            } else {
+                show_error("ไม่พบไฟล์ Template: {$fileName}", 404);
+                return;
+            }
+        }
+
+        $this->load->helper('download');
+        force_download($fileName, file_get_contents($filePath));
+    }
+
+    
+    public function generateYearlySummaryExcelNotuse($year) {
         $records = $this->MainModel->getYearlyApprovedRecordsForSummary($year);
         if (empty($records)) return null;
 
@@ -1143,26 +1172,4 @@ class Form extends MY_Controller {
         ];
     }
 
-    /**
-     * ดาวน์โหลดไฟล์ Template สำหรับ Environmental Aspect & Risk
-     */
-    public function downloadAspectTemplate() {
-        $fileName = 'Environmental_aspect_evaluation_and_Risk.xls';
-        $filePath = APPPATH . 'controllers/feform/FE-ASP/' . $fileName;
-
-        if (!file_exists($filePath)) {
-            // สำรองกรณีเป็นนามสกุล .xlsx
-            $filePathXlsx = APPPATH . 'controllers/feform/FE-ASP/Environmental_aspect_evaluation_and_Risk.xlsx';
-            if (file_exists($filePathXlsx)) {
-                $filePath = $filePathXlsx;
-                $fileName = 'Environmental_aspect_evaluation_and_Risk.xlsx';
-            } else {
-                show_error("ไม่พบไฟล์ Template: {$fileName}", 404);
-                return;
-            }
-        }
-
-        $this->load->helper('download');
-        force_download($fileName, file_get_contents($filePath));
-    }
 }

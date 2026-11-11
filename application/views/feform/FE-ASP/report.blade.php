@@ -59,6 +59,7 @@
                     </div>
                 </div>
 
+                @if(isset($EMPNO) && (string)$EMPNO === '13204')
                 <!-- Action Buttons บน Banner -->
                 <div class="flex items-center gap-2">
                     <!-- ปุ่มตรวจความครบถ้วนและสั่งสร้าง FE-DOC -->
@@ -77,6 +78,7 @@
                         Download Cover (Excel)
                     </button>
                 </div>
+                @endif
             </div>
         </div>
     </div>
