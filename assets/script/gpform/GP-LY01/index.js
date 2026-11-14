@@ -1,6 +1,6 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { intVal, showDigits, showMessage } from '@amec/webasset/utils';
-import { setDatePicker } from '@amec/webasset/flatpickr';
+import { formHeader } from '../../service';
 import { getItems, getForm, requestSaveTax, getCurrent } from './data';
 
 $(document).ready(async function () {
@@ -16,8 +16,9 @@ $(document).ready(async function () {
             CYEAR2: $('#CYEAR2').val(),
             NRUNNO: $('#NRUNNO').val(),
         });
-
         if (!data) throw new Error('Data not found!');
+
+        await formHeader(data[0].form);
 
         const currentData = await getCurrent(data[0].EMPCOD);
         await renderFormTable(itemsData);
