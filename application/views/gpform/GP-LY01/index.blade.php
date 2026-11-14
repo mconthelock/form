@@ -24,7 +24,7 @@
                     </tr>
                 </tbody>
                 <tfoot>
-                    <tr class="bg-gray-300">
+                    <tr class="bg-gray-200 text-lg">
                         <th colspan="2" class="text-center total font-bold">รวมรายการลดหย่อน</th>
                         <th class="text-end total font-mono font-bold" id="table-tax-total">0.00</th>
                         <td class="text-strat total font-mono font-bold text-blue-700" id="input-tax-total">0.00</td>
