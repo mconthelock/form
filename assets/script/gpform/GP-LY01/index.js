@@ -363,8 +363,6 @@ function calParent() {
 }
 
 function validateThaiID(id) {
-    console.log(id);
-
     if (id == '') return false;
     id = id.replace(/\D/g, '');
     if (id.length !== 13) return false;
