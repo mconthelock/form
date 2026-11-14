@@ -5,7 +5,7 @@
         @include('layouts/form-header')
         @include('layouts/form-header-info')
 
-        <section class="border border-gray-300">
+        <section class="border border-gray-300 ">
             <table class="table table-bordered tax-table w-full">
                 <thead>
                     <tr class="bg-blue-900 text-white">
@@ -32,6 +32,9 @@
                 </tfoot>
             </table>
         </section>
+
+        @include('layouts/form-action')
+        @include('layouts/form-flow')
     </main>
 @endsection
 

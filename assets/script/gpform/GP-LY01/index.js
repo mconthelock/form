@@ -1,14 +1,16 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { intVal, showDigits, showMessage } from '@amec/webasset/utils';
-import { formHeader, formHeaderInfo } from '../../service';
+import {
+    formHeader,
+    formHeaderInfo,
+    formFlowApproval,
+    formApprovalBtn,
+} from '../../service';
 import { getItems, getForm, requestSaveTax, getCurrent } from './data';
 
 $(document).ready(async function () {
-    // const userId = '12069';
-    // const userId = $('#loginuserid').val() || '';
     try {
         const itemsData = await getItems();
-
         const data = await getForm({
             NFRMNO: $('#NFRMNO').val(),
             VORGNO: $('#VORGNO').val(),
@@ -20,6 +22,8 @@ $(document).ready(async function () {
 
         await formHeader(data[0].form);
         await formHeaderInfo(data[0].form);
+        await formFlowApproval(data[0].form);
+        await formApprovalBtn();
 
         const currentData = await getCurrent(data[0].EMPCOD);
         await renderFormTable(itemsData);

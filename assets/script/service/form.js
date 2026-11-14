@@ -128,9 +128,6 @@ export async function formHeaderInfo(data) {
         $(el).find('.org').html(`${emp.SDIV}/${emp.SDEPT}/${emp.SSEC}`);
         $(el).find('.email').html(emp.SRECMAIL);
     };
-
-    console.log(data);
-
     const master = data.formmst;
     const no = `${master.VANAME}${data.CYEAR2.slice(2)}-${('000000' + data.NRUNNO).slice(-6)}`;
     const date = `${dayjs(data.DREQDATE).format('YYYY-MM-DD')} ${data.CREQTIME}`;
@@ -142,4 +139,145 @@ export async function formHeaderInfo(data) {
     const inputter = await displayEmpInfo(data.VINPUTER);
     setEmpInfo(req, '#form-header-req');
     setEmpInfo(inputter, '#form-header-inputted');
+}
+
+export async function formFlowApproval(data) {
+    const approvingStep = async (data) => {
+        const currentStepNo = data.find((c) => c.CSTEPST == '3');
+        const curName = await displayEmpInfo(currentStepNo.VAPVNO);
+
+        const lastStepNo = data.find(
+            (n) => n.CSTEPNEXTNO == currentStepNo.CSTEPNO,
+        );
+
+        return `<div class="px-4 py-2 bg-amber-200 border border-amber-300 text-amber-700 flex flex-col gap-3">
+            <div class="text-xs flex flex-row items-center gap-0.5">
+                <i class="fi fi-ts-arrow-circle-right text-xl me-2"></i>
+                <span class="font-bold">Current Step:</span>
+                <span class="bg-amber-700 rounded-full text-white px-2 py-1">${currentStepNo.steps.VNAME}</span>
+                <span>${curName.SNAME} / ${curName.STNAME} (${curName.SEMPNO})</span>
+            </div>
+            <div class="text-xs flex flex-row items-center gap-0.5 text-green-700">
+                <i class="fi fi-rs-check-circle text-xl me-2"></i>
+                <span class="font-bold">Last Approved:</span>
+                <span>${dayjs(lastStepNo.DAPVDATE).format('YYYY-MM-DD')} ${lastStepNo.CAPVTIME} <span class="bg-red-500 px-2 py-1 rounded-full text-white">(${dayjs().diff(dayjs(lastStepNo.DAPVDATE), 'day')} day ago)</span></span>
+            </div>
+        </div>`;
+    };
+
+    const approvedStep = (data) => {
+        return `<div class="px-4 py-2 bg-green-200 border border-green-300 text-green-700 flex gap-3">
+            <div class="text-xs flex flex-row items-center gap-0.5 text-green-700">
+                <i class="fi fi-rs-check-circle text-xl me-2"></i>
+                <span class="font-bold">Approval Completed:</span>
+                <span>2026-01-01 15:00:23 (3 ago)</span>
+            </div>
+        </div>`;
+    };
+
+    const rejectStep = (data) => {
+        return `<div class="px-4 py-2 bg-red-200 border border-red-300 text-red-700 flex gap-3">
+            <div class="text-xs flex flex-row items-center gap-0.5 text-red-700">
+                <i class="fi fi-rs-check-circle text-xl me-2"></i>
+                <span class="font-bold">Approval Completed:</span>
+                <span>2026-01-01 15:00:23 (3 ago)</span>
+            </div>
+        </div>`;
+    };
+
+    const currentStep = async (data) => {
+        let el = '';
+        switch (data.CST) {
+            case '1':
+                el = await approvingStep(data.flow);
+                break;
+            case '2':
+                el = await approvedStep(data.flow);
+                break;
+            case '3':
+                el = await rejectStep(data.flow);
+                break;
+            default:
+                el = '';
+                break;
+        }
+        $('#form-flow-status').html(el);
+    };
+
+    const setStepInfo = (data) => {
+        let steps = '';
+        for (let dt of data) {
+            steps += `<li class="step ${parseInt(dt.CSTEPST) > 3 ? 'step-primary' : ''}"><span class="font-mono text-sm">${dt.VAPVNO}</span></li>`;
+        }
+        $('#form-flow-steps').html(steps);
+    };
+
+    const setStepTable = async (data) => {
+        const badgeStatus = (dt) => {
+            if (dt.CSTEPNO == '--')
+                return `<span class="bg-gray-200 border border-gray-300 text-gray-700 px-2 py-0.5 text-nowrap">Submitted</span>`;
+            const st = parseInt(dt.CSTEPST);
+            if (st == 3)
+                return `<span class="bg-amber-200 border border-amber-300 text-amber-700 px-2 py-0.5 text-nowrap">Pending Approval</span>`;
+
+            if (st == 5)
+                return `<span class="bg-green-600 border border-green-700 text-white px-2 py-0.5 text-nowrap">Approved</span>`;
+
+            if (st > 5)
+                return `<span class="bg-red-600 border border-red-700 text-white px-2 py-0.5 text-nowrap">Rejected</span>`;
+
+            return ``;
+        };
+
+        const badgeLine = (dt, no) => {
+            if (parseInt(dt.CSTEPST) == 3)
+                return `<div class="w-8 h-8 bg-red-600 text-white font-bold text-md flex items-center justify-center">${no}</div>`;
+
+            return `<div class="w-8 h-8 bg-gray-300 text-gray-600 font-bold text-md flex items-center justify-center">${no}</div>`;
+        };
+
+        let table = '';
+        let no = 1;
+        for (let dt of data) {
+            const date =
+                dt.DAPVDATE == null
+                    ? ''
+                    : `${dayjs(dt.DAPVDATE).format('YYYY-MM-DD')} ${dt.CAPVTIME}`;
+            const user = await displayEmpInfo(dt.VAPVNO);
+            table += `<tr>
+                <td>${badgeLine(dt, no)}</td>
+                <td>${dt.steps.VNAME}</td>
+                <td>${dt.VAPVNO}</td>
+                <td>${user.SNAME} / ${user.STNAME}</td>
+                <td>${user.SPOSITION}</td>
+                <td>${date}</td>
+                <td>${badgeStatus(dt)}</td>
+                <td>${dt.VREMARK == null ? '' : dt.VREMARK}</td>
+            </tr>`;
+            no++;
+        }
+        $('#form-flow-table tbody').html(table);
+    };
+
+    currentStep(data);
+    setStepInfo(data.flow);
+    setStepTable(data.flow);
+}
+
+export async function formApprovalBtn(opt) {
+    const opts = {
+        approve: true,
+        reject: true,
+        return: false,
+        delete: false,
+        print: false,
+        ...opt,
+    };
+    $('#form-button-container button').each(function () {
+        const id = $(this).data('attr');
+        if (opts[id]) {
+            $(this).removeClass('hidden');
+        }
+    });
+    $('#form-button-container-loading').addClass('hidden');
 }
