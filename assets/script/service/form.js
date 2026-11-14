@@ -1,5 +1,6 @@
 import { displayEmpInfo } from '@amec/webasset/indexDB';
 import { showMessage } from '@amec/webasset/utils';
+import dayjs from 'dayjs';
 
 export async function setRequester() {
     const inputuser = $('#EMPNO').val();
@@ -112,4 +113,33 @@ export async function formHeader(data) {
     $('#form-header-status-th').html(stat.th);
 }
 
-export async function formHeaderInfo(data) {}
+export async function formHeaderInfo(data) {
+    const setEmpInfo = (emp, el) => {
+        $(el)
+            .find('.img')
+            .html(
+                `<img src="${emp.image}" alt="Profile Image" class="h-full w-full">`,
+            );
+
+        $(el)
+            .find('.name')
+            .html(`${emp.SNAME} / ${emp.STNAME} (${emp.SEMPNO})`);
+        $(el).find('.pos').html(emp.SPOSNAME);
+        $(el).find('.org').html(`${emp.SDIV}/${emp.SDEPT}/${emp.SSEC}`);
+        $(el).find('.email').html(emp.SRECMAIL);
+    };
+
+    console.log(data);
+
+    const master = data.formmst;
+    const no = `${master.VANAME}${data.CYEAR2.slice(2)}-${('000000' + data.NRUNNO).slice(-6)}`;
+    const date = `${dayjs(data.DREQDATE).format('YYYY-MM-DD')} ${data.CREQTIME}`;
+    $('#form-header-no').html(no);
+    $('#form-header-date').html(date);
+    $('#form-header-remark').html(data.VREMARK);
+
+    const req = await displayEmpInfo(data.VREQNO);
+    const inputter = await displayEmpInfo(data.VINPUTER);
+    setEmpInfo(req, '#form-header-req');
+    setEmpInfo(inputter, '#form-header-inputted');
+}
