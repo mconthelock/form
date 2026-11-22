@@ -74,8 +74,67 @@
         border-color: var(--color-gray-200, currentColor);
     }
 
+    html {
+        scrollbar-gutter: stable;
+    }
+
     body {
         @apply font-sans;
+    }
+
+    /* Prevent #navbar from reserving 4rem (64px) top space on desktop before initNavbar() runs */
+    @media (width >= 48rem) {
+        #navbar {
+            display: none !important;
+        }
+    }
+
+    /* Pre-reserve sidebar dimensions before JS hydration to eliminate CLS jump */
+    #sidebar {
+        background-color: var(--color-primary);
+        min-height: 100vh;
+    }
+
+    @media (width >= 48rem) {
+        #sidebar {
+            width: 16rem;
+        }
+    }
+
+    @media (width >= 64rem) {
+        #sidebar {
+            width: 20rem;
+        }
+    }
+
+    html.sidebar-collapsed #sidebar:not(.collapsed-hover) {
+        width: 75px;
+    }
+
+    /* Top navigation progress bar (instant feedback on link click) */
+    #nav-progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 2px;
+        width: 0;
+        background-color: var(--color-primary);
+        z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+            width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 180ms ease;
+    }
+
+    #nav-progress-bar.is-loading {
+        width: 78%;
+        opacity: 1;
+    }
+
+    #nav-progress-bar.is-done {
+        width: 100%;
+        opacity: 0;
     }
 
     .input {
@@ -316,4 +375,57 @@
 /* Icon font */
 i.fi {
     @apply flex items-center justify-center;
+}
+
+/* Scoped theme for controllers/webform pages only */
+@import './webform.css';
+
+/* ==========================================================================
+   Cross-Document View Transitions (Smooth MPA Navigation)
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+
+    .drawer-side {
+        view-transition-name: app-sidebar;
+    }
+
+    #main-contents {
+        view-transition-name: app-main;
+    }
+
+    ::view-transition-old(app-sidebar),
+    ::view-transition-new(app-sidebar) {
+        animation: none;
+    }
+
+    ::view-transition-old(app-main) {
+        animation: 140ms ease-out both amec-page-out;
+    }
+
+    ::view-transition-new(app-main) {
+        animation: 200ms cubic-bezier(0.22, 1, 0.36, 1) both amec-page-in;
+    }
+}
+
+@keyframes amec-page-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes amec-page-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

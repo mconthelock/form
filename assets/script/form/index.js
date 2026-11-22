@@ -170,10 +170,26 @@ async function createFormTable(data) {
     const pageId = $('body').attr('menutitle');
     const pagestatus = $('#status').val();
     const status = [
-        { id: 0, name: 'Draft', badge: 'badge badge-outline badge-neutral' },
-        { id: 1, name: 'Running', badge: 'badge badge-outline badge-info' },
-        { id: 2, name: 'Approved', badge: 'badge badge-success' },
-        { id: 3, name: 'Rejected', badge: 'badge badge-outline badge-error' },
+        {
+            id: 0,
+            name: 'Draft',
+            badge: 'badge badge-xs badge-outline badge-neutral font-mono font-bold uppercase',
+        },
+        {
+            id: 1,
+            name: 'Running',
+            badge: 'badge badge-xs badge-outline badge-info font-mono font-bold uppercase',
+        },
+        {
+            id: 2,
+            name: 'Approved',
+            badge: 'badge badge-xs badge-success font-mono font-bold uppercase',
+        },
+        {
+            id: 3,
+            name: 'Rejected',
+            badge: 'badge badge-xs badge-outline badge-error font-mono font-bold uppercase',
+        },
     ];
 
     const lastApproved = (flow) => {
@@ -191,6 +207,21 @@ async function createFormTable(data) {
     };
 
     const opt = { ...tableOption };
+    opt.dom =
+        '<"overflow-x-auto"t><"dt-footer-bar px-4 py-3 bg-base-100 border-t border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs wf-mute"<"table-info"i><"table-page"p>>';
+    opt.pagingType = 'simple_numbers';
+    opt.language = {
+        ...tableOption.language,
+        info: 'Showing <strong class="text-primary">_START_ - _END_</strong> of <strong class="text-primary">_TOTAL_</strong> records',
+        infoEmpty:
+            'Showing <strong class="text-primary">0 - 0</strong> of <strong class="text-primary">0</strong> records',
+        paginate: {
+            previous: '«',
+            next: '»',
+            first: '«',
+            last: '»',
+        },
+    };
     opt.data = data;
     opt.searching = true;
     opt.pageLength = 10;
@@ -215,7 +246,7 @@ async function createFormTable(data) {
                         : `https://webflow.mitsubishielevatorasia.co.th${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(document.URL)}`;
-                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}">${formno}</a>`;
+                    return `<a class="font-mono font-bold text-primary hover:underline link-self" href="#" data-title="${pageId}" data-url="${url}">${formno}</a>`;
                     //return `<a class="text-primary" href="${url}">${formno}</a>`;
                 }
                 return formno;
@@ -360,13 +391,13 @@ async function createFormTable(data) {
 
                     let badge = '';
                     if (diffDays >= 30)
-                        badge = `<div class="badge badge-error">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-xs badge-error font-mono font-bold">${diffDays} days</div>`;
                     else if (diffDays >= 15)
-                        badge = `<div class="badge badge-warning">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-xs badge-warning font-mono font-bold">${diffDays} days</div>`;
                     else if (diffDays >= 7)
-                        badge = `<div class="badge badge-info">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-xs badge-info font-mono font-bold">${diffDays} days</div>`;
                     else
-                        badge = `<div class="badge badge-outline badge-primary">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-xs badge-outline badge-primary font-mono font-bold">${diffDays} days</div>`;
                     return `<div class="text-center">${badge}</div>`;
                 }
 
@@ -388,6 +419,35 @@ async function createFormTable(data) {
         }
 
         await fillNextApproverInfo(row, data.form.flow, nextId);
+    };
+
+    opt.drawCallback = function (settings) {
+        const pagination = $(this).closest('.dt-container').find('.dt-paging');
+        const nav = pagination.find('nav');
+        nav.addClass('join');
+        nav.find('.dt-paging-button').each(function () {
+            const btn = $(this);
+            const isCurrent = btn.hasClass('current');
+            const isDisabled = btn.hasClass('disabled');
+
+            btn.removeClass(
+                'btn-primary btn-outline border-base-300 btn-disabled',
+            ).addClass('join-item btn btn-xs');
+
+            if (isCurrent) {
+                btn.addClass('btn-primary');
+            } else {
+                btn.addClass('btn-outline border-base-300');
+            }
+
+            if (isDisabled && !isCurrent) {
+                btn.addClass('btn-disabled');
+            }
+        });
+
+        nav.find('.ellipsis').addClass(
+            'join-item btn btn-xs btn-outline border-base-300 btn-disabled',
+        );
     };
 
     opt.initComplete = function (settings, json) {

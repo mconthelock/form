@@ -35,6 +35,9 @@
 	const savedTheme = localStorage.getItem("theme") || "light"; // ค่าเริ่มต้นเป็น 'light'
 	document.documentElement.setAttribute("data-theme", savedTheme);
 	document.documentElement.setAttribute("class", savedTheme);
+	if (localStorage.getItem("pin") === "false") {
+		document.documentElement.classList.add("sidebar-collapsed");
+	}
 	localStorage.setItem("theme", savedTheme);
 	document.addEventListener("DOMContentLoaded", function () {
 		if (savedTheme === "dark") {

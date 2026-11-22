@@ -17,26 +17,35 @@
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
     <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
+    <script>
+        if (localStorage.getItem('pin') === null) {
+            localStorage.setItem('pin', 'true');
+        }
+        if (localStorage.getItem('pin') === 'false') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    </script>
     @yield('styles')
 </head>
 
 <body menuTitle="{{ $title ?? '' }}" class="flex flex-col min-h-screen">
+    <div id="nav-progress-bar" aria-hidden="true"></div>
     <input type="hidden" id="appid" value="{{ $_ENV['APP_ID'] }}">
     <input type="checkbox" id="loading-box" class="modal-toggle" checked />
     <!-- Navbar -->
-    <div id="navbar" class=""></div>
-    <div class="drawer lg:drawer-open">
+    <div id="navbar" class="md:hidden!"></div>
+    <div class="drawer md:drawer-open">
         <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
         <div class="drawer-content flex flex-col items-center justify-start w-full h-full">
             <!-- Page content here -->
-            <div class="flex-1 flex flex-col w-full px-4 md:px-8 lg:mt-5">
+            <div class="flex-1 flex flex-col w-full px-4 md:px-8 lg:mt-5" id="main-contents">
                 @yield('contents')
             </div>
             <!-- Footer -->
             @include('layouts.footer')
         </div>
         <div class="drawer-side z-51!">
-            <div id="sidebar"></div>
+            <div id="sidebar" class="size-xl h-full"></div>
         </div>
     </div>
 

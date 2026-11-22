@@ -1,36 +1,59 @@
 @extends('layouts/template')
 
 @section('contents')
-    <div class="space-y-3 mb-8">
-        <div>
-            <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
-                Create Electronic Form
-            </h1>
-            <div class="mt-2 max-w-3xl text-sm text-slate-500" id="page-description">
-                Select a department to create a new electronic form.
+    <main class="webform-theme w-full flex flex-col gap-4 pb-12">
+        {{-- Section 1: Standard Page Header Component --}}
+        <div
+            class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 bg-base-100 p-5 md:p-6 shadow-sm border border-base-300 border-t-4 border-t-primary">
+            <div class="space-y-1.5 max-w-3xl">
+                <div class="flex items-center gap-2">
+                    <span class="badge badge-primary font-mono text-[11px] uppercase tracking-wider font-bold">
+                        AMEC-WEBFLOW
+                    </span>
+                    <span class="badge badge-xs badge-outline font-mono font-bold uppercase">
+                        NEW REQUEST
+                    </span>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary line-clamp-1" id="page-title">
+                    Create Electronic Form
+                </h1>
+                <p class="text-sm wf-mute leading-relaxed" id="page-description">
+                    Select a department to create a new electronic form.
+                </p>
             </div>
         </div>
-    </div>
 
-    <div class="flex flex-col w-full px-4 mt-5 mb-20">
-        <div class="flex">
-            <div class="flex-1">
-                <div class="flex flex-wrap justify-start gap-5">
+        {{-- Section 2: Department Grid & Recent Created Forms --}}
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+            <section class="xl:col-span-9 bg-base-100 border border-base-300 shadow-sm">
+                <div class="px-5 py-3 border-b border-base-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-primary">
+                            Departments
+                        </h2>
+                    </div>
+                    <span class="badge badge-xs badge-outline font-mono font-bold">
+                        {{ count($department) }} DEPTS
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5">
                     @foreach ($department as $dept)
-                        <a class="bg-white border border-slate-300 hover:shadow-lg hover:bg-primary/20 rounded-lg transition-shadow"
+                        <a class="block bg-base-100 border border-base-300 border-t-2 border-t-transparent hover:border-primary hover:border-t-primary hover:bg-primary/[0.03] transition-all group"
                             href="{{ base_url() . 'webform/form/createdetail/' . $dept['id'] }}">@include('form/create/deptcard', $dept)</a>
                     @endforeach
                 </div>
-            </div>
-            <div class="flex-none w-96">
-                <div class="bg-primary/10 rounded-lg p-5" id="recent-created-forms">
+            </section>
+
+            <aside class="xl:col-span-3 bg-base-100 border border-base-300 border-t-4 border-t-primary shadow-sm">
+                <div class="p-4" id="recent-created-forms">
                     <div>
-                        <h1>Recent Created Forms</h1>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-primary">Recent Created Forms</h2>
                     </div>
                 </div>
-            </div>
+            </aside>
         </div>
-    </div>
+    </main>
 @endsection
 
 @section('scripts')

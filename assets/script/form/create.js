@@ -72,8 +72,11 @@ function renderRecentCreatedForms(id) {
     if (!filteredForms.length) {
         container.html(`
             <div>
-                <h1>Recent Created Forms</h1>
-                <div class="mt-3 text-sm text-slate-500">No recent forms yet.</div>
+                <div class="border-b border-base-200 pb-2.5 mb-3 flex items-center justify-between">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-primary">Recent Created Forms</h2>
+                    <span class="badge badge-xs badge-outline font-mono">0</span>
+                </div>
+                <div class="text-xs wf-mute py-2">No recent forms yet.</div>
             </div>
         `);
         return;
@@ -82,9 +85,9 @@ function renderRecentCreatedForms(id) {
     const list = filteredForms
         .map((item) => {
             const tagColor = getTagColor(item.group);
-            return `<a href="${item.link}" class="mt-3 block rounded-lg border border-slate-200 bg-white p-3 text-sm hover:bg-primary/5">
-                    <div class="font-semibold text-slate-700"><div class="badge badge-outline ${tagColor} me-1">${item.code}</div>${item.name}</div>
-                    <div class="mt-1 line-clamp-2 text-xs text-slate-500 hidden">${item.desc || ''}</div>
+            return `<a href="${item.link}" class="block border border-base-300 border-l-2 border-l-transparent bg-base-100 p-3 text-xs hover:border-l-primary hover:bg-primary/[0.04] transition-all">
+                    <div class="font-semibold text-base-content leading-snug"><span class="badge badge-xs badge-outline font-mono font-bold ${tagColor} me-1.5">${item.code}</span>${item.name}</div>
+                    <div class="mt-1 line-clamp-2 text-[11px] wf-mute hidden">${item.desc || ''}</div>
                 </a>
             `;
         })
@@ -92,8 +95,11 @@ function renderRecentCreatedForms(id) {
 
     container.html(`
         <div>
-            <h1>Recent Created Forms</h1>
-            <div class="mt-3 space-y-2">${list}</div>
+            <div class="border-b border-base-200 pb-2.5 mb-3 flex items-center justify-between">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-primary">Recent Created Forms</h2>
+                <span class="badge badge-xs badge-primary font-mono font-bold">${filteredForms.length}</span>
+            </div>
+            <div class="space-y-2">${list}</div>
         </div>
     `);
 }
@@ -144,11 +150,11 @@ function renderFormListPagination() {
         return;
     }
 
-    let buttons = `<button type="button" class="join-item btn btn-sm form-list-page" data-page="${formListPage - 1}" ${formListPage === 1 ? 'disabled' : ''}>«</button>`;
+    let buttons = `<button type="button" class="join-item btn btn-xs btn-outline border-base-300 form-list-page" data-page="${formListPage - 1}" ${formListPage === 1 ? 'disabled' : ''}>«</button>`;
     for (let page = 1; page <= totalPages; page++) {
-        buttons += `<button type="button" class="join-item btn btn-sm form-list-page ${page === formListPage ? 'btn-active' : ''}" data-page="${page}">${page}</button>`;
+        buttons += `<button type="button" class="join-item btn btn-xs form-list-page ${page === formListPage ? 'btn-primary' : 'btn-outline border-base-300'}" data-page="${page}">${page}</button>`;
     }
-    buttons += `<button type="button" class="join-item btn btn-sm form-list-page" data-page="${formListPage + 1}" ${formListPage === totalPages ? 'disabled' : ''}>»</button>`;
+    buttons += `<button type="button" class="join-item btn btn-xs btn-outline border-base-300 form-list-page" data-page="${formListPage + 1}" ${formListPage === totalPages ? 'disabled' : ''}>»</button>`;
 
     nav.html(`<div class="join">${buttons}</div>`);
 }
@@ -261,17 +267,18 @@ async function setFormList(data, group) {
         return;
     }
     let str = `
-        <li class="list-row list-group p-4 pb-2 text-xl text-primary font-black tracking-wide">${group.VGROUPNAME}</li>`;
+        <li class="list-row list-group px-4 py-2.5 bg-base-200/70 border-y border-base-300 border-l-4 border-l-primary text-xs text-primary font-bold uppercase tracking-wider">${group.VGROUPNAME}</li>`;
     filtered.forEach((item) => {
         const uri = item.VFORMPAGE.includes('?') ? '&' : '?';
-        str += `<li class="list-row list-data border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}${uri}no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}&bp=${bp}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
-            <div class="text-4xl font-thin opacity-30 tabular-nums min-w-37">${item.VANAME}</div>
+        str += `<li class="list-row list-data items-center px-4 py-3.5 border-b border-base-200 border-l-2 border-l-transparent cursor-pointer hover:bg-primary/[0.04] hover:border-l-primary transition-colors create-form-detail" data-url="${item.VFORMPAGE}${uri}no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}&bp=${bp}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
+            <div class="font-mono text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1.5 tabular-nums min-w-28 text-center">${item.VANAME}</div>
             <div class="list-col-grow">
-                <div>${item.VNAME}</div>
-                <div class="text-xs font-semibold opacity-60">${item.VDESC == null ? '' : item.VDESC}</div>
+                <div class="text-sm font-semibold text-base-content">${item.VNAME}</div>
+                <div class="text-xs wf-mute mt-0.5">${item.VDESC == null ? '' : item.VDESC}</div>
             </div>
-            <button class="btn btn-circle btn-ghost flex justify-center items-center">
-                <i class="fi fi-rr-play text-xl"></i>
+            <button type="button" class="btn btn-xs btn-outline btn-primary flex justify-center items-center gap-1">
+                <i class="fi fi-rr-play text-xs"></i>
+                <span class="hidden sm:inline">Open</span>
             </button>
         </li>`;
     });
