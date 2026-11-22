@@ -59,8 +59,8 @@ export async function createFormMaster(data) {
                 resolve(res);
             },
             error: function (xhr, err) {
-                console.log(err);
-                reject(err);
+                console.log(xhr, err);
+                reject(xhr);
             },
         });
     });
@@ -77,8 +77,8 @@ export async function updateFormMaster(data) {
                 resolve(res);
             },
             error: function (xhr, err) {
-                console.log(err);
-                reject(err);
+                console.log(xhr, err);
+                reject(xhr);
             },
         });
     });
@@ -113,8 +113,8 @@ export async function addFlowMaster(data) {
                 resolve(res);
             },
             error: function (xhr, err) {
-                console.log(err);
-                reject(err);
+                console.log(xhr, err);
+                reject(xhr);
             },
         });
     });
@@ -131,8 +131,8 @@ export async function updateFlowMaster(data) {
                 resolve(res);
             },
             error: function (xhr, err) {
-                console.log(err);
-                reject(err);
+                console.log(xhr, err);
+                reject(xhr);
             },
         });
     });
@@ -149,8 +149,8 @@ export async function deleteFlowMaster(data) {
                 resolve(res);
             },
             error: function (xhr, err) {
-                console.log(err);
-                reject(err);
+                console.log(xhr, err);
+                reject(xhr);
             },
         });
     });

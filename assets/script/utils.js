@@ -16,6 +16,27 @@ import { root } from '@amec/webasset/utils';
 export const host = $('meta[name=base_url]').attr('content');
 export const uri = $('meta[name=base_uri]').attr('content');
 
+const SIDEBAR_CACHE_KEY = 'amec_sidebar_html';
+
+const saveSidebarSnapshot = () => {
+    try {
+        const sb = document.getElementById('sidebar');
+        if (sb && sb.querySelector('#sidebar-menu')) {
+            sessionStorage.setItem(SIDEBAR_CACHE_KEY, sb.outerHTML);
+        }
+    } catch {
+        // Ignore storage quota or private mode errors
+    }
+};
+
+const clearSidebarSnapshot = () => {
+    try {
+        sessionStorage.removeItem(SIDEBAR_CACHE_KEY);
+    } catch {
+        // Ignore storage errors
+    }
+};
+
 const initFromCache = async (opt) => {
     const { APP_NAME, APP_ID, TIMEOUT } = getConfig();
     const cookie = getCookie(APP_NAME);
@@ -61,6 +82,7 @@ const initFromCache = async (opt) => {
     if (opt.sidebar !== false) {
         initSidebar(opt);
         await setSidebarMenu(menu, info, opt.lang || 'en');
+        saveSidebarSnapshot();
     }
     showbgLoader({ show: false });
 
@@ -73,6 +95,7 @@ const initFromCache = async (opt) => {
         .off('click.webformAuth', '#delete-cookie')
         .on('click.webformAuth', '#delete-cookie', async function (e) {
             e.preventDefault();
+            clearSidebarSnapshot();
             await clearAuth(indexedDBID);
         });
 
@@ -80,6 +103,7 @@ const initFromCache = async (opt) => {
         .off('click.webformAuth', '.logout')
         .on('click.webformAuth', '.logout', async function (e) {
             e.preventDefault();
+            clearSidebarSnapshot();
             await clearAuth(indexedDBID);
             localStorage.removeItem('amecUserLogin');
         });
@@ -115,7 +139,9 @@ export const initApp = async (opt = {}) => {
         try {
             const cached = await initFromCache(mergedOpt);
             if (cached === null) {
-                return await initAuthen(mergedOpt);
+                const res = await initAuthen(mergedOpt);
+                saveSidebarSnapshot();
+                return res;
             }
             return cached;
         } catch (error) {

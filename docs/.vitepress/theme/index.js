@@ -1,22 +1,21 @@
 // https://vitepress.dev/guide/custom-theme
-import { h } from 'vue';
 import DefaultTheme from 'vitepress/theme';
 import './style.css';
+import './custom.css';
+import Layout from './components/Layout.vue';
 import Indent from './components/Indent.vue';
 import FancyLightboxImage from './components/FancyLightboxImage.vue';
-import MermaidDiagram from './components/MermaidDiagram.vue';
+import RoleOnly from './components/RoleOnly.vue';
+import FormScene from './components/FormScene.vue';
 
 /** @type {import('vitepress').Theme} */
 export default {
     extends: DefaultTheme,
-    Layout: () => {
-        return h(DefaultTheme.Layout, null, {
-            // https://vitepress.dev/guide/extending-default-theme#layout-slots
-        });
-    },
-    enhanceApp({ app, router, siteData }) {
+    Layout,
+    enhanceApp({ app }) {
         app.component('Indent', Indent);
         app.component('FancyLightboxImage', FancyLightboxImage);
-        app.component('MermaidDiagram', MermaidDiagram);
+        app.component('RoleOnly', RoleOnly);
+        app.component('FormScene', FormScene);
     },
 };

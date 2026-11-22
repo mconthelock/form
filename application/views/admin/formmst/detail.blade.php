@@ -31,15 +31,15 @@
         </div>
 
         {{-- Section 2: Form Info & Workflow Editor --}}
-        <section class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-            <div class="xl:col-span-8 bg-base-100 border border-base-300 shadow-sm flex flex-col" id="form-info">
-                <div class="p-5 space-y-5">
+        <section class="grid grid-cols-1 xl:grid-cols-12 gap-4 xl:items-stretch">
+            <div class="xl:col-span-7 bg-base-100 border border-base-300 shadow-sm flex flex-col" id="form-info">
+                <div class="p-5 space-y-5 flex-1">
                     @include('admin/formmst/_info')
                 </div>
 
                 {{-- Footer Action Strip --}}
                 <div
-                    class="px-5 py-3.5 bg-base-200 border-t border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    class="px-5 py-3.5 bg-base-200 border-t border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                     <div class="flex items-center gap-2 text-xs wf-mute font-mono">
                         <span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
                         <span>AMEC Webflow Form Master Registry</span>
@@ -48,20 +48,32 @@
                 </div>
             </div>
 
-            <aside
-                class="xl:col-span-4 bg-base-100 border border-base-300 border-t-4 border-t-primary shadow-sm flex flex-col">
-                <div class="px-4 py-3 bg-base-200 border-b border-base-300 flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                        <span class="w-1.5 h-4 bg-primary shrink-0"></span>
-                        <div>
-                            <div class="text-xs font-bold uppercase tracking-wider text-primary">Form Flow</div>
-                            <div class="wf-mute text-[11px]">Approval workflow steps</div>
+            <aside class="xl:col-span-5 xl:relative" id="form-flow-panel">
+                <div
+                    class="xl:absolute xl:inset-0 bg-base-100 border border-base-300 border-t-4 border-t-primary shadow-sm flex flex-col">
+                    <div
+                        class="px-4 py-3 bg-base-200 border-b border-base-300 flex items-center justify-between gap-2 shrink-0">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-1.5 h-4 bg-primary shrink-0"></span>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-primary">Form Flow</span>
+                                    <span class="badge badge-xs badge-primary font-mono font-bold"
+                                        id="flow-step-count">0</span>
+                                </div>
+                                <div class="wf-mute text-[11px] truncate">Approval sequence · drag or use arrows to reorder
+                                </div>
+                            </div>
                         </div>
+                        <button type="button" class="btn btn-xs btn-primary gap-1 shrink-0 add-flow" id="add-flow"
+                            title="Add Flow Step">
+                            <i class="fi fi-rr-plus-small text-sm"></i>
+                            <span>Add Step</span>
+                        </button>
                     </div>
-                    <a href="#" class="btn btn-xs btn-primary add-flow" id="add-flow" title="Add Flow Step">+ Add Step</a>
-                </div>
-                <div class="p-4 flex flex-col gap-2">
-                    @include('admin/formmst/_flow')
+                    <div class="flex flex-col flex-1 min-h-0">
+                        @include('admin/formmst/_flow')
+                    </div>
                 </div>
             </aside>
         </section>

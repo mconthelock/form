@@ -145,7 +145,21 @@ async function reloadTable() {
 
 async function createTableOption(data) {
     const opt = { ...tableOption };
-    opt.dom = `<"flex mb-3 items-center"<"flex-1"><"flex-none flex flex-row gap-2 table-option">><"bg-white border border-slate-300 rounded-lg overflow-x-auto my-5"t><"flex flex-col items-center gap-3 mt-5 lg:flex-row"<"flex-1"p><"flex-none flex gap-3 items-center table-foot-option"i>>`;
+    opt.dom =
+        '<"overflow-x-auto"t><"dt-footer-bar px-4 py-3 bg-base-100 border-t border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs wf-mute"<"table-info"i><"table-page"p>>';
+    opt.pagingType = 'simple_numbers';
+    opt.language = {
+        ...tableOption.language,
+        info: 'Showing <strong class="text-primary">_START_ - _END_</strong> of <strong class="text-primary">_TOTAL_</strong> records',
+        infoEmpty:
+            'Showing <strong class="text-primary">0 - 0</strong> of <strong class="text-primary">0</strong> records',
+        paginate: {
+            previous: '«',
+            next: '»',
+            first: '«',
+            last: '»',
+        },
+    };
     opt.data = data;
     opt.pageLength = 20;
     opt.order = [
@@ -162,12 +176,12 @@ async function createTableOption(data) {
         {
             data: 'SEMPNO',
             title: 'Employee No.',
-            className: 'sticky-column',
+            className: 'font-mono font-semibold text-primary sticky-column',
         },
         {
             data: 'SNAME',
             title: 'Name',
-            className: 'sticky-column',
+            className: 'font-medium sticky-column',
         },
         {
             data: 'SDIV',
@@ -185,32 +199,65 @@ async function createTableOption(data) {
         },
         {
             data: 'auth',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="2" /> ADM`,
-            className: 'text-start',
+            title: `<input type="checkbox" class="checkbox checkbox-xs border-white check-all" data-id="2" /> ADM`,
+            className: 'text-start text-nowrap',
             sortable: false,
             render: function (data, type, row) {
-                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="002" ${data[0]?.CAUTHNO == '002' ? 'checked' : ''} /> ADM`;
+                return `<label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="auth-${row.SEMPNO}" class="radio radio-xs radio-primary" value="002" ${data[0]?.CAUTHNO == '002' ? 'checked' : ''} /> <span>ADM</span></label>`;
             },
         },
         {
             data: 'auth',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="1"  /> OPR`,
-            className: 'text-start',
+            title: `<input type="checkbox" class="checkbox checkbox-xs border-white check-all" data-id="1" /> OPR`,
+            className: 'text-start text-nowrap',
             sortable: false,
             render: function (data, type, row) {
-                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="001" ${data[0]?.CAUTHNO == '001' ? 'checked' : ''} /> OPR`;
+                return `<label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="auth-${row.SEMPNO}" class="radio radio-xs radio-primary" value="001" ${data[0]?.CAUTHNO == '001' ? 'checked' : ''} /> <span>OPR</span></label>`;
             },
         },
         {
             data: 'auth',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="3"  /> USR`,
-            className: 'text-start',
+            title: `<input type="checkbox" class="checkbox checkbox-xs border-white check-all" data-id="3" /> USR`,
+            className: 'text-start text-nowrap',
             sortable: false,
             render: function (data, type, row) {
-                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="003" ${data[0]?.CAUTHNO == '003' || data.length == 0 ? 'checked' : ''} /> USR`;
+                return `<label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="auth-${row.SEMPNO}" class="radio radio-xs radio-primary" value="003" ${data[0]?.CAUTHNO == '003' || data.length == 0 ? 'checked' : ''} /> <span>USR</span></label>`;
             },
         },
     ];
+    const stylePagination = function () {
+        const pagination = $(this).closest('.dt-container').find('.dt-paging');
+        const nav = pagination.find('nav');
+        nav.addClass('join');
+        nav.find('.dt-paging-button').each(function () {
+            const btn = $(this);
+            const isCurrent = btn.hasClass('current');
+            const isDisabled = btn.hasClass('disabled');
+
+            btn.removeClass(
+                'btn-primary btn-outline border-base-300 btn-disabled',
+            ).addClass('join-item btn btn-xs');
+
+            if (isCurrent) {
+                btn.addClass('btn-primary');
+            } else {
+                btn.addClass('btn-outline border-base-300');
+            }
+
+            if (isDisabled && !isCurrent) {
+                btn.addClass('btn-disabled');
+            }
+        });
+
+        nav.find('.ellipsis').addClass(
+            'join-item btn btn-xs btn-outline border-base-300 btn-disabled',
+        );
+    };
+    opt.drawCallback = stylePagination;
+    opt.initComplete = function (settings, json) {
+        tableOption.initComplete.call(this, settings, json);
+        stylePagination.call(this);
+    };
     table = await createTable(opt);
 }
 

@@ -86,7 +86,21 @@ async function reloadTable() {
 
 async function createTableOption(data) {
     const opt = { ...tableOption };
-    opt.dom = `<"flex mb-3 items-center"<"flex-1"><"flex-none flex flex-row gap-2 table-option">><"bg-white border border-slate-300 rounded-lg overflow-x-auto my-5"t><"flex flex-col items-center gap-3 mt-5 lg:flex-row"<"flex-1"p><"flex-none flex gap-3 items-center table-foot-option"i>>`;
+    opt.dom =
+        '<"overflow-x-auto"t><"dt-footer-bar px-4 py-3 bg-base-100 border-t border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs wf-mute"<"table-info"i><"table-page"p>>';
+    opt.pagingType = 'simple_numbers';
+    opt.language = {
+        ...tableOption.language,
+        info: 'Showing <strong class="text-primary">_START_ - _END_</strong> of <strong class="text-primary">_TOTAL_</strong> records',
+        infoEmpty:
+            'Showing <strong class="text-primary">0 - 0</strong> of <strong class="text-primary">0</strong> records',
+        paginate: {
+            previous: '«',
+            next: '»',
+            first: '«',
+            last: '»',
+        },
+    };
     opt.data = data;
     opt.pageLength = 10;
     opt.order = [
@@ -94,13 +108,14 @@ async function createTableOption(data) {
         [1, 'asc'],
     ];
     opt.columns = [
-        { data: 'deptname.name', title: 'Owner', className: 'text-nowrap' },
-        { data: 'NSEQ', title: 'Seq.' },
+        { data: 'deptname.name', title: 'Owner', className: 'text-nowrap font-semibold text-primary' },
+        { data: 'NSEQ', title: 'Seq.', className: 'text-center font-mono' },
         {
             data: 'VNAME',
             title: 'Report Name',
+            className: 'font-medium',
         },
-        { data: 'VURL', title: 'Link' },
+        { data: 'VURL', title: 'Link', className: 'font-mono text-xs wf-mute break-all' },
         {
             data: 'CSTATUS',
             title: 'Status',
@@ -109,8 +124,9 @@ async function createTableOption(data) {
             render: function (data, type, row) {
                 if (type === 'display') {
                     if (data === '1')
-                        return '<div class="badge badge-success">Active</div>';
-                    else return '<div class="badge badge-error">Inactive</div>';
+                        return '<div class="badge badge-xs badge-success font-mono font-bold uppercase">Active</div>';
+                    else
+                        return '<div class="badge badge-xs badge-error font-mono font-bold uppercase">Inactive</div>';
                 }
                 return data;
             },
@@ -118,17 +134,50 @@ async function createTableOption(data) {
         {
             data: 'ID',
             title: 'Action',
-            className: 'text-center w-32',
+            className: 'text-center text-nowrap!',
             sortable: false,
             render: function (data, type, row) {
-                return `<div>
-                    <button class="btn btn-ghost btn-sm btn-circle row-edit" data-id="${data}"><i class="fi fi-rr-pencil text-xl text-primary"></i></button>
-                    <a href="${process.env.APP_ENV}/admin/report/authen/${data}" class="btn btn-ghost btn-sm btn-circle row-authen" data-id="${data}"><i class="fi fi-rr-users text-xl text-primary"></i></a>
-                    <button class="btn btn-ghost btn-sm btn-circle row-delete" data-id="${data}"><i class="fi fi-rs-circle-xmark text-xl text-red-500"></i></button>
+                return `<div class="inline-flex items-center gap-1">
+                    <button type="button" class="btn btn-xs btn-outline btn-primary row-edit" data-id="${data}" title="Edit Report"><i class="fi fi-rr-pencil text-sm"></i></button>
+                    <a href="${process.env.APP_ENV}/admin/report/authen/${data}" class="btn btn-xs btn-outline border-base-300 row-authen" data-id="${data}" title="Permissions"><i class="fi fi-rr-users text-sm"></i></a>
+                    <button type="button" class="btn btn-xs btn-outline btn-error row-delete" data-id="${data}" title="Delete Report"><i class="fi fi-rs-circle-xmark text-sm"></i></button>
                 </div>`;
             },
         },
     ];
+    const stylePagination = function () {
+        const pagination = $(this).closest('.dt-container').find('.dt-paging');
+        const nav = pagination.find('nav');
+        nav.addClass('join');
+        nav.find('.dt-paging-button').each(function () {
+            const btn = $(this);
+            const isCurrent = btn.hasClass('current');
+            const isDisabled = btn.hasClass('disabled');
+
+            btn.removeClass(
+                'btn-primary btn-outline border-base-300 btn-disabled',
+            ).addClass('join-item btn btn-xs');
+
+            if (isCurrent) {
+                btn.addClass('btn-primary');
+            } else {
+                btn.addClass('btn-outline border-base-300');
+            }
+
+            if (isDisabled && !isCurrent) {
+                btn.addClass('btn-disabled');
+            }
+        });
+
+        nav.find('.ellipsis').addClass(
+            'join-item btn btn-xs btn-outline border-base-300 btn-disabled',
+        );
+    };
+    opt.drawCallback = stylePagination;
+    opt.initComplete = function (settings, json) {
+        tableOption.initComplete.call(this, settings, json);
+        stylePagination.call(this);
+    };
     table = await createTable(opt);
 }
 

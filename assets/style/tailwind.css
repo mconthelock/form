@@ -82,35 +82,6 @@
         @apply font-sans;
     }
 
-    /* Prevent #navbar from reserving 4rem (64px) top space on desktop before initNavbar() runs */
-    @media (width >= 48rem) {
-        #navbar {
-            display: none !important;
-        }
-    }
-
-    /* Pre-reserve sidebar dimensions before JS hydration to eliminate CLS jump */
-    #sidebar {
-        background-color: var(--color-primary);
-        min-height: 100vh;
-    }
-
-    @media (width >= 48rem) {
-        #sidebar {
-            width: 16rem;
-        }
-    }
-
-    @media (width >= 64rem) {
-        #sidebar {
-            width: 20rem;
-        }
-    }
-
-    html.sidebar-collapsed #sidebar:not(.collapsed-hover) {
-        width: 75px;
-    }
-
     /* Top navigation progress bar (instant feedback on link click) */
     #nav-progress-bar {
         position: fixed;
@@ -379,6 +350,60 @@ i.fi {
 
 /* Scoped theme for controllers/webform pages only */
 @import './webform.css';
+
+/* ==========================================================================
+   Pre-reserve Navbar & Sidebar Dimensions (Unlayered — beats DaisyUI .menu)
+   Eliminates width expansion / CLS jump before sidebar.min.css loads
+   ========================================================================== */
+@media (width >= 48rem) {
+    #navbar {
+        display: none !important;
+    }
+}
+
+#sidebar {
+    background-color: var(--color-primary);
+    min-height: 100vh;
+    height: 100vh;
+    width: 100%;
+}
+
+#sidebar .sidebar-head,
+#sidebar #menu {
+    width: 100%;
+}
+
+#sidebar .sidebar-text,
+#sidebar .sidebar-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (width >= 48rem) {
+    #sidebar {
+        width: 16rem;
+    }
+}
+
+@media (width >= 64rem) {
+    #sidebar.size-xl,
+    #sidebar {
+        width: 20rem;
+    }
+}
+
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) {
+    width: 75px !important;
+}
+
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) #sidebarToggle,
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) .sidebar-profile-menu,
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) .sidebar-text,
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) .sidebar-title,
+html.sidebar-collapsed #sidebar:not(.collapsed-hover) .list-disc {
+    display: none !important;
+}
 
 /* ==========================================================================
    Cross-Document View Transitions (Smooth MPA Navigation)
