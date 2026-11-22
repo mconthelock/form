@@ -15,12 +15,12 @@ class form extends MY_Controller {
             5 => 'nav-form-represent',
             6 => 'nav-form-finish'
         );
-        $uri = base_url().'webform/form/list/'.$id;
-        $this->views('form/frame', array('id' => $id, 'title' => $status[$id], 'target' => $uri));
+        $title = isset($status[$id]) ? $status[$id] : 'nav-form-waitapprove';
+        $this->views('form/index', array('id' => $id, 'title' => $title));
     }
 
     public function list($id = 1){
-        $this->views('form/index',array('id' => $id));
+        $this->index($id);
     }
 
     public function create(){

@@ -2,10 +2,19 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitepress';
 import dotenv from 'dotenv';
 import * as sidebar from './sidebar.js';
+import { fileURLToPath, URL } from 'node:url';
+import { defineConfig } from 'vitepress';
+import dotenv from 'dotenv';
+import * as sidebar from './sidebar.js';
 
 // โหลดไฟล์ .env ที่ root ของโปรเจกต์
 dotenv.config();
 
+const APP_NAME = process.env.APP_NAME || 'form';
+const APP_ID = process.env.APP_ID || '1';
+const APP_HOST = process.env.APP_HOST || '';
+const APP_ENV = process.env.APP_ENV || '';
+const APP_API = process.env.APP_API || '';
 const APP_NAME = process.env.APP_NAME || 'form';
 const APP_ID = process.env.APP_ID || '1';
 const APP_HOST = process.env.APP_HOST || '';
@@ -81,7 +90,7 @@ export default defineConfig({
                 {
                     text: 'Advanced Features',
                     link: '/form/tool/qrcode',
-                    roles: ['ADMIN', 'MANAGER'],
+                    roles: ['*'],
                 },
             ],
             '/form/isform/': sidebar.isFormItem,

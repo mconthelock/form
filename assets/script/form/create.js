@@ -1,11 +1,28 @@
-import CryptoJS from 'crypto-js';
+import 'select2/dist/css/select2.min.css';
+import select2 from 'select2';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
-import { getTagColor, initApp } from '../utils';
+import { setSelect2 } from '@amec/webasset/select2';
+import { createTable } from '@amec/webasset/dataTable';
+import { getTagColor, initApp, tableOption, tableFillSelect } from '../utils';
 import { getFormMaster, getFormDept, getFormMasterGroup } from '../service';
 
-const FORM_LIST_PAGE_SIZE = 10;
-let formListPage = 1;
+select2();
+
+let table = null;
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeRegex(value) {
+    return String(value ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 $(document).ready(function () {
     loadCreatePage();
@@ -14,7 +31,7 @@ $(document).ready(function () {
 async function loadCreatePage() {
     try {
         if ($('#deptid').length > 0) {
-            await createFormList();
+            await createFormTable();
             await createRecent($('#deptid').val());
         } else {
             await createRecent();
@@ -85,9 +102,9 @@ function renderRecentCreatedForms(id) {
     const list = filteredForms
         .map((item) => {
             const tagColor = getTagColor(item.group);
-            return `<a href="${item.link}" class="block border border-base-300 border-l-2 border-l-transparent bg-base-100 p-3 text-xs hover:border-l-primary hover:bg-primary/[0.04] transition-all">
-                    <div class="font-semibold text-base-content leading-snug"><span class="badge badge-xs badge-outline font-mono font-bold ${tagColor} me-1.5">${item.code}</span>${item.name}</div>
-                    <div class="mt-1 line-clamp-2 text-[11px] wf-mute hidden">${item.desc || ''}</div>
+            return `<a href="${escapeHtml(item.link)}" class="block border border-base-300 border-l-2 border-l-base-300 bg-base-100 p-3 text-xs hover:border-l-primary hover:bg-primary/[0.04] transition-all">
+                    <div class="font-semibold text-base-content leading-snug"><span class="badge badge-xs badge-outline font-mono font-bold ${tagColor} me-1.5">${escapeHtml(item.code)}</span>${escapeHtml(item.name)}</div>
+                    <div class="mt-1 line-clamp-2 text-[11px] wf-mute hidden">${escapeHtml(item.desc || '')}</div>
                 </a>
             `;
         })
@@ -112,196 +129,205 @@ function normalizeVorgno(value) {
     return String(value ?? '').replace(/^0+/, '') || '0';
 }
 
-function getFormListRows() {
-    return $('#formlist .list-row.list-data');
-}
-
-function getMatchingFormListRows() {
-    const searchValue = $('#search-form').val().trim().toLowerCase();
-    const rows = getFormListRows();
-    if (searchValue === '') {
-        return rows;
-    }
-
-    return rows.filter(function () {
-        const formName = $(this)
-            .children()
-            .map(function () {
-                return $(this).text().toLowerCase();
-            })
-            .get()
-            .join(' ');
-        return formName.includes(searchValue);
-    });
-}
-
-function renderFormListPagination() {
-    const nav = $('#formlist-pagination');
-    if (!nav.length) {
-        return;
-    }
-
-    const totalPages = Math.ceil(
-        getMatchingFormListRows().length / FORM_LIST_PAGE_SIZE,
-    );
-
-    if (totalPages <= 1) {
-        nav.empty();
-        return;
-    }
-
-    let buttons = `<button type="button" class="join-item btn btn-xs btn-outline border-base-300 form-list-page" data-page="${formListPage - 1}" ${formListPage === 1 ? 'disabled' : ''}>«</button>`;
-    for (let page = 1; page <= totalPages; page++) {
-        buttons += `<button type="button" class="join-item btn btn-xs form-list-page ${page === formListPage ? 'btn-primary' : 'btn-outline border-base-300'}" data-page="${page}">${page}</button>`;
-    }
-    buttons += `<button type="button" class="join-item btn btn-xs btn-outline border-base-300 form-list-page" data-page="${formListPage + 1}" ${formListPage === totalPages ? 'disabled' : ''}>»</button>`;
-
-    nav.html(`<div class="join">${buttons}</div>`);
-}
-
-function applyFormListPagination() {
-    const matchingRows = getMatchingFormListRows();
-    const totalPages = Math.max(
-        1,
-        Math.ceil(matchingRows.length / FORM_LIST_PAGE_SIZE),
-    );
-
-    formListPage = Math.min(Math.max(formListPage, 1), totalPages);
-
-    const start = (formListPage - 1) * FORM_LIST_PAGE_SIZE;
-    const end = start + FORM_LIST_PAGE_SIZE;
-
-    getFormListRows().hide();
-    matchingRows.slice(start, end).show();
-    updateGroupHeaderVisibility();
-}
-
-//while searching, keep every group header visible so the per-group "Not found" line can show; otherwise only show headers whose rows landed on the current page
-function updateGroupHeaderVisibility() {
-    const searchValue = $('#search-form').val().trim().toLowerCase();
-
-    $('#formlist .list-group').each(function () {
-        const header = $(this);
-        if (searchValue !== '') {
-            header.show();
-            return;
-        }
-
-        //check each row's own inline display instead of :visible, since #formlist is still hidden during the initial load
-        const hasVisibleRow = header
-            .nextUntil('.list-group', '.list-data')
-            .toArray()
-            .some((row) => row.style.display !== 'none');
-        header.toggle(hasVisibleRow);
-    });
-}
-
-$(document).on('click', '.form-list-page', function () {
-    const page = Number($(this).data('page'));
-    if (!page || page === formListPage) {
-        return;
-    }
-
-    formListPage = page;
-    applyFormListPagination();
-    renderFormListPagination();
-});
-
-async function createFormList() {
+async function createFormTable() {
+    await initApp();
     const id = $('#deptid').val();
-    const formMaster = await getFormMaster();
-    const formdept = await getFormDept();
-    const formGroup = await getFormMasterGroup();
+    const user = $('#user-login').attr('empno') || '';
+    const bp = document.URL;
+
+    const [formMaster, formdept, formGroup] = await Promise.all([
+        getFormMaster(),
+        getFormDept(),
+        getFormMasterGroup(),
+    ]);
+
     const selectdDept = formdept.find((d) => String(d.id) === String(id));
     const linkedDeptIds = Array.isArray(selectdDept?.link)
         ? selectdDept.link.map((value) => normalizeVorgno(value))
         : [];
 
-    let result = formMaster.filter(
-        (f) =>
-            linkedDeptIds.includes(normalizeVorgno(f.VORGNO)) &&
-            String(f.CSTATUS) === '1',
+    const deptGroups = formGroup.filter((item) =>
+        linkedDeptIds.includes(normalizeVorgno(item.VGROUPORG)),
+    );
+    const groupMap = new Map(
+        deptGroups.map((g) => [String(g.VGROUP), g.VGROUPNAME]),
     );
 
-    $('#formlist').empty();
-    if (!result.length) {
-        $('#formlist').append(
-            '<div class="text-center text-sm text-slate-500 py-6">No forms available for this department.</div>',
-        );
-        $('#formlist-skeleton').addClass('hidden');
-        $('#formlist').removeClass('hidden');
-        return;
-    }
+    const rows = formMaster
+        .filter(
+            (f) =>
+                linkedDeptIds.includes(normalizeVorgno(f.VORGNO)) &&
+                String(f.CSTATUS) === '1',
+        )
+        .map((item) => {
+            const uri = String(item.VFORMPAGE || '').includes('?') ? '&' : '?';
+            const groupName =
+                item.VDIR != null && groupMap.has(String(item.VDIR))
+                    ? groupMap.get(String(item.VDIR))
+                    : 'General';
+            return {
+                ...item,
+                groupName,
+                targetUrl: `${item.VFORMPAGE}${uri}no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}&bp=${bp}`,
+            };
+        });
 
-    //VGROUPORG is an org code, not the dept id, so match it against linkedDeptIds like VORGNO above
-    const distinctGroups = [
-        {
-            VGROUPORG: '030101',
-            VGROUP: null,
-            VGROUPNAME: 'General',
-        },
-        ...formGroup.filter((item) =>
-            linkedDeptIds.includes(normalizeVorgno(item.VGROUPORG)),
-        ),
-    ];
-    for (const group of distinctGroups) {
-        await setFormList(result, group);
-    }
+    $('#form-count-badge').text(
+        `${rows.length} ${rows.length === 1 ? 'FORM' : 'FORMS'}`,
+    );
 
-    formListPage = 1;
-    applyFormListPagination();
-    renderFormListPagination();
-    $('#formlist-skeleton').addClass('hidden');
-    $('#formlist').removeClass('hidden');
-}
-
-async function setFormList(data, group) {
-    await initApp();
-    const user = $('#user-login').attr('empno');
-    const hash = CryptoJS.MD5(user);
-    const bp = document.URL;
-
-    // &empnolv=${hash.toString().toUpperCase()}
-    const filtered = data.filter((item) => item.VDIR == group.VGROUP);
-    if (!filtered.length) {
-        return;
-    }
-    let str = `
-        <li class="list-row list-group px-4 py-2.5 bg-base-200/70 border-y border-base-300 border-l-4 border-l-primary text-xs text-primary font-bold uppercase tracking-wider">${group.VGROUPNAME}</li>`;
-    filtered.forEach((item) => {
-        const uri = item.VFORMPAGE.includes('?') ? '&' : '?';
-        str += `<li class="list-row list-data items-center px-4 py-3.5 border-b border-base-200 border-l-2 border-l-transparent cursor-pointer hover:bg-primary/[0.04] hover:border-l-primary transition-colors create-form-detail" data-url="${item.VFORMPAGE}${uri}no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}&bp=${bp}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
-            <div class="font-mono text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1.5 tabular-nums min-w-28 text-center">${item.VANAME}</div>
-            <div class="list-col-grow">
-                <div class="text-sm font-semibold text-base-content">${item.VNAME}</div>
-                <div class="text-xs wf-mute mt-0.5">${item.VDESC == null ? '' : item.VDESC}</div>
-            </div>
-            <button type="button" class="btn btn-xs btn-outline btn-primary flex justify-center items-center gap-1">
-                <i class="fi fi-rr-play text-xs"></i>
-                <span class="hidden sm:inline">Open</span>
-            </button>
-        </li>`;
+    // Populate group filter dropdown
+    const usedGroupNames = [...new Set(rows.map((r) => r.groupName))];
+    const groupOptions = usedGroupNames.map((name) => ({
+        value: name,
+        text: name,
+    }));
+    await tableFillSelect('#group-filter', groupOptions, 'value', 'text');
+    await setSelect2({
+        element: $('#group-filter'),
+        placeholder: 'All Groups',
     });
-    $('#formlist').append(str);
+
+    if (table) {
+        table.clear();
+        table.rows.add(rows);
+        table.draw();
+        return;
+    }
+
+    const opt = { ...tableOption };
+    opt.dom =
+        '<"overflow-x-auto"t><"dt-footer-bar px-4 py-3 bg-base-100 border-t border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs wf-mute"<"table-info"i><"table-page"p>>';
+    opt.pagingType = 'simple_numbers';
+    opt.language = {
+        ...tableOption.language,
+        emptyTable: 'No forms available for this department.',
+        zeroRecords: 'No matching forms found.',
+        info: 'Showing <strong class="text-primary">_START_ - _END_</strong> of <strong class="text-primary">_TOTAL_</strong> forms',
+        infoEmpty:
+            'Showing <strong class="text-primary">0 - 0</strong> of <strong class="text-primary">0</strong> forms',
+        paginate: {
+            previous: '«',
+            next: '»',
+            first: '«',
+            last: '»',
+        },
+    };
+    opt.data = rows;
+    opt.pageLength = 10;
+    opt.order = [
+        [2, 'asc'],
+        [0, 'asc'],
+    ];
+    opt.columns = [
+        {
+            data: 'VANAME',
+            title: 'Code',
+            className: 'text-nowrap align-middle',
+            render: function (data, type) {
+                if (type === 'display') {
+                    return `<span class="inline-block font-mono text-xs font-bold text-primary bg-primary/8 border border-primary/20 px-2.5 py-1 tabular-nums min-w-24 text-center">${escapeHtml(data)}</span>`;
+                }
+                return data || '';
+            },
+        },
+        {
+            data: 'VNAME',
+            title: 'Form Name',
+            className: 'text-left min-w-[280px]',
+            render: function (data, type, row) {
+                const desc = row.VDESC == null ? '' : String(row.VDESC);
+                if (type === 'display') {
+                    return `<div class="flex flex-col gap-0.5">
+                        <div class="text-sm font-semibold text-base-content leading-snug">${escapeHtml(data)}</div>
+                        ${desc ? `<div class="text-xs wf-mute line-clamp-2">${escapeHtml(desc)}</div>` : ''}
+                    </div>`;
+                }
+                return `${data || ''} ${desc}`;
+            },
+        },
+        {
+            data: 'groupName',
+            title: 'Group',
+            className: 'text-nowrap align-middle',
+            render: function (data, type) {
+                if (type === 'display') {
+                    return `<span class="badge badge-xs badge-outline font-mono font-bold uppercase">${escapeHtml(data)}</span>`;
+                }
+                return data || '';
+            },
+        },
+        {
+            data: null,
+            title: 'Action',
+            orderable: false,
+            searchable: false,
+            className: 'text-center text-nowrap! align-middle',
+            render: function (data, type, row) {
+                return `<button type="button"
+                    class="btn btn-xs btn-outline btn-primary inline-flex items-center gap-1 create-form-detail"
+                    data-url="${escapeHtml(row.targetUrl)}"
+                    data-name="${escapeHtml(row.VNAME)}"
+                    data-desc="${escapeHtml(row.VDESC == null ? '' : row.VDESC)}"
+                    data-code="${escapeHtml(row.VANAME)}">
+                    <i class="fi fi-rr-play text-xs"></i>
+                    <span>Create</span>
+                </button>`;
+            },
+        },
+    ];
+
+    opt.createdRow = function (rowEl) {
+        $(rowEl).addClass('cursor-pointer');
+    };
+
+    const stylePagination = function () {
+        const pagination = $(this).closest('.dt-container').find('.dt-paging');
+        const nav = pagination.find('nav');
+        nav.addClass('join');
+        nav.find('.dt-paging-button').each(function () {
+            const btn = $(this);
+            const isCurrent = btn.hasClass('current');
+            const isDisabled = btn.hasClass('disabled');
+
+            btn.removeClass(
+                'btn-primary btn-outline border-base-300 btn-disabled',
+            ).addClass('join-item btn btn-xs');
+
+            if (isCurrent) {
+                btn.addClass('btn-primary');
+            } else {
+                btn.addClass('btn-outline border-base-300');
+            }
+
+            if (isDisabled && !isCurrent) {
+                btn.addClass('btn-disabled');
+            }
+        });
+
+        nav.find('.ellipsis').addClass(
+            'join-item btn btn-xs btn-outline border-base-300 btn-disabled',
+        );
+    };
+
+    opt.drawCallback = stylePagination;
+    opt.initComplete = function (settings, json) {
+        tableOption.initComplete.call(this, settings, json);
+        stylePagination.call(this);
+    };
+
+    table = await createTable(opt);
 }
 
-$(document).on('click', '.create-form-detail', async function (e) {
-    e.preventDefault();
+async function openFormDetail({ formCode, formName, formDesc, url }) {
     try {
         await showLoader();
-        //แยกประเภท URL คือตอนนี้มี 3 แบบคือ
-        //1. URL ที่เรียกจากภายใน project
-        //2. URL ที่เรียกจาก project webflow
-        //3. URL ที่เรียกจาก ASP
-        const formCode = $(this).data('code') || '';
-        const formName = $(this).data('name') || 'Untitled form';
-        const formDesc = $(this).data('desc') || '';
-        let url = $(this).attr('data-url');
-        if (url.includes('index.asp')) {
-            url = `https://webflow.mitsubishielevatorasia.co.th/${url}`;
+        let target = url;
+        if (target.includes('index.asp')) {
+            target = `https://webflow.mitsubishielevatorasia.co.th/${target}`;
         }
 
-        const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(url)}`;
+        const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(target)}`;
         saveRecentCreatedForm({
             code: formCode,
             name: formName,
@@ -309,7 +335,6 @@ $(document).on('click', '.create-form-detail', async function (e) {
             link: detailUrl,
             group: $('#deptid').val(),
         });
-        //renderRecentCreatedForms();
         window.location.href = detailUrl;
     } catch (error) {
         console.log(error);
@@ -319,61 +344,61 @@ $(document).on('click', '.create-form-detail', async function (e) {
     } finally {
         await showLoader({ show: false });
     }
+}
+
+$(document).on('click', '.create-form-detail', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    await openFormDetail({
+        formCode: $(this).data('code') || '',
+        formName: $(this).data('name') || 'Untitled form',
+        formDesc: $(this).data('desc') || '',
+        url: $(this).attr('data-url') || '',
+    });
 });
 
-//shows a "Not found" line under a group header when none of its rows match the search, independent of pagination
-function updateGroupNotFoundMessages() {
-    const searchValue = $('#search-form').val().trim().toLowerCase();
-    const matchingRows = getMatchingFormListRows();
-
-    $('#formlist .list-group').each(function () {
-        const header = $(this);
-        const notFoundEl = header.next('.group-search-not-found');
-        const groupRows = header.nextUntil('.list-group', '.list-data');
-        const hasMatch =
-            searchValue === '' ||
-            groupRows.filter((_, row) => matchingRows.is(row)).length > 0;
-
-        if (hasMatch) {
-            notFoundEl.remove();
-        } else if (!notFoundEl.length) {
-            header.after(
-                '<li class="list-row group-search-not-found pt-0 pb-2 text-sm text-slate-500">Not found</li>',
-            );
-        }
+$(document).on('click', '#table tbody tr', async function (e) {
+    if ($(e.target).closest('button, a').length) return;
+    const btn = $(this).find('.create-form-detail');
+    if (!btn.length) return;
+    await openFormDetail({
+        formCode: btn.data('code') || '',
+        formName: btn.data('name') || 'Untitled form',
+        formDesc: btn.data('desc') || '',
+        url: btn.attr('data-url') || '',
     });
-}
+});
 
-function applySearchFilter() {
-    const notFoundEl = $('#form-search-not-found');
-    const hasMatch = getMatchingFormListRows().length > 0;
-
-    if (!hasMatch) {
-        if (!notFoundEl.length) {
-            $('#formlist').append(
-                '<div id="form-search-not-found" class="mt-4 text-center text-sm text-slate-500">Not found</div>',
-            );
-        }
-    } else {
-        notFoundEl.remove();
-    }
-
-    updateGroupNotFoundMessages();
-
-    formListPage = 1;
-    applyFormListPagination();
-    renderFormListPagination();
-}
-
-$(document).on('keyup', '#search-form', async function (e) {
-    e.preventDefault();
-    applySearchFilter();
+$(document).on('input', '#search-form', function () {
+    if (!table) return;
+    table.search($(this).val() || '').draw();
 });
 
 $(document).on('click', '.clear-search-form', function () {
     const input = $('#search-form');
-    input.val('').trigger('keyup');
-    input.focus();
+    input.val('').trigger('input').focus();
+});
+
+$(document).on('change', '#group-filter', function () {
+    if (!table) return;
+    const val = $(this).val() || '';
+    if (val === '') {
+        table.column(2).search('').draw();
+    } else {
+        table
+            .column(2)
+            .search(`^${escapeRegex(val)}$`, true, false)
+            .draw();
+    }
+});
+
+$(document).on('click', '#reset-filter', function () {
+    if (!table) return;
+    $('#search-form').val('');
+    $('#group-filter').val('').trigger('change.select2');
+    table.search('');
+    table.columns().search('');
+    table.page('first').draw('full-reset');
 });
 
 $(document).on('keydown', function (e) {

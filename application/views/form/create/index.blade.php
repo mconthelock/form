@@ -14,7 +14,8 @@
                         NEW REQUEST
                     </span>
                 </div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary line-clamp-1" id="page-title">
+                <h1 class="text-2xl md:text-3xl font-black uppercase tracking-tight text-primary line-clamp-1"
+                    id="page-title">
                     Create Electronic Form
                 </h1>
                 <p class="text-sm wf-mute leading-relaxed" id="page-description">
@@ -39,7 +40,7 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5">
                     @foreach ($department as $dept)
-                        <a class="block bg-base-100 border border-base-300 border-t-2 border-t-transparent hover:border-primary hover:border-t-primary hover:bg-primary/[0.03] transition-all group"
+                        <a class="block bg-base-100 border border-base-300 border-t-2 border-t-base-300 hover:border-primary hover:border-t-primary hover:bg-primary/3 transition-all group"
                             href="{{ base_url() . 'webform/form/createdetail/' . $dept['id'] }}">@include('form/create/deptcard', $dept)</a>
                     @endforeach
                 </div>

@@ -1,15 +1,78 @@
 import '@amec/webasset/css/dataTable.min.css';
+import 'select2/dist/css/select2.min.css';
 import dayjs from 'dayjs';
 import CryptoJS from 'crypto-js';
+import select2 from 'select2';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
+import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
 import { displayEmpInfo } from '@amec/webasset/indexDB';
-import { initApp, tableOption } from '../utils';
+import { initApp, tableOption, tableFillSelect } from '../utils';
 import { getFormList } from './data';
+
+select2();
 
 var table;
 var user;
+var customFilterBound = false;
+
+const FORM_STATUS_META = [
+    {
+        id: '0',
+        name: 'Draft',
+        badge: 'badge badge-xs badge-outline badge-neutral font-mono font-bold uppercase',
+    },
+    {
+        id: '1',
+        name: 'Running',
+        badge: 'badge badge-xs badge-outline badge-info font-mono font-bold uppercase',
+    },
+    {
+        id: '2',
+        name: 'Approved',
+        badge: 'badge badge-xs badge-success font-mono font-bold uppercase',
+    },
+    {
+        id: '3',
+        name: 'Rejected',
+        badge: 'badge badge-xs badge-outline badge-error font-mono font-bold uppercase',
+    },
+];
+
+function getLastApproved(flow = []) {
+    const flowFilter = (Array.isArray(flow) ? flow : []).filter(
+        (f) => f && f.DAPVDATE != null,
+    );
+    const flowSorted = flowFilter.sort((a, b) => {
+        const dateA = new Date(
+            `${dayjs(a.DAPVDATE).format('MM/DD/YYYY')} ${(a.CAPVTIME?.trim() || '00:00:00').substring(0, 8)}`,
+        );
+        const dateB = new Date(
+            `${dayjs(b.DAPVDATE).format('MM/DD/YYYY')} ${(b.CAPVTIME?.trim() || '00:00:00').substring(0, 8)}`,
+        );
+        return dateB - dateA;
+    });
+    return flowSorted[0] || null;
+}
+
+function getRunningDays(form) {
+    if (!form) return 0;
+    const latest = getLastApproved(form.flow);
+    let sdate;
+    if (!latest) {
+        if (!form.DREQDATE) return 0;
+        sdate = new Date(
+            `${dayjs(form.DREQDATE).format('MM/DD/YYYY')} ${(form.CREQTIME?.trim() || '00:00:00').substring(0, 8)}`,
+        );
+    } else {
+        sdate = new Date(
+            `${dayjs(latest.DAPVDATE).format('MM/DD/YYYY')} ${(latest.CAPVTIME?.trim() || '00:00:00').substring(0, 8)}`,
+        );
+    }
+    const diffTime = Math.abs(Date.now() - sdate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
 $(document).ready(async function () {
     try {
         await initApp();
@@ -58,52 +121,116 @@ function getPageTitle(data) {
 }
 
 async function populateFilters(data) {
-    // const owners = [...new Set(data.map((item) => item.APP_DIV))].filter(
-    //     (item) => item,
-    // );
-    // const ownerOptions = owners.map((owner) => ({
-    //     value: owner,
-    //     text: owner,
-    // }));
-    // await tableFillSelect('#table-owner-filter', ownerOptions, 'value', 'text');
-    // await setSelect2({
-    //     element: $('#table-owner-filter'),
-    //     placeholder: 'Filter by Owner',
-    // });
-    // const developer = await getUsers({ CSTATUS: '1', SDEPCODE: '050601' });
-    // const devOptions = developer
-    //     .filter((dev) => dev.SPOSCODE >= '33' && dev.SPOSCODE <= '50')
-    //     .map((dev) => ({
-    //         value: dev.SEMPNO,
-    //         text: `${dev.SNAME} (${dev.SEMPNO})`,
-    //     }));
-    // const avatarData = developer.map((dev) => dev.SEMPNO);
-    // await setSelect2({
-    //     element: $('#table-dev-filter'),
-    //     avatar: true,
-    //     placeholder: 'Filter by Developer',
-    //     data: devOptions,
-    //     avatarData: avatarData,
-    // });
+    // 1. Form Type options (distinct VANAME + VNAME present in current records)
+    const formMap = new Map();
+    for (const item of data) {
+        const mst = item?.form?.formmst;
+        if (!mst) continue;
+        const code = String(mst.VANAME || '').trim();
+        const name = String(mst.VNAME || '').trim();
+        if (!code && !name) continue;
+        const key = code || name;
+        if (!formMap.has(key)) {
+            formMap.set(key, code && name ? `${code} : ${name}` : key);
+        }
+    }
+    const formOptions = Array.from(formMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([value, text]) => ({ value, text }));
+
+    await tableFillSelect('#table-form-filter', formOptions, 'value', 'text');
+    await setSelect2({
+        element: $('#table-form-filter'),
+        placeholder: 'All Forms',
+    });
+
+    // 2. Status options (statuses present in current records, fallback to all 4)
+    const presentStatuses = new Set(
+        data.map((item) => String(item?.form?.CST ?? '')).filter(Boolean),
+    );
+    const statusOptions = FORM_STATUS_META.filter(
+        (s) => presentStatuses.size === 0 || presentStatuses.has(s.id),
+    ).map((s) => ({ value: s.id, text: s.name }));
+
+    await tableFillSelect(
+        '#table-status-filter',
+        statusOptions,
+        'value',
+        'text',
+    );
+    await setSelect2({
+        element: $('#table-status-filter'),
+        placeholder: 'All Status',
+        disableSearch: true,
+    });
+
+    // 3. Running Days select2 (when present)
+    if ($('#table-aging-filter').length) {
+        await setSelect2({
+            element: $('#table-aging-filter'),
+            placeholder: 'All Days',
+            disableSearch: true,
+            emptyValue: false,
+        });
+    }
 }
 
 function bindEvents() {
+    if (!customFilterBound) {
+        $.fn.dataTable.ext.search.push(function (settings, _data, dataIndex) {
+            if (settings.nTable.id !== 'table') return true;
+            const rowData = settings.aoData[dataIndex]?._aData;
+            const form = rowData?.form;
+            if (!form) return true;
+
+            const formFilter = $('#table-form-filter').val() || '';
+            if (formFilter) {
+                const code = String(form.formmst?.VANAME || '').trim();
+                const name = String(form.formmst?.VNAME || '').trim();
+                if (code !== formFilter && name !== formFilter) return false;
+            }
+
+            const statusFilter = $('#table-status-filter').val() || '';
+            if (statusFilter && String(form.CST ?? '') !== String(statusFilter)) {
+                return false;
+            }
+
+            const agingFilter = $('#table-aging-filter').val() || '';
+            if (agingFilter) {
+                const days = getRunningDays(form);
+                if (agingFilter === 'lt7' && days >= 7) return false;
+                if (agingFilter === '7to14' && (days < 7 || days > 14))
+                    return false;
+                if (agingFilter === '15to29' && (days < 15 || days > 29))
+                    return false;
+                if (agingFilter === 'gte30' && days < 30) return false;
+            }
+
+            return true;
+        });
+        customFilterBound = true;
+    }
+
     $('#table-search').on('input', function () {
         table.search($(this).val()).draw();
     });
 
-    $('#table-owner-filter').on('change', function () {
-        table.column(5).search($(this).val()).draw();
+    $('.clear-table-search').on('click', function () {
+        $('#table-search').val('').trigger('input').focus();
     });
 
-    $('#table-dev-filter').on('change', function () {
-        table.column(6).search($(this).val()).draw();
-    });
+    $('#table-form-filter, #table-status-filter, #table-aging-filter').on(
+        'change',
+        function () {
+            table.draw();
+        },
+    );
 
     $('#reset-filter').on('click', function () {
         $('#table-search').val('');
-        $('#table-owner-filter').val('').trigger('change.select2');
-        $('#table-dev-filter').val('').trigger('change.select2');
+        $('#table-form-filter').val('').trigger('change.select2');
+        $('#table-status-filter').val('').trigger('change.select2');
+        $('#table-aging-filter').val('').trigger('change.select2');
 
         table.search('');
         table.columns().search('');
@@ -169,42 +296,8 @@ async function reloadTable() {
 async function createFormTable(data) {
     const pageId = $('body').attr('menutitle');
     const pagestatus = $('#status').val();
-    const status = [
-        {
-            id: 0,
-            name: 'Draft',
-            badge: 'badge badge-xs badge-outline badge-neutral font-mono font-bold uppercase',
-        },
-        {
-            id: 1,
-            name: 'Running',
-            badge: 'badge badge-xs badge-outline badge-info font-mono font-bold uppercase',
-        },
-        {
-            id: 2,
-            name: 'Approved',
-            badge: 'badge badge-xs badge-success font-mono font-bold uppercase',
-        },
-        {
-            id: 3,
-            name: 'Rejected',
-            badge: 'badge badge-xs badge-outline badge-error font-mono font-bold uppercase',
-        },
-    ];
-
-    const lastApproved = (flow) => {
-        const flowFilter = flow.filter((f) => f.DAPVDATE != null);
-        const flowSorted = flowFilter.sort((a, b) => {
-            const dateA = new Date(
-                `${dayjs(a.DAPVDATE).format('MM/DD/YYYY')} ${(a.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
-            );
-            const dateB = new Date(
-                `${dayjs(b.DAPVDATE).format('MM/DD/YYYY')} ${(b.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
-            );
-            return dateB - dateA;
-        });
-        return flowSorted[0] || null;
-    };
+    const status = FORM_STATUS_META;
+    const lastApproved = getLastApproved;
 
     const opt = { ...tableOption };
     opt.dom =
@@ -272,7 +365,7 @@ async function createFormTable(data) {
                         </div>
                     </div>`;
                 }
-                return data;
+                return data?.VREQNO || '';
             },
         },
         {
@@ -285,7 +378,9 @@ async function createFormTable(data) {
                         return '';
                     return `${dayjs(data.DREQDATE).format('DD/MM/YYYY')} ${(data.CREQTIME.trim() + ':00').substring(0, 8)}`;
                 }
-                return data;
+                return data?.DREQDATE
+                    ? dayjs(data.DREQDATE).format('YYYY-MM-DD')
+                    : '';
             },
         },
         {
@@ -357,38 +452,21 @@ async function createFormTable(data) {
             data: 'form',
             title: 'Status',
             className: 'text-center',
-            render: (data, type, row) => {
+            render: (data, type) => {
+                const stat = status.find((s) => s.id == data.CST);
                 if (type === 'display') {
-                    const stat = status.find((s) => s.id == data.CST);
-                    return `<div class="badge ${stat.badge || 'badge badge-outline border-base-300'}">${stat.name || 'Unknow'}</div>`;
+                    return `<div class="badge ${stat?.badge || 'badge badge-outline border-base-300'}">${stat?.name || 'Unknown'}</div>`;
                 }
-                return data;
+                return stat?.name || '';
             },
         },
         {
             data: 'form',
             title: 'Running Days',
             className: `${pagestatus == 6 ? 'hidden' : ''}`,
-            render: (data, type, row) => {
+            render: (data, type) => {
+                const diffDays = getRunningDays(data);
                 if (type === 'display') {
-                    let sdate = '';
-                    const latest = lastApproved(data.flow);
-                    if (!latest) {
-                        sdate = new Date(
-                            `${dayjs(data.DREQDATE).format('MM/DD/YYYY')} ${(data.CREQTIME.trim() || '00:00' + ':0000').substring(0, 8)}`,
-                        );
-                    } else {
-                        sdate = new Date(
-                            `${dayjs(latest.DAPVDATE).format('MM/DD/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
-                        );
-                    }
-
-                    const now = new Date();
-                    const diffTime = Math.abs(now - sdate);
-                    const diffDays = Math.ceil(
-                        diffTime / (1000 * 60 * 60 * 24),
-                    );
-
                     let badge = '';
                     if (diffDays >= 30)
                         badge = `<div class="badge badge-xs badge-error font-mono font-bold">${diffDays} days</div>`;
@@ -401,7 +479,7 @@ async function createFormTable(data) {
                     return `<div class="text-center">${badge}</div>`;
                 }
 
-                return null;
+                return diffDays;
             },
         },
     ];
