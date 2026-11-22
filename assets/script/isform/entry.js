@@ -49,6 +49,10 @@ module.exports = {
     devForm: './assets/script/isform/IS-DEV/index.js',
     devFormView: './assets/script/isform/IS-DEV/view.js',
 
+    //IS-UAT: User Acceptance Testing
+    uatForm: './assets/script/isform/IS-UAT/index.js',
+    uatFormView: './assets/script/isform/IS-UAT/view.js',
+
     //IS-CBO: Bring out computer
     computerList: './assets/script/isform/IS-CBO/computer-list.js',
 };
