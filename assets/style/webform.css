@@ -16,11 +16,11 @@ body:not(:has(#sidebar)):has(.webform-theme) {
 }
 
 .webform-theme {
-    /* Surfaces & Base Content (Procurement Corporate Standard) */
+    /* Surfaces & Base Content (Corporate Standard with Crisp Border Contrast) */
     --color-base-100: #ffffff;
-    --color-base-200: #f2f2f2;
-    --color-base-300: #e6e6e6;
-    --color-base-content: #333333;
+    --color-base-200: #f1f5f9;
+    --color-base-300: #cbd5e1;
+    --color-base-content: #1e293b;
 
     /* Brand Primary — Preserved Current Blue */
     --color-primary: oklch(0.43 0.181 260.48);
@@ -61,23 +61,34 @@ body:not(:has(#sidebar)):has(.webform-theme) {
 .webform-theme .btn:not(.btn-circle),
 .webform-theme .input,
 .webform-theme .select,
+.webform-theme .textarea,
 .webform-theme .badge,
 .webform-theme .kbd,
 .webform-theme .skeleton,
-.webform-theme .list {
+.webform-theme .list,
+.webform-theme .collapse {
     border-radius: 0px;
 }
 
 .webform-theme .input,
-.webform-theme .select {
+.webform-theme .select,
+.webform-theme .textarea {
     background-color: var(--color-base-100);
     border-color: var(--color-base-300);
     box-shadow: none;
 }
 
+.webform-theme .input[readonly],
+.webform-theme .input:disabled,
+.webform-theme .select:disabled {
+    background-color: var(--color-base-200);
+    color: var(--color-base-content);
+}
+
 .webform-theme .input:focus,
 .webform-theme .input:focus-within,
-.webform-theme .select:focus {
+.webform-theme .select:focus,
+.webform-theme .textarea:focus {
     outline: none !important;
     border-color: var(--color-primary) !important;
 }
@@ -213,8 +224,9 @@ body:not(:has(#sidebar)):has(.webform-theme) {
     color: inherit !important;
 }
 
-.webform-theme div.dt-container .dt-footer-bar .dt-paging > nav.join {
+.webform-theme div.dt-container .dt-footer-bar .dt-paging > nav {
     display: inline-flex !important;
+    align-items: center !important;
     gap: 0 !important;
 }
 
@@ -222,32 +234,39 @@ body:not(:has(#sidebar)):has(.webform-theme) {
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
-    .dt-paging-button.btn,
-.webform-theme
-    div.dt-container
-    .dt-footer-bar
-    .dt-paging
-    > nav.join
-    .ellipsis.btn {
-    min-width: 1.5rem !important;
-    min-height: 1.5rem !important;
-    height: 1.5rem !important;
+    > nav
+    .dt-paging-button,
+.webform-theme div.dt-container .dt-footer-bar .dt-paging > nav .ellipsis {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 1.75rem !important;
+    min-height: 1.75rem !important;
+    height: 1.75rem !important;
     padding: 0 0.5rem !important;
     margin: 0 !important;
     border-radius: 0 !important;
     font-size: 0.75rem !important;
+    font-weight: 600 !important;
     line-height: 1 !important;
     filter: none !important;
     box-shadow: none !important;
+    background: transparent !important;
+    color: var(--color-base-content) !important;
+    border: 1px solid var(--color-base-300) !important;
+    cursor: pointer !important;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease,
+        border-color 120ms ease;
 }
 
 .webform-theme
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
-    .join-item:not(:first-child) {
+    > nav
+    > *:not(:first-child) {
     margin-inline-start: -1px !important;
 }
 
@@ -255,25 +274,8 @@ body:not(:has(#sidebar)):has(.webform-theme) {
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
-    .dt-paging-button.btn-outline,
-.webform-theme
-    div.dt-container
-    .dt-footer-bar
-    .dt-paging
-    > nav.join
-    .ellipsis.btn-outline {
-    background: transparent !important;
-    color: var(--color-base-content) !important;
-    border: 1px solid var(--color-base-300) !important;
-}
-
-.webform-theme
-    div.dt-container
-    .dt-footer-bar
-    .dt-paging
-    > nav.join
-    .dt-paging-button.btn-outline:hover:not(.disabled) {
+    > nav
+    .dt-paging-button:hover:not(.disabled):not(.current) {
     background: var(--color-base-200) !important;
     color: var(--color-primary) !important;
     border-color: var(--color-base-300) !important;
@@ -283,17 +285,19 @@ body:not(:has(#sidebar)):has(.webform-theme) {
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
+    > nav
     .dt-paging-button.btn-primary,
 .webform-theme
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
-    .dt-paging-button.current.btn {
+    > nav
+    .dt-paging-button.current {
     background: var(--color-primary) !important;
     color: var(--color-primary-content) !important;
     border: 1px solid var(--color-primary) !important;
+    position: relative;
+    z-index: 1;
     cursor: default !important;
 }
 
@@ -301,8 +305,9 @@ body:not(:has(#sidebar)):has(.webform-theme) {
     div.dt-container
     .dt-footer-bar
     .dt-paging
-    > nav.join
-    .dt-paging-button.disabled.btn:not(.current) {
+    > nav
+    .dt-paging-button.disabled:not(.current),
+.webform-theme div.dt-container .dt-footer-bar .dt-paging > nav .ellipsis {
     background: transparent !important;
     color: var(--color-base-content) !important;
     border: 1px solid var(--color-base-300) !important;

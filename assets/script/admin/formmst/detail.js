@@ -181,20 +181,23 @@ let flowState = { sortFlow: [], orgList: [], posList: [], currentPage: 1 };
 async function setFlowMaster(formno) {
     const { orgList, posList } = await setApproverType();
     const flow = await getFlowMaster(formno.nno, formno.orgno, formno.cyear);
+    const flowList = Array.isArray(flow) ? flow.filter(Boolean) : [];
     let sortFlow = [];
-    const firstFlow = flow.find((f) => f.CSTART == '1');
-    sortFlow.push(firstFlow);
-    console.log(sortFlow);
+    const firstFlow = flowList.find((f) => f.CSTART == '1');
 
-    let currentFlow = firstFlow;
-    while (currentFlow) {
-        const nextFlow = flow.find((f) => f.CSTEPNO == currentFlow.CSTEPNEXTNO);
-        if (nextFlow) {
-            sortFlow.push(nextFlow);
-            currentFlow = nextFlow;
-        } else {
-            break;
+    if (firstFlow) {
+        const visited = new Set();
+        let currentFlow = firstFlow;
+        while (currentFlow && !visited.has(currentFlow.CSTEPNO)) {
+            sortFlow.push(currentFlow);
+            visited.add(currentFlow.CSTEPNO);
+            const nextFlow = flowList.find(
+                (f) => f.CSTEPNO == currentFlow.CSTEPNEXTNO,
+            );
+            currentFlow = nextFlow || null;
         }
+    } else if (flowList.length > 0) {
+        sortFlow = flowList;
     }
 
     flowState = { sortFlow, orgList, posList, currentPage: 1 };
@@ -211,7 +214,14 @@ function renderFlowPage() {
 
     const el = $('#flow-list-row');
     el.empty();
+    if (pageItems.length === 0) {
+        el.append(
+            '<div class="border border-base-300 bg-base-200/40 p-4 text-center text-xs wf-mute">No flow steps configured yet.</div>',
+        );
+        return;
+    }
     for (const fs of pageItems) {
+        if (!fs || !fs.STEPMST) continue;
         el.append(`<details class="collapse bg-base-100 border border-base-300 flow-accordion" name="flow-accordion" data-flow-id="${fs.STEPMST.CNO}" data-flow-next-id="${fs.CSTEPNEXTNO}" data-start="${fs.CSTART}">
             <summary class="collapse-title font-semibold flex justify-between p-4!">
                 <div class="flex gap-2 items-center">

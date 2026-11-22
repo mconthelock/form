@@ -421,7 +421,7 @@ async function createFormTable(data) {
         await fillNextApproverInfo(row, data.form.flow, nextId);
     };
 
-    opt.drawCallback = function (settings) {
+    const stylePagination = function () {
         const pagination = $(this).closest('.dt-container').find('.dt-paging');
         const nav = pagination.find('nav');
         nav.addClass('join');
@@ -450,6 +450,8 @@ async function createFormTable(data) {
         );
     };
 
+    opt.drawCallback = stylePagination;
+
     opt.initComplete = function (settings, json) {
         const { container } = tableOption.initComplete.call(
             this,
@@ -458,6 +460,7 @@ async function createFormTable(data) {
         );
         $('.dt-search').addClass('hidden');
         $('.dt-length').addClass('hidden');
+        stylePagination.call(this);
     };
     table = await createTable(opt);
 }

@@ -10,6 +10,7 @@
     "glob": "^13.0.0",
     "style-loader": "^4.0.0",
     "tailwindcss": "^4.1.12",
+    "three": "^0.187.0",
     "vitepress": "^2.0.0-alpha.12"
   },
   "dependencies": {
