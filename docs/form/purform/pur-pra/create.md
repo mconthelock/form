@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# คู่มือการสร้างฟอร์ม Price Approval (PRO-PRA)
-=======
 # คู่มือการสร้างฟอร์ม Price Approval (PUR-PRA)
->>>>>>> 934b5416 (Refactor code structure and remove redundant sections for improved readability and maintainability)
 
 ฟอร์ม Price Approval มี 2 โหมดสำหรับระบุข้อมูล Price Comparison:
 

@@ -1,5 +1,4 @@
 import { Steps } from '@amec/webasset/components/steps';
-<<<<<<< HEAD
 import {
     getUrlParams,
     requiredForm,
@@ -27,7 +26,6 @@ export const steps = {
     _requester: null,
     _plannerCode: null,
     _function: null,
-<<<<<<< HEAD
     _system: null,
     _formNo: null,
     _priceApvForm: null,
@@ -67,15 +65,6 @@ export const steps = {
     },
     get system() {
         return this._system;
-=======
-    _db: null,
-    _formNo: null,
-    set db(value) {
-        this._db = value;
-    },
-    get db() {
-        return this._db;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
     },
     set plannerCode(value) {
         this._plannerCode = value;
@@ -175,11 +164,7 @@ export const steps = {
             inputer: this._inputer,
             requester: this._requester,
             plannerCode: this._plannerCode,
-<<<<<<< HEAD
             system: this._system,
-=======
-            db: this._db,
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
             function: this._function,
             formNo: this._formNo,
             priceApvForm: this._priceApvForm,
@@ -192,59 +177,25 @@ export const steps = {
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
-<<<<<<< HEAD
         this._system = null;
-=======
-        this._db = null;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
         this._formNo = null;
         this._priceApvForm = null;
         this._vendor = null;
         this._compareMode = null;
     },
-<<<<<<< HEAD
     async init(isReturn = false) {
         this._isReturn = isReturn;
-=======
-import { requiredForm } from '@amec/webasset/utils';
-export const steps = {
-    instance: null,
-    mode: null,
-    init() {
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
-=======
-    resetRequester() {
-        this.requester = null;
-        this.plannerCode = null;
-        $('input[name="requester"]').val('');
-        $('#requester-card-container').empty();
-    },
-    async init(inputer, returnOrDraft = false) {
-        this.inputer = inputer;
-        await this.setProfileCard(
-            inputer,
-            '#inputer-card-container',
-            'Inputer',
-        );
-
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
                 { label: 'New or Continue' },
                 { label: 'Choose Pending Items' },
                 { label: 'Input Data' },
-<<<<<<< HEAD
                 { label: 'Select Item Code' },
                 { label: 'Upload File' },
             ],
-<<<<<<< HEAD
             currentStep: isReturn ? 3 : 0,
             disabledSteps: isReturn ? [0, 1, 2] : [],
-=======
-            currentStep: returnOrDraft ? 3 : 0,
-            disabledSteps: returnOrDraft ? [0, 1, 2] : [],
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
             clickable: true,
             allowClickForward: false,
             onChange: async function (currentStep) {
@@ -257,17 +208,10 @@ export const steps = {
                 }
             },
         });
-<<<<<<< HEAD
         if (isReturn) {
             await this.handlePanel(3);
         } else {
             await this.handlePanel(0);
-=======
-        if (returnOrDraft) {
-            this.handlePanel(3);
-        } else {
-            this.handlePanel(0);
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
         }
         this.bindEvents();
     },
@@ -322,21 +266,13 @@ export const steps = {
                 (record) => record.K85M03 === empno,
             );
             if (enableFuncAs400) {
-<<<<<<< HEAD
                 $('input[name="function"][data-system="AS400"]').prop(
-=======
-                $('input[name="function"][data-db="AS400"]').prop(
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                     'disabled',
                     false,
                 );
             }
             if (enebleFuncMitsu) {
-<<<<<<< HEAD
                 $('input[name="function"][data-system="PROCUREMENT"]').prop(
-=======
-                $('input[name="function"][data-db="MITSU"]').prop(
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                     'disabled',
                     false,
                 );
@@ -399,11 +335,7 @@ export const steps = {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
             this.function = null;
-<<<<<<< HEAD
             this.system = null;
-=======
-            this.db = null;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
             this.formNo = null;
             this.setRequester(null);
             $('#step-vendor')[0].reset();
@@ -424,54 +356,10 @@ export const steps = {
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
-<<<<<<< HEAD
                 await tableDraft.destroy();
                 tableDraft.preload();
                 const draftData = await getListDraft(this.inputer);
                 if (!draftData.status) {
-=======
-                await this.setProfileCard(
-                    this.inputer,
-                    '#requester-card-container',
-                );
-                // TODO: ดึงข้อมูล draft จากแหล่งข้อมูลจริง
-                // * mockdata
-                const draftData = [
-                    {
-                        FORMNO: 'COMP-2026-000001',
-                        REQBY_NAME: 'John Doe',
-                        PLANNER_CODE: 'X',
-                        MODE: 'E',
-                        VENDOR: '70006',
-                        AMOUNT_PRESENT: 28500,
-                        AMOUNT_NEW: 30000,
-                        AMOUNT_DIFF: -1500,
-                        RATIO: '5%',
-                        REQ_DATE: '2026-08-15 09:59',
-                        QUOTATION: null,
-                        FUNCTION: 1,
-                        DB: 'AS400',
-                        STATUS: 0,
-                    },
-                    {
-                        FORMNO: 'COMP-2026-000002',
-                        REQBY_NAME: 'John Doo',
-                        PLANNER_CODE: 'X',
-                        MODE: 'E',
-                        VENDOR: '70006',
-                        AMOUNT_PRESENT: 25500,
-                        AMOUNT_NEW: 30000,
-                        AMOUNT_DIFF: -4500,
-                        RATIO: '7%',
-                        REQ_DATE: '2026-08-16 09:59',
-                        QUOTATION: null,
-                        FUNCTION: 2,
-                        DB: 'AS400',
-                        STATUS: 1,
-                    },
-                ];
-                if (draftData.length === 0) {
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                     showMessage('No draft data available', 'warning');
                     this.instance.skipTo(2);
                     this.mode = 'new';
@@ -486,11 +374,7 @@ export const steps = {
                 break;
             case 2:
                 this.function = null;
-<<<<<<< HEAD
                 this.system = null;
-=======
-                this.db = null;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                 btnNext.prop('disabled', true);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
@@ -512,11 +396,7 @@ export const steps = {
                             (condition) => `
                                 <label class="label">
                                     <input type="radio" name="function" value="${condition.NO}" class="radio req"
-<<<<<<< HEAD
                                         data-message="Please enter function" data-system="${condition.SYSTEM}" disabled>
-=======
-                                        data-message="Please enter function" data-db="${condition.DB}" disabled>
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                                     ${condition.NO}
                                     ${condition.DESCRIPTION}
                                 </label>
@@ -526,7 +406,6 @@ export const steps = {
                 );
                 break;
             case 3:
-<<<<<<< HEAD
                 await tableCreatePrice.init({
                     PLANNER: this.plannerCode,
                     SYSTEM: this.system,
@@ -534,29 +413,19 @@ export const steps = {
                 if (!this._isReturn) {
                     btnPrevious.removeClass('hidden');
                 }
-=======
-                await tableCreatePrice.init(this.plannerCode);
-                tableComparison.reset();
-                btnPrevious.removeClass('hidden');
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                 btnNext.removeClass('hidden');
                 break;
             case 4:
                 importExcel.reset();
-<<<<<<< HEAD
                 await tableComparison.init({
                     formNo: this.formNo,
                     function: this.function,
                 });
-=======
-                await tableComparison.init({ formNo: this.formNo });
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                 btnPrevious.removeClass('hidden');
                 const submitOpt = {
                     remark: false,
                     back: false,
                 };
-<<<<<<< HEAD
                 if (this.mode == 'new') {
                     submitOpt.draft = true;
                     submitOpt.request = true;
@@ -571,15 +440,6 @@ export const steps = {
                     submitOpt.request = false;
                     submitOpt.form = this.priceApvForm;
                     submitHtml = await webflowSubmit(submitOpt);
-=======
-                if (this.mode == 'draft') {
-                    submitOpt.draft = false;
-                    // submitOpt.request = false;
-                    submitOpt.save = true;
-                    // submitOpt.approve = true;
-                    submitOpt.flow = true;
-                    submitOpt.flowHtml = ''; // TODO หาก user ตัดสินใจ ว่าให้ approve ค่อยมากำหนดค่า
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                 }
                 webformSubmitContainer.html(submitHtml).removeClass('hidden');
                 break;
@@ -591,34 +451,6 @@ export const steps = {
      * @description จัดการการกดปุ่ม previous ของแต่ละ step
      * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
      */
-=======
-                { label: 'Pre Data' },
-                { label: 'Upload File' },
-            ],
-            currentStep: 0,
-            clickable: true,
-            allowClickForward: false,
-            onChange: async function (currentStep) {
-                await steps.handlePanel(currentStep);
-            },
-        });
-        this.bindEvents();
-    },
-    bindEvents() {
-        const self = this;
-        const stepper = self.instance;
-        $(document).on('click', '.previous-step', function () {
-            self.handlePreviousStep(stepper.currentStep);
-        });
-        $(document).on('click', '.next-step', async function () {
-            if (!(await self.validatePanel(stepper.currentStep))) return;
-            if (stepper.currentStep === 0) {
-                self.mode = $(this).attr('mode');
-            }
-            self.handleNextStep(stepper.currentStep);
-        });
-    },
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
     handlePreviousStep(index) {
         switch (index) {
             case 3:
@@ -637,7 +469,6 @@ export const steps = {
                 break;
         }
     },
-<<<<<<< HEAD
     /**
      * @author Sutthipong Tangmongkhoncharoen(24008)
      * @since 2026-09-15
@@ -645,10 +476,6 @@ export const steps = {
      * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
      */
     handleNextStep(index) {
-=======
-    handleNextStep(index) {
-        console.log('mode', this.mode);
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
         switch (index) {
             case 0:
                 if (this.mode === 'new') {
@@ -662,22 +489,13 @@ export const steps = {
                 }
                 break;
             case 1:
-<<<<<<< HEAD
                 this.instance.skipTo(3);
                 break;
             default:
-=======
-                console.log('2');
-                this.instance.skipTo(3);
-                break;
-            default:
-                console.log('3');
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
                 this.instance.next();
                 break;
         }
     },
-<<<<<<< HEAD
     bindEvents() {
         const self = this;
         const stepper = self.instance;
@@ -739,34 +557,11 @@ export const steps = {
         $(document).on('change', 'input[name="function"]', async function () {
             try {
                 self.function = $(this).val();
-<<<<<<< HEAD
                 self.system = $(this).data('system');
-=======
-                self.db = $(this).data('db');
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);
             }
         });
-=======
-    /** ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป */
-    async validatePanel(index) {
-        // TODO: ใส่ validation ของแต่ละหน้า เช่น
-        if (index === 2) {
-            return await requiredForm('#step-requester');
-        }
-        return true;
-    },
-    async handlePanel(index) {
-        const requester = $('input[name="requester"]');
-        if (index <= 1) {
-            $('#step-requester')[0].reset();
-            $('#requester-card-container').empty();
-            if (index === 1) {
-                requester.trigger('focus');
-            }
-        }
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
     },
 };

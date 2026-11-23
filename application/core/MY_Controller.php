@@ -1,15 +1,5 @@
 <?php
     defined('BASEPATH') OR exit('No direct script access allowed');
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    //use Coolpraz\PhpBlade\PhpBlade;
->>>>>>> 4765fc75 (fix: update Blade Engine)
-=======
-    //use Coolpraz\PhpBlade\PhpBlade;
-=======
->>>>>>> 64e821f8 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
->>>>>>> fd43a012 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
     use duncan3dc\Laravel\BladeInstance;
     class MY_Controller extends CI_Controller {
         protected $views = APPPATH . 'views';
@@ -25,40 +15,13 @@
             }else{
                 $this->callback = 'https://' . $_SERVER['HTTP_HOST'].'/form/authen/index/6/';
             }
-<<<<<<< HEAD
-<<<<<<< HEAD
             $this->blade = new BladeInstance($this->views, $this->cache);
-            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
-=======
-
-            //$this->blade = new PhpBlade($this->views, $this->cache);
-            $this->blade = new BladeInstance($this->views, $this->cache);
->>>>>>> 4765fc75 (fix: update Blade Engine)
-=======
-
-            //$this->blade = new PhpBlade($this->views, $this->cache);
-            $this->blade = new BladeInstance($this->views, $this->cache);
-=======
-            $this->blade = new BladeInstance($this->views, $this->cache);
-            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
->>>>>>> 64e821f8 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
->>>>>>> fd43a012 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
             $this->load->database();
             $this->load->library('mail');
             $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :time();
         }
 
         public function views($view_name, $data = array()){
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-            //echo $this->blade->view()->make($view_name, $data);
->>>>>>> 4765fc75 (fix: update Blade Engine)
-=======
-            //echo $this->blade->view()->make($view_name, $data);
-=======
->>>>>>> 64e821f8 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
->>>>>>> fd43a012 (fix: update dependencies and handle PHP 8 deprecations across multiple files)
             echo $this->blade->render($view_name, $data);
         }
 

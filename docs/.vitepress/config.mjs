@@ -12,11 +12,6 @@ const APP_ID = process.env.APP_ID || '1';
 const APP_HOST = process.env.APP_HOST || '';
 const APP_ENV = process.env.APP_ENV || '';
 const APP_API = process.env.APP_API || '';
-const APP_NAME = process.env.APP_NAME || 'form';
-const APP_ID = process.env.APP_ID || '1';
-const APP_HOST = process.env.APP_HOST || '';
-const APP_ENV = process.env.APP_ENV || '';
-const APP_API = process.env.APP_API || '';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({

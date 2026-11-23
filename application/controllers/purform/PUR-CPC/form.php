@@ -13,7 +13,6 @@ class form extends MY_Controller{
             $this->views('purform/PUR-CPC/form');
         }
     }
-<<<<<<< HEAD
 
     public function view(){
         $this->views('purform/PUR-CPC/view');
@@ -22,6 +21,4 @@ class form extends MY_Controller{
     public function lists(){
         $this->views('purform/PUR-CPC/lists');
     }
-=======
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
 }

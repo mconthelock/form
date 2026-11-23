@@ -1,6 +1,5 @@
 import {
     getUrlParams,
-<<<<<<< HEAD
     openNewTab,
     renderLoadError,
     requiredForm,
@@ -119,33 +118,11 @@ $(async function () {
         renderLoadError(error.message);
     } finally {
         showLoader({ show: false });
-=======
-    renderLoadError,
-    showErrorMessage,
-    showMessage,
-} from '@amec/webasset/utils';
-import { getUser } from '@amec/webasset/api/amec';
-import { getK850mpData } from '../PUR-CPC/data';
-import { getListCreate } from './data';
-
-$(async function () {
-    try {
-        const params = getUrlParams();
-        const empno = params.EMPNO;
-        if (!(await checkPlanner(empno))) {
-            throw new Error('User not found');
-        }
-        $('#INPUTBY').val(empno);
-    } catch (error) {
-        console.error(error);
-        renderLoadError(error.message);
->>>>>>> 63e38705 (feat(price-apv): add PUR-PRA module with form handling, data fetching, and validation logic)
     }
 });
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
-<<<<<<< HEAD
  * @since 2026-10-27
  * @description เริ่มทัวร์แนะนำการใช้งานฟอร์มตาม key 'PRICEAPV' เมื่อคลิกปุ่ม
  */
@@ -231,8 +208,6 @@ $(document).on(
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
-=======
->>>>>>> 63e38705 (feat(price-apv): add PUR-PRA module with form handling, data fetching, and validation logic)
  * @since 2026-09-30
  * @description ตรวจสอบว่า Planner มีอยู่ในระบบหรือไม่ เมื่อกรอกข้อมูลในฟิลด์ REQBY
  */
@@ -250,7 +225,6 @@ $(document).on('change', '#REQBY', async function () {
  */
 $(document).on('click', '#btn-view-compare', async function () {
     try {
-<<<<<<< HEAD
         showLoader();
         const req = $('#REQBY').val();
         // $('#requester-fieldset span#card-empno').text();
@@ -350,16 +324,6 @@ $(document).on('change', '#VPLANNER', async function () {
         if (!checked.status) {
             showMessage(`Planner not found for ${planner}`, 'warning');
             $(this).val('');
-=======
-        const req = $('#REQBY').val();
-        if (!req) {
-            showMessage('Please enter the requester.', 'warning');
-            return;
-        }
-        const lists = await getListCreate(req);
-        if (!lists.status) {
-            showMessage(`Price comparison not found for ${req}`, 'warning');
->>>>>>> 63e38705 (feat(price-apv): add PUR-PRA module with form handling, data fetching, and validation logic)
             return;
         }
     } catch (error) {
@@ -370,7 +334,6 @@ $(document).on('change', '#VPLANNER', async function () {
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
-<<<<<<< HEAD
  * @since 2026-10-19
  * @description จัดการการเปลี่ยนแปลงการตรวจสอบไฟล์ที่จำเป็นตามเหตุผลและสถานะการ Return Form
  */
@@ -525,26 +488,3 @@ $(document).on(
         }
     },
 );
-=======
- * @since 2026-09-30
- * @description ตรวจสอบว่า Planner มีอยู่ในระบบหรือไม่
- * @param {string} empno
- * @returns
- */
-async function checkPlanner(empno) {
-    const k850mpData = await getK850mpData();
-    const k850mpRecord = k850mpData.data.filter(
-        (record) => record.K85M03 === empno,
-    );
-    if (k850mpRecord.length === 0) {
-        showMessage('Planner not found', 'warning');
-        return false;
-    }
-    const empnoData = await getUser(empno);
-    if (!empnoData) {
-        showMessage('User not found', 'warning');
-        return false;
-    }
-    return true;
-}
->>>>>>> 63e38705 (feat(price-apv): add PUR-PRA module with form handling, data fetching, and validation logic)

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# คู่มือการดูฟอร์ม Price Approval (PRO-PRA)
-=======
 # คู่มือการดูฟอร์ม Price Approval (PUR-PRA)
->>>>>>> 934b5416 (Refactor code structure and remove redundant sections for improved readability and maintainability)
 
 หน้า **View** ใช้แสดงข้อมูล Price Approval ที่บันทึกไว้เพื่อให้ผู้เกี่ยวข้องตรวจสอบ โดยข้อมูลในหน้านี้เป็นแบบอ่านอย่างเดียว ไม่สามารถแก้ไขจากหน้านี้ได้ ส่วนปุ่มดำเนินการท้ายหน้าอาจแตกต่างกันตามสถานะฟอร์มและสิทธิ์ของผู้ใช้
 

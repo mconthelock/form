@@ -205,7 +205,6 @@ export async function createFormIsDev(data) {
         });
     });
 }
-<<<<<<< HEAD
 
 export async function updateFormIsDev(data) {
     return new Promise((resolve, reject) => {
@@ -225,5 +224,3 @@ export async function updateFormIsDev(data) {
         });
     });
 }
-=======
->>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)

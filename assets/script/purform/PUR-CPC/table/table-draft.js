@@ -110,7 +110,6 @@ export const tableDraft = {
                 try {
                     const selected = getSelectedData(self.instance);
                     const data = selected[0];
-<<<<<<< HEAD:assets/script/purform/PUR-CPC/table/table-draft.js
                     if (data.VFORMNO == steps.formNo) return;
                     steps.formNo = data.VFORMNO;
                     steps.function = data.NFUNCTIONS;
@@ -120,11 +119,6 @@ export const tableDraft = {
                     steps.setInputer(data.VINPUTER);
                     steps.compareMode = data.CMODE;
                     steps.vendor = data.VVENDOR;
-=======
-                    steps.formNo = data.FORMNO;
-                    steps.function = data.FUNCTION;
-                    steps.db = data.DB;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management):assets/script/purform/PUR-CPC/table.draft.js
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);

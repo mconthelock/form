@@ -1,17 +1,11 @@
 import {
     getUrlParams,
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    logtest,
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
     renderLoadError,
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
 import { steps } from './steps';
 import { importExcel } from './importExcel';
-<<<<<<< HEAD
 import { modalConfirmRequest } from './modal/modal-comfirm';
 import { tableComparison } from './table/table-comparison';
 import { createComparison, getComparisonListByForm } from './data';
@@ -20,10 +14,6 @@ import { finishProcess, prepareFormData } from './function';
 import { redirectWebflow } from '@amec/webasset/form';
 import { getFormByUrlParam } from '../PUR-PRA/function';
 import { getFormPriceApprove } from '../PUR-PRA/data';
-=======
-import { modalConfirmRequest } from './modal-comfirm';
-import { tableComparison } from './table-comparison';
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
 
 $(async function () {
     try {
@@ -81,7 +71,6 @@ $(document).on('submit', 'form[data-step-panel]', function (e) {
  * @since 2026-09-22
  * @description Handle click events for request buttons (draft, save, request)
  */
-<<<<<<< HEAD
 $(document).on(
     'click',
     'button[name="btnRequest"], button[name="btnAction"]',
@@ -130,118 +119,3 @@ $(document).on(
         }
     },
 );
-=======
-    logtest,
-    showErrorMessage,
-    showMessage,
-} from '@amec/webasset/utils';
-import { getUser, getUserImage } from '@amec/webasset/api/amec';
-
-import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
-import { getActivePriceConditions } from './data';
-import { steps } from './steps';
-
-$(async function () {
-    try {
-        const params = getUrlParams();
-        const empno = params.EMPNO;
-        logtest(params);
-        const activePriceConditions = await getActivePriceConditions();
-        if (!activePriceConditions.status) {
-            throw new Error(activePriceConditions.message);
-        }
-        const priceCondContainer = $('#price-cond');
-        priceCondContainer.replaceWith(
-            activePriceConditions.data
-                .map(
-                    (condition) => `
-                <label class="label">
-                    <input type="radio" name="function" value="${condition.NO}" class="radio req"
-                        data-message="Please enter function">
-                    ${condition.NO}
-                    ${condition.DESCRIPTION}
-                </label>
-            `,
-                )
-                .join(''),
-        );
-
-        // Set the inputer field with the empno
-        $('#INPUTBY').val(empno);
-        await setProfileCard(empno, '#inputer-card-container', 'Inputer');
-        // Set step
-        steps.init();
-    } catch (error) {
-        console.error(error);
-        showErrorMessage(error.message);
-    }
-});
-
-$(document).on('input', 'input[name="requester"]', async function () {
-    try {
-        const requester = $(this).val();
-        if (requester.length < 5) {
-            $('#requester-card-container').empty();
-            return;
-        }
-        await setProfileCard(requester, '#requester-card-container');
-    } catch (error) {
-        console.error(error);
-        showErrorMessage(error.message);
-    }
-});
-
-$(document).on('change', 'input[name="requester"]', async function () {
-    try {
-        const requester = $(this).val();
-        if (requester.length < 5) {
-            showMessage('Requester must be at least 5 characters', 'warning');
-            $(this).val('');
-=======
-$(document).on('click', 'button[name="btnRequest"]', async function (e) {
-    try {
-        const val = $(this).val();
-        const data = tableComparison.data();
-        if (data.length === 0) {
-            showMessage('No data available for request.', 'warning');
-            return;
-        }
-        switch (val) {
-            case 'draft':
-                break;
-            case 'save':
-                break;
-            case 'request':
-                modalConfirmRequest.show(true);
-                break;
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
-        }
-    } catch (error) {
-        console.error(error);
-        showErrorMessage(error.message);
-    }
-});
-<<<<<<< HEAD
-
-async function setProfileCard(empno, containner, title = 'Requester') {
-    const empnoData = await getUser(empno);
-    const userImage = await getUserImage(empno);
-    if (!empnoData) {
-        $(containner).empty();
-        showMessage('Requester not found', 'warning');
-        return;
-    }
-    new EmployeeProfileCard({
-        container: containner,
-        name: empnoData.SNAME,
-        empno: empno,
-        position: empnoData.SPOSITION,
-        sec: empnoData.SSEC || '-',
-        dept: empnoData.SDEPT || '-',
-        image: userImage,
-        title: title,
-    });
-}
->>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
-=======
->>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)

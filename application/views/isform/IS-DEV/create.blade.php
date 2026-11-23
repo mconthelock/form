@@ -2,7 +2,6 @@
 
 @section('contents')
     <form action="" id="form-is-dev">
-<<<<<<< HEAD
         <input type="text" class="hidden" id="MODE" value="{{ $mode ?? 1 }}" />
         <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
@@ -12,28 +11,8 @@
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
         <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR2 ?? '' }}" />
         <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO ?? 0 }}" />
-=======
-        <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
-        <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
-        <input type="text" class="hidden" value="1" data-map="STATUS" />
-        <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
-        <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
-        <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
->>>>>>> a51dfb45 (feat: enhance form functionality by adding category and plan year, and refactor data handling in JavaScript)
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
             data-map="INPUTBY" />
-        <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD=======>>>>>>> 171584cc (feat: enhance form handling by adding
-            category data and refactoring form submission logic)
-            =======
-
-
-            >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update hidden inputs in create view)
-            =======
-            >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring form submission logic)
-            =======
-
-
-            >>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update hidden inputs in create view)
             <section class="flex flex-col gap-3 mb-4">
                 <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
                 {{-- Request User --}}
@@ -100,7 +79,7 @@
                         <legend class="fieldset-legend">System Name</legend>
                         <ul class="flex gap-5">
                             <li class="flex items-center gap-3"><input type="radio" name="system_name"
-                                    class="radio radio-primary" checked />AS400 Application</li>
+                                     class="radio radio-primary" checked />AS400 Application</li>
                             <li class="flex items-center gap-3"><input type="radio" name="system_name"
                                     class="radio radio-primary" />Windows Application</li>
                         </ul>
@@ -188,24 +167,7 @@
                                 <legend class="fieldset-legend">ROI Payback Period</legend>
                                 <div class="flex items-center gap-3">
                                     <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
-                                        <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD <<<<<<< HEAD value="1"
-                                        id="req-roi-years" data-map="ROI_RETURN" />
-                                    =======
-                                    value="1" id="req-roi-years" data-map="" />
-                                    >>>>>>> 171584cc (feat: enhance form handling by adding category data and refactoring
-                                    form submission logic)
-                                    =======
-                                    value="1" id="req-roi-years" data-map="ROI_RETURN" />
-                                    >>>>>>> 1922b1ad (fix: correct category key and add plan year to form data; update
-                                    hidden inputs in create view)
-                                    =======
-                                    value="1" id="req-roi-years" data-map="" />
-                                    >>>>>>> 4bcb662b (feat: enhance form handling by adding category data and refactoring
-                                    form submission logic)
-                                    =======
-                                    value="1" id="req-roi-years" data-map="ROI_RETURN" />
-                                    >>>>>>> a5f355e5 (fix: correct category key and add plan year to form data; update
-                                    hidden inputs in create view)
+                                        value="1" id="req-roi-years" data-map="ROI_RETURN" />
                                     <span class="text-gray-500 text-xs"> Year(s)</span>
                                 </div>
                             </fieldset>
