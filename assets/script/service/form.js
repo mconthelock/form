@@ -105,8 +105,7 @@ export async function formHeader(data) {
     $('#form-header-icon').html(setVname(master.VANAME));
     $('#form-header-title').html(master.VNAME);
     $('#form-header-subtitle').html(master.VDESC);
-    //const form = master.form;
-    const stat = setStatus('1');
+    const stat = setStatus(String(data.CST));
     $('#form-header-status').addClass(stat.classed);
     $('#form-header-status-icon').html(stat.icon);
     $('#form-header-status-en').html(stat.en);
@@ -264,20 +263,58 @@ export async function formFlowApproval(data) {
     setStepTable(data.flow);
 }
 
-export async function formApprovalBtn(opt) {
+export async function formApprovalBtn(form, opt = {}) {
     const opts = {
-        approve: true,
-        reject: true,
+        approve: false,
+        reject: false,
         return: false,
         delete: false,
         print: false,
+        remark: false,
+        empno: $('#EMPNO').val(),
         ...opt,
     };
+
+    const currentEmp = String(opts.empno || '').trim();
+    const flowList = Array.isArray(form?.flow) ? form.flow : [];
+    const currentStep = flowList.find((c) => String(c.CSTEPST) === '3');
+    const isApprover =
+        String(form?.CST) === '1' &&
+        Boolean(currentStep) &&
+        Boolean(currentEmp) &&
+        (String(currentStep.VAPVNO || '').trim() === currentEmp ||
+            String(currentStep.VREPNO || '').trim() === currentEmp);
+
+    const visibleMap = {
+        approve: isApprover && opts.approve,
+        reject: isApprover && opts.reject,
+        return: isApprover && opts.return,
+        delete: isApprover && opts.delete,
+        print: Boolean(opts.print),
+    };
+
+    let hasVisibleBtn = false;
     $('#form-button-container button').each(function () {
         const id = $(this).data('attr');
-        if (opts[id]) {
+        if (visibleMap[id]) {
             $(this).removeClass('hidden');
+            hasVisibleBtn = true;
+        } else {
+            $(this).addClass('hidden');
         }
     });
+
+    if (isApprover && opts.remark) {
+        $('#form-remark-container').removeClass('hidden');
+    } else {
+        $('#form-remark-container').addClass('hidden');
+    }
+
+    if (hasVisibleBtn) {
+        $('#form-action-section').removeClass('hidden');
+    } else {
+        $('#form-action-section').addClass('hidden');
+    }
+
     $('#form-button-container-loading').addClass('hidden');
 }

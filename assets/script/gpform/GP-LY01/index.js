@@ -23,7 +23,11 @@ $(document).ready(async function () {
         await formHeader(data[0].form);
         await formHeaderInfo(data[0].form);
         await formFlowApproval(data[0].form);
-        await formApprovalBtn();
+        await formApprovalBtn(data[0].form, {
+            approve: true,
+            remark: true,
+            empno: $('#EMPNO').val(),
+        });
 
         const currentData = await getCurrent(data[0].EMPCOD);
         await renderFormTable(itemsData);
