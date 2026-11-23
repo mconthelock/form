@@ -306,17 +306,16 @@
                         <span>Long-Term Use (ใช้ระยะยาว)</span>
                     </label>
                     <div class="mt-3">
-                        <input type="number" name="LONGTERM_YEARS" id = "LONGTERM_YEARS" class="input input-bordered w-full"
-                            placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="1" max="2" step="1" aria-describedby="long-term-years-hint">
-                        <p id="long-term-years-hint" class="tph-hint">ขออนุญาตได้สูงสุด 2 ปี (1–2 years)</p>
+                        <input type="hidden" name="LONGTERM_YEARS" id="LONGTERM_YEARS">
+                        <p class="tph-hint">ระยะเวลาการอนุญาต 2 ปี (730 วันนับจากวันปัจจุบัน)</p>
                     </div>
                     <div id="long-term-valid-until" class="mt-3 hidden rounded-lg border border-slate-200 bg-slate-50 p-3"
                         aria-live="polite">
                         <div class="text-sm font-semibold text-slate-700">Valid Until (ใช้ได้จนถึง)</div>
                         <div id="LONGTERM_VALID_UNTIL_DISPLAY" class="mt-1 font-medium text-slate-900">
-                            Enter year(s) to calculate the end date.
+                            Calculated from today plus 730 days.
                         </div>
-                        <p class="tph-hint">Calculated from today and the selected year(s).</p>
+                        <p class="tph-hint">Calculated from the current date plus 730 days.</p>
                     </div>
                     <label class="inline-flex items-center gap-2 mt-4">
                         <input type="radio" name="permit_option" class="radio radio-primary" id='period' value="period">

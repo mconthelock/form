@@ -20,8 +20,9 @@ import {
     populateSavedDetails,
     buildSavePayload,
     renderPrevFile,
+    toggleConfirmationTable,
+    toggleChangeBox,
 } from './form';
-
 let empno = '';
 let selectedFilesArray = [];
 
@@ -42,16 +43,20 @@ $(document).ready(async function () {
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
 
-    // ผูก Event คอนโทรลหน้าจอ
+    // 1. ผูก Event คอนโทรลหน้าจอ
     bindEmpSearchEvent();
     initFormControls();
-    applyReviewPeriodRules();
 
-    // เติมคำตอบตารางประเมินเดิม (ถ้ามี)
+    // 2. เติมข้อมูลคำตอบที่บันทึกไว้ในตาราง
     populateSavedDetails(window.INITIAL_SAVED_DETAILS || []);
 
-    // เริ่มต้นระบบ Flow
+    // 3. เริ่มต้นระบบ Flow (จะคำนวณสิทธิ์และ Mode)
     await initFlow(form, formData.status);
+
+    // 4. บังคับใช้กฎ Review Period และ Toggle ตารางหลัง Flow เซ็ตสิทธิ์เสร็จ
+    applyReviewPeriodRules();
+    toggleConfirmationTable();
+    toggleChangeBox();
 
     if (form.NRUNNO) {
         loadExistingFiles();
@@ -234,7 +239,7 @@ $(document).ready(async function () {
     }
 
     // --------------------------------------------------------
-    // 🧪 ปุ่มทดสอบส่ง Email แจ้งเตือน PIC (sendNotifyEmailToPic)
+    // ปุ่มทดสอบส่ง Email แจ้งเตือน PIC (sendNotifyEmailToPic)
     // --------------------------------------------------------
     $('#btnTestSendEmail')
         .off('click')
@@ -300,6 +305,28 @@ $(document).ready(async function () {
                 await showLoader({ show: false });
             }
         });
+
+    // --------------------------------------------------------
+    // ปุ่ม Manual Test Generate Cover PDF (สร้างผ่าน PHP TCPDF)
+    // --------------------------------------------------------
+    $('#btnTestGeneratePdf')
+        .off('click')
+        .on('click', function () {
+            const controlNo = $('#ControlNoDrp').val() || '';
+            const reviewPeriod =
+                $('input[name="REVIEW_PERIOD"]:checked').val() || 'YEARLY';
+            const reviewDetails =
+                $('input[name="REVIEW_DETAILS"]:checked').val() || 'NO_CHANGE';
+            const detailChange = encodeURIComponent(
+                $('#DetailChangeTxt').val() || '',
+            );
+            const effectStatus =
+                $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT';
+
+            const testUrl = `${host}feform/FE-ASP/form/preview_cover_pdf?controlNo=${encodeURIComponent(controlNo)}&reviewPeriod=${reviewPeriod}&reviewDetails=${reviewDetails}&detailChange=${detailChange}&effectStatus=${effectStatus}`;
+
+            window.open(testUrl, '_blank');
+        });
 });
 
 /**
@@ -309,38 +336,90 @@ async function executeSaveProcess(form, isDraft = false) {
     const payload = buildSavePayload(form, isDraft, empno);
     if (!payload) return null;
 
-    const validFiles = selectedFilesArray.filter((f) => f !== null);
-
     try {
         await showLoader({ show: true });
+
+        // 1. บันทึกข้อมูล Master และสั่ง PHP สร้างไฟล์ Cover PDF ลงโฟลเดอร์ชั่วคราว
         const resHeader = await saveDocMaster(payload);
         if (!resHeader || !resHeader.status) {
             throw new Error(resHeader?.message || 'บันทึกข้อมูลไม่สำเร็จ');
         }
 
         const createdDoc = resHeader.data || {};
-        form.NFRMNO = createdDoc.NFRMNO || form.NFRMNO;
-        form.VORGNO = createdDoc.VORGNO || form.VORGNO;
-        form.CYEAR = createdDoc.CYEAR || form.CYEAR;
-        form.CYEAR2 = createdDoc.CYEAR2 || form.CYEAR2;
-        form.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
+        const actualDocNo = resHeader.docNo || form.DOC_NO || '';
+        // alert(actualDocNo);
+        const targetForm = {
+            NFRMNO: createdDoc.NFRMNO || form.NFRMNO,
+            VORGNO: createdDoc.VORGNO || form.VORGNO,
+            CYEAR: createdDoc.CYEAR || form.CYEAR,
+            CYEAR2: createdDoc.CYEAR2 || form.CYEAR2,
+            NRUNNO: createdDoc.NRUNNO || form.NRUNNO,
+            DOC_NO: createdDoc.DOC_NO || form.DOC_NO,
+        };
+
         $('#DocHeaderIDHid').val(createdDoc.DOC_HEADER_ID);
+        form.NRUNNO = targetForm.NRUNNO;
+        form.CYEAR2 = targetForm.CYEAR2;
 
-        // ส่งไฟล์ผ่าน NestJS API เข้า Storage กลาง
-        if (validFiles.length > 0) {
-            let nestData = new FormData();
-            nestData.append('NFRMNO', form.NFRMNO);
-            nestData.append('VORGNO', form.VORGNO);
-            nestData.append('CYEAR', form.CYEAR);
-            nestData.append('CYEAR2', form.CYEAR2);
-            nestData.append('NRUNNO', form.NRUNNO);
-            nestData.append('CREATEBY', empno);
-            nestData.append('FORM_TYPE', 'FE');
-            validFiles.forEach((file) => nestData.append('files', file));
+        // 2. เตรียมรายการไฟล์แนบที่ผู้ใช้เลือกมา
+        let filesToUpload = selectedFilesArray.filter((f) => f !== null);
 
-            const resFile = await uploadDocFiles(nestData);
+        // 3. รวมไฟล์ Cover PDF ที่ PHP สร้างไว้เข้าเป็นไฟล์แรก
+        let hasCoverFile = false;
+        if (!isDraft && resHeader.coverFile && resHeader.coverFile.fileUrl) {
+            try {
+                const coverRes = await fetch(
+                    resHeader.coverFile.fileUrl + '?t=' + Date.now(),
+                );
+                if (coverRes.ok) {
+                    const coverBlob = await coverRes.blob();
+                    const coverFile = new File(
+                        [coverBlob],
+                        resHeader.coverFile.fileName,
+                        { type: 'application/pdf' },
+                    );
+                    filesToUpload.unshift(coverFile);
+                    hasCoverFile = true;
+                }
+            } catch (errCover) {
+                console.warn('Cannot fetch cover file to upload:', errCover);
+            }
+        }
+
+        // 4. ส่งไฟล์ทั้งหมดผ่าน NestJS API (uploadDocFiles) ส่วนกลาง   `\\amecnas\AMECWEB\File\development\Form\FE\AMEC-AR\${actualDocNo}`
+        if (filesToUpload.length > 0) {
+            let nestJsData = new FormData();
+            nestJsData.append('NFRMNO', targetForm.NFRMNO);
+            nestJsData.append('VORGNO', targetForm.VORGNO);
+            nestJsData.append('CYEAR', targetForm.CYEAR);
+            nestJsData.append('CYEAR2', targetForm.CYEAR2);
+            nestJsData.append('NRUNNO', targetForm.NRUNNO);
+            nestJsData.append('CREATEBY', empno);
+            nestJsData.append('FORM_TYPE', 'FE');
+            nestJsData.append(
+                'PATH',
+                `\\\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\AMEC-AR\\${actualDocNo}`,
+            );
+
+            filesToUpload.forEach((file) => nestJsData.append('files', file));
+
+            const resFile = await uploadDocFiles(nestJsData);
             if (!resFile || !resFile.status) {
-                throw new Error(resFile?.message || 'อัปโหลดไฟล์แนบไม่สำเร็จ');
+                throw new Error(resFile?.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
+            }
+
+            // 5. เมื่อบันทึกเข้าส่วนกลางสำเร็จแล้ว ลบไฟล์ Cover Sheet ออกจาก assets/upload/fe_asp/ ทันที
+            if (hasCoverFile && resHeader.coverFile?.fileName) {
+                try {
+                    await $.ajax({
+                        url: host + 'feform/FE-ASP/form/deleteTempCoverFile',
+                        type: 'POST',
+                        data: { fileName: resHeader.coverFile.fileName },
+                        dataType: 'json',
+                    });
+                } catch (delErr) {
+                    console.warn('Cannot delete temporary cover file:', delErr);
+                }
             }
         }
 

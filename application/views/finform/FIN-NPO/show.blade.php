@@ -66,6 +66,14 @@
             min-width: 110px;
             text-align: right;
         }
+
+        #stampTable tfoot th,
+        #stampTable tfoot td {
+            background: #e0f2fe;
+            color: #0f172a;
+            font-weight: 800;
+            text-align: right;
+        }
     </style>
 @endsection
 

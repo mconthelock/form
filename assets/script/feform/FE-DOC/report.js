@@ -167,7 +167,7 @@ async function loadReport(formElement) {
         const baseUrl = host || window.location.origin + '/';
 
         const res = await $.ajax({
-            url: baseUrl + 'feform/FE-DOC/FeDocReport/Search',
+            url: baseUrl + 'feform/FE-DOC/Report/Search',
             type: 'POST',
             data: new FormData(formElement),
             processData: false,

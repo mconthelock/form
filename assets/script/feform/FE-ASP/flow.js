@@ -14,9 +14,13 @@ import {
     showConfirm,
 } from '@amec/webasset/utils';
 import { host } from '../../utils';
-import { deleteDraftDoc } from './data';
+import { deleteDraftDoc, handleAutoFeDocUpload } from './data';
 import { stampFormAttachedFiles } from '../FE-DOC/pdfStamper';
-import { applyReviewPeriodRules } from './form';
+import {
+    applyReviewPeriodRules,
+    toggleConfirmationTable,
+    toggleChangeBox,
+} from './form';
 
 export async function initFlow(form, status) {
     if (!form.NRUNNO) {
@@ -71,9 +75,14 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
             $('#drop-zone').removeClass('hidden');
             $('.btn-delete-file').show();
         } else {
+            // โหมด View หรือ รออนุมัติ (ห้ามแก้ไข แต่ต้องแสดงตารางถ้าข้อมูลเดิมเป็น YEARLY)
             $('input[name="REVIEW_PERIOD"]').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('.btn-delete-file').hide();
+
+            // ✅ บังคับคงการแสดงผลตาราง Confirmation และ Change Box ตามค่าจริงของเอกสาร
+            toggleConfirmationTable();
+            toggleChangeBox();
         }
     };
 
@@ -114,6 +123,17 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     } else {
         // Mode 3: View Mode
         setFormEditable(false);
+    }
+    // #DeptDrp, #SecDrp
+    $('#DeptDrp, #SecDrp')
+        .prop('disabled', true)
+        .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+        .removeClass('bg-white text-slate-800');
+
+    if ($('#SecDrp').val() === '00') {
+        $('#SecDrp').hide();
+    } else {
+        $('#SecDrp').show();
     }
 
     // ปุ่มฟังก์ชันเฉพาะของ 13204
@@ -265,16 +285,29 @@ export async function actionFlow(actionType, form) {
                 cleanAction === 'approve' &&
                 resActionFlow?.statusDoc === 'APPROVE'
             ) {
-                const reviewDetails = $(
-                    'input[name="REVIEW_DETAILS"]:checked',
-                ).val();
-                if (reviewDetails === 'CHANGE') {
-                    await executeFinalStamping(form);
-                }
+                // const reviewDetails = $(
+                //     'input[name="REVIEW_DETAILS"]:checked',
+                // ).val();
+                // if (reviewDetails === 'CHANGE') {
+                // }
+                await executeFinalStamping(form);
             }
 
-            showMessage('ดำเนินการสำเร็จ', 'success');
-            setTimeout(() => redirectWebflow(), 1200);
+            // ตรวจสอบกรณีเอกสาร Yearly ครบ 100% แล้วมีการ Trigger สร้าง FE-DOC อัตโนมัติ
+            if (resActionFlow?.feDocTriggered && resActionFlow?.feDocData) {
+                await handleAutoFeDocUpload(
+                    resActionFlow.feDocData,
+                    form.EMPNO,
+                );
+                showMessage(
+                    `อนุมัติสำเร็จ และระบบได้สร้างเอกสารสรุปรอบปี FE-DOC (${resActionFlow.feDocData.docNo}) พร้อมแนบไฟล์ Excel เรียบร้อยแล้ว`,
+                    'success',
+                );
+            } else {
+                showMessage('ดำเนินการสำเร็จ', 'success');
+            }
+
+            setTimeout(() => redirectWebflow(), 1400);
         } else {
             showErrorMessage(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
         }
@@ -312,6 +345,7 @@ export async function executeFinalStamping(form) {
             NRUNNO: form.NRUNNO,
             EMPNO: form.EMPNO,
             FORM_TYPE: 'FE',
+            PATH: `\\\\amecnas\\AMECWEB\\File\\development\\Form\\FE\\AMEC-AR\\${form.DOC_NO}`,
         },
         res.logs,
         { hasBorder: false },

@@ -38,7 +38,7 @@ class Scrap_model extends CI_Model {
                 sp.SCRAP_NAME,
                 sp.UNIT,
                 sp.BOI,
-                sp.B_GUARANTEE,
+                COALESCE(sp2.IS_BG, old_p.IS_BG) AS IS_BG,
                 COALESCE(sp2.QUOTATION, old_p.QUOTATION)  AS QUOTATION,
                 old_p.VENDOR          AS VENDOR,
                 old_p.PRICE           AS PRICE,
@@ -56,7 +56,7 @@ class Scrap_model extends CI_Model {
                AND sp2.CYEAR2  = $cyear2
                AND sp2.TYPE    = '1'
             LEFT JOIN (
-                SELECT SCRAP_ID, VENDOR, PRICE, QUOTATION, FYEAR, PERIOD,
+                SELECT SCRAP_ID, VENDOR, PRICE, QUOTATION, IS_BG, FYEAR, PERIOD,
                        ROW_NUMBER() OVER (PARTITION BY SCRAP_ID ORDER BY FYEAR DESC, PERIOD DESC) AS RN
                 FROM SCRAP_PRICE
                 WHERE TYPE = '1'
@@ -101,12 +101,14 @@ class Scrap_model extends CI_Model {
             $newPrice      = $row['_NEW_PRICE']      ?? null;
             $effectiveDate = $row['_EFFECTIVE_DATE'] ?? null;
             $quotation     = $row['QUOTATION']       ?? null;
+            $isBg           = $row['IS_BG']            ?? null;
 
             if (!$scrapId) continue;
 
             $scrapIdE   = $this->sk->escape($scrapId);
             $vendorE    = $newVendor  !== null ? $this->sk->escape($newVendor)  : 'NULL';
             $quotationE = $quotation  !== null ? $this->sk->escape($quotation)  : 'NULL';
+            $isBgE      = $isBg       !== null ? $this->sk->escape($isBg)       : 'NULL';
             $nfrmnoE    = $this->sk->escape($nfrmno);
             $vorgnoE    = $this->sk->escape($vorgno);
             $cyearE     = $this->sk->escape($cyear);
@@ -118,11 +120,11 @@ class Scrap_model extends CI_Model {
 
             $sql = "
                 INSERT INTO SCRAP_PRICE (
-                    FYEAR, PERIOD, SCRAP_ID, VENDOR, PRICE, QUOTATION,
+                    FYEAR, PERIOD, SCRAP_ID, VENDOR, PRICE, QUOTATION, IS_BG,
                     STATUS, TYPE, NFRMNO, VORGNO, CYEAR, NRUNNO, CYEAR2, EFFECTIVE_DATE, EMP_CREATE
                 )
                 SELECT
-                    {$fyear}, {$period}, {$scrapIdE}, {$vendorE}, {$priceE}, {$quotationE},
+                    {$fyear}, {$period}, {$scrapIdE}, {$vendorE}, {$priceE}, {$quotationE}, {$isBgE},
                     '1', '1', {$nfrmnoE}, {$vorgnoE}, {$cyearE}, {$nrunno}, {$cyear2}, {$effDateSql}, {$empnoE}
                 FROM DUAL
                 WHERE NOT EXISTS (

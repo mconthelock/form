@@ -29,9 +29,10 @@ export async function getLocations() {
     });
 }
 
-export async function getFormData(nfrno, vorgno, cyear, cyear2, runno) {
+export async function getFormData(nfrno, vorgno, cyear, cyear2, runno, empno) {
+    const query = empno ? `?empno=${encodeURIComponent(empno)}` : '';
     return await fetchUtils({
-        url: `${process.env.APP_API}/gpform/gp-tph/${nfrno}/${vorgno}/${cyear}/${cyear2}/${runno}`,
+        url: `${process.env.APP_API}/gpform/gp-tph/${nfrno}/${vorgno}/${cyear}/${cyear2}/${runno}${query}`,
         method: 'GET',
     });
 }

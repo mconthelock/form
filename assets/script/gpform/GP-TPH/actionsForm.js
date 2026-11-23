@@ -151,14 +151,14 @@ import {
         return areaOwnerLabels.get(ownerValue) || ownerValue || '-';
     }
 
-    function calculateLongTermValidUntil(yearsValue) {
-        const years = Number(yearsValue);
-        if (!Number.isSafeInteger(years) || years < 1 || years > 2) {
-            return '';
-        }
+    function calculateLongTermValidUntil() {
+        const validUntil = new Date();
+        validUntil.setDate(validUntil.getDate() + 730);
 
-        const year = new Date().getFullYear() + years;
-        return `${year}-03-31`;
+        const year = validUntil.getFullYear();
+        const month = String(validUntil.getMonth() + 1).padStart(2, '0');
+        const day = String(validUntil.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     function setLongTermValidUntil(value) {
@@ -428,7 +428,7 @@ import {
             $('#INPUTBY').val(data.form?.VINPUTER || '');
             $('#REQBY').val(data.form?.VREQNO || '');
             $('#PURPOSE').val(data.PURPOSE || '');
-            $('#LONGTERM_YEARS').val(data.LONGTERM_YEARS || '');
+            $('#LONGTERM_YEARS').val(data.LONGTERM_YEARS ? '2' : '');
             $('#PERMIT_START_DATE').val(
                 data.PERMIT_START_DATE?.split('T')[0] || '',
             );
@@ -454,11 +454,7 @@ import {
             togglePermitOptionFields();
             updatePermitTypeRestrictions();
             if (data.LONGTERM_YEARS) {
-                setLongTermValidUntil(
-                    data.PERMIT_END_DATE
-                        ? `${data.PERMIT_END_DATE.slice(0, 4)}-03-31`
-                        : calculateLongTermValidUntil(data.LONGTERM_YEARS),
-                );
+                setLongTermValidUntil(calculateLongTermValidUntil());
             }
 
             if (data.REQUEST_TYPE === 'H') {
@@ -997,25 +993,14 @@ import {
             radio.addEventListener('change', function () {
                 $('#PERMIT_START_DATE, #PERMIT_END_DATE').val('');
                 setLongTermValidUntil(
-                    this.value === 'long_term'
-                        ? calculateLongTermValidUntil(
-                              $('#LONGTERM_YEARS').val(),
-                          )
-                        : '',
+                    this.value === 'long_term' ? calculateLongTermValidUntil() : '',
                 );
+                if (this.value === 'long_term') {
+                    $('#LONGTERM_YEARS').val('2');
+                }
                 togglePermitOptionFields();
                 updatePermitTypeRestrictions();
             });
-        });
-
-        $('#LONGTERM_YEARS').on('input change', function () {
-            if (
-                document.querySelector(
-                    'input[name="permit_option"][value="long_term"]',
-                )?.checked
-            ) {
-                setLongTermValidUntil(calculateLongTermValidUntil(this.value));
-            }
         });
 
         document.addEventListener('click', function (event) {
@@ -1194,20 +1179,6 @@ import {
                 return;
             }
 
-            if (
-                permitOption === 'long_term' &&
-                (!Number.isSafeInteger(Number($('#LONGTERM_YEARS').val())) ||
-                    Number($('#LONGTERM_YEARS').val()) < 1 ||
-                    Number($('#LONGTERM_YEARS').val()) > 2)
-            ) {
-                showMessage(
-                    'กรุณาระบุจำนวนปีเป็นจำนวนเต็มตั้งแต่ 1 ถึง 2 ปี',
-                    'warning',
-                );
-                $('#LONGTERM_YEARS').focus();
-                return;
-            }
-
             const details = Array.from($('#visitor-table-body tr')).map(
                 (row, index) => ({
                     seqNo: index + 1,
@@ -1258,6 +1229,7 @@ import {
 
             const formData = new FormData($('#tphForm')[0]);
             if (permitOption === 'long_term') {
+                formData.set('LONGTERM_YEARS', '2');
                 formData.set('PERMIT_END_DATE', longTermValidUntil);
             }
             formData.set('REMARK', $('#remark').val());

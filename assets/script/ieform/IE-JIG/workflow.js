@@ -37,6 +37,13 @@ const checkResponse = (result) => {
         );
     return result;
 };
+const traceCreate = (step, message, value) => {
+    const label = `[JIG CREATE][STEP ${step}] ${message}`;
+    if (value === undefined) console.info(label);
+    else console.info(label, value);
+};
+const traceCreateError = (step, message, error) =>
+    console.error(`[JIG CREATE][STEP ${step}][ERROR] ${message}`, error);
 
 export function initializeJigWorkflow(editor) {
     const { form, rows, pageMode } = editor;
@@ -63,13 +70,22 @@ export function initializeJigWorkflow(editor) {
         remarkInput.removeAttribute('aria-invalid');
     });
     async function completeCreate(saved) {
+        traceCreate('12', 'ตรวจสอบ JIG_NO หลังบันทึก', {
+            key,
+            responseJigNo: saved?.JIG_NO ?? null,
+        });
         const record = saved?.JIG_NO ? saved : await loadJigForm(key);
+        traceCreate('13', 'พบข้อมูล JIG ที่บันทึกแล้ว', record);
         if (!record?.JIG_NO)
             throw new Error(
                 'บันทึกแล้ว แต่ยังไม่พบ JIGNO จาก API กรุณาลองอีกครั้งเพื่อยืนยันผล',
             );
         loaded = false;
         sessionStorage.removeItem(recoveryId);
+        traceCreate('14', 'ล้าง recovery state และจบ Create สำเร็จ', {
+            recoveryId,
+            JIG_NO: record.JIG_NO,
+        });
         await Swal.fire({
             icon: 'success',
             title: 'บันทึกเรียบร้อย',
@@ -104,6 +120,8 @@ export function initializeJigWorkflow(editor) {
                 }),
             );
         } catch (error) {
+            if (pageMode === 'create')
+                traceCreateError('FAILED', 'Create JIG Form ไม่สำเร็จ', error);
             await Swal.fire({
                 icon: 'error',
                 title: 'ดำเนินการไม่สำเร็จ',
@@ -119,8 +137,21 @@ export function initializeJigWorkflow(editor) {
     }
     async function persist(lock) {
         if (pageMode === 'view') return false;
+        if (pageMode === 'create')
+            traceCreate('01', 'เริ่ม Create JIG Form', {
+                origin: window.location.origin,
+                key,
+                recoveryId,
+            });
         await editor.ready;
-        if (!(await editor.validate())) return false;
+        if (pageMode === 'create') traceCreate('02', 'Editor พร้อมใช้งาน');
+        const valid = await editor.validate();
+        if (!valid) {
+            if (pageMode === 'create')
+                traceCreateError('03', 'Validation หน้า Create ไม่ผ่าน');
+            return false;
+        }
+        if (pageMode === 'create') traceCreate('03', 'Validation ผ่าน');
         updateRevision();
         const files = editor.files();
         const hasNg = Array.from(rows.querySelectorAll('.result')).some(
@@ -129,26 +160,54 @@ export function initializeJigWorkflow(editor) {
         const payload = collectJigPayload(form, rows, files.stored, hasNg);
         const reqby = form.elements.requested_by.value;
         const inputby = form.elements.input_by.value;
+        if (pageMode === 'create')
+            traceCreate('04', 'รวบรวมข้อมูลสำหรับบันทึก', {
+                inputby,
+                reqby,
+                hasNg,
+                checkpointCount: payload.DETAILS?.length ?? 0,
+                storedFileCount: files.stored.length,
+                incomingFileCount: files.incoming.length,
+                location: payload.LOCATION,
+                picEmpno: payload.PIC_EMPNO,
+            });
         lock();
         if (pageMode === 'create') {
-            const pending = JSON.parse(
-                sessionStorage.getItem(recoveryId) || 'null',
-            );
-            if (pending?.uncertain)
+            const recoveryValue = sessionStorage.getItem(recoveryId);
+            const pending = JSON.parse(recoveryValue || 'null');
+            traceCreate('05', 'ตรวจสอบ recovery state', {
+                recoveryId,
+                recoveryValue,
+                pending,
+            });
+            if (pending?.uncertain) {
+                traceCreateError(
+                    '05',
+                    'พบ uncertain state จากการสร้าง Webflow ครั้งก่อน',
+                    pending,
+                );
                 throw new Error(
                     'ยังยืนยันผลสร้างเลข Form ครั้งก่อนไม่ได้ กรุณาตรวจรายการ Webflow ก่อนสร้างซ้ำ',
                 );
+            }
             if (pending?.key) {
                 key = keyOf(pending.key);
+                traceCreate('06', 'พบ Form key เดิม กำลังตรวจ JIG_FORM', key);
                 const existing = await loadJigForm(key, true);
+                traceCreate('06', 'ผลตรวจ JIG_FORM เดิม', existing);
                 if (existing) {
                     // The JIG snapshot may be saved even if the separate WEBFORM transaction failed.
                     const picCode = form.elements
                         .namedItem('location')
                         .selectedOptions[0]?.dataset.piccode?.trim();
-                    checkResponse(
+                    traceCreate('11', 'เรียก requester-flow สำหรับข้อมูลเดิม', {
+                        key,
+                        picCode,
+                    });
+                    const flowResult = checkResponse(
                         await configureJigRequesterFlow(key, picCode),
                     );
+                    traceCreate('11', 'requester-flow สำเร็จ', flowResult);
                     await completeCreate(existing);
                     return true;
                 }
@@ -157,43 +216,97 @@ export function initializeJigWorkflow(editor) {
                     recoveryId,
                     JSON.stringify({ uncertain: true }),
                 );
-                const result = checkResponse(
-                    await createForm({
-                        NFRMNO: key.NFRMNO,
-                        VORGNO: key.VORGNO,
-                        CYEAR: key.CYEAR,
-                        REQBY: reqby,
-                        INPUTBY: inputby,
-                        REMARK: '',
-                    }),
-                );
-                if (!result?.data?.NRUNNO)
+                traceCreate('06', 'ตั้ง uncertain state ก่อนเรียก createForm', {
+                    recoveryId,
+                });
+                const createParams = {
+                    NFRMNO: key.NFRMNO,
+                    VORGNO: key.VORGNO,
+                    CYEAR: key.CYEAR,
+                    REQBY: reqby,
+                    INPUTBY: inputby,
+                    REMARK: '',
+                };
+                traceCreate('07', 'เรียก Webflow createForm', createParams);
+                let result;
+                try {
+                    result = checkResponse(await createForm(createParams));
+                    traceCreate('07', 'Webflow createForm ตอบกลับ', result);
+                } catch (error) {
+                    traceCreateError('07', 'Webflow createForm ล้มเหลว', error);
+                    throw error;
+                }
+                if (!result?.data?.NRUNNO) {
+                    traceCreateError(
+                        '08',
+                        'Webflow response ไม่มี data.NRUNNO',
+                        result,
+                    );
                     throw new Error(
                         'API ไม่คืนเลข Form กรุณาตรวจรายการ Webflow ก่อนสร้างซ้ำ',
                     );
+                }
                 key = keyOf(result.data);
                 sessionStorage.setItem(recoveryId, JSON.stringify({ key }));
+                traceCreate('08', 'ได้รับ Form key และบันทึก recovery key', {
+                    key,
+                    recoveryId,
+                });
             }
+            traceCreate('09', 'เรียก getFormDetail', key);
             const webform = await getFormDetail(key);
+            traceCreate('09', 'getFormDetail ตอบกลับ', webform);
             if (
                 String(webform.VINPUTER).trim() !== inputby ||
                 String(webform.VREQNO).trim() !== reqby
-            )
+            ) {
+                traceCreateError('09', 'VINPUTER หรือ VREQNO ไม่ตรงกับค่าที่ส่ง', {
+                    expected: { inputby, reqby },
+                    actual: {
+                        VINPUTER: webform.VINPUTER,
+                        VREQNO: webform.VREQNO,
+                    },
+                });
                 throw new Error(
                     'Requested By ไม่ตรงกับ Form ที่สร้างไว้ก่อนหน้า กรุณาใช้ผู้ร้องขอเดิม',
                 );
-            payload.FILES = [
-                ...files.stored,
-                ...(await uploadJigFiles(key, actor, files.incoming)),
-            ].map((file, i) => ({ ...file, FILE_SEQ: i + 1 }));
-            const saved = checkResponse(
-                await insertJigForm({
-                    ...payload,
-                    ...key,
-                    FORM_TYPE: 'CREATE',
-                    CREATE_BY: actor,
-                }),
+            }
+            traceCreate('10', 'เริ่ม upload ไฟล์', {
+                storedFileCount: files.stored.length,
+                incomingFileCount: files.incoming.length,
+            });
+            const uploadedFiles = await uploadJigFiles(
+                key,
+                actor,
+                files.incoming,
             );
+            traceCreate('10', 'upload ไฟล์สำเร็จ', uploadedFiles);
+            payload.FILES = [...files.stored, ...uploadedFiles].map(
+                (file, i) => ({ ...file, FILE_SEQ: i + 1 }),
+            );
+            const jigRequest = {
+                ...payload,
+                ...key,
+                FORM_TYPE: 'CREATE',
+                CREATE_BY: actor,
+            };
+            traceCreate('11', 'เรียก API บันทึก JIG_FORM', {
+                ...jigRequest,
+                FILES: jigRequest.FILES.map((file) => ({
+                    FILE_SEQ: file.FILE_SEQ,
+                    FILE_NAME: file.FILE_NAME,
+                    FILE_PATH: file.FILE_PATH,
+                    FILE_GROUP: file.FILE_GROUP,
+                })),
+            });
+            let saved;
+            try {
+                saved = checkResponse(await insertJigForm(jigRequest));
+                traceCreate('11', 'API บันทึก JIG_FORM ตอบกลับ', saved);
+            } catch (error) {
+                traceCreateError('11', 'API บันทึก JIG_FORM ล้มเหลว', error);
+                throw error;
+            }
             await completeCreate(saved);
         } else {
             const uploaded = await uploadJigFiles(key, actor, files.incoming);
@@ -294,8 +407,7 @@ export function initializeJigWorkflow(editor) {
             }
             remarkInput.removeAttribute('aria-invalid');
             const result = await Swal.fire({
-                title:
-                    action === 'approve' ? 'ยืนยัน Approve?' : 'ยืนยัน Return?',
+                title: action === 'approve' ? 'ยืนยัน Approve?' : 'ยืนยัน Return?',
                 showCancelButton: true,
                 confirmButtonText: 'ยืนยัน',
                 cancelButtonText: 'ยกเลิก',

@@ -547,11 +547,22 @@ function getEmployeeName(item) {
 }
 
 async function renderInvoiceTable(invoices = [], canEditWht = false) {
+    const totals = invoices.reduce(
+        (sum, invoice) => {
+            const netPrice = Number(invoice.NET_PRICE || 0);
+            const totalAmount = Number(invoice.TOTAL_AMT || 0);
+            sum.netPrice += netPrice;
+            sum.vat += totalAmount - netPrice;
+            sum.totalAmount += totalAmount;
+            return sum;
+        },
+        { netPrice: 0, vat: 0, totalAmount: 0 },
+    );
     const rows = invoices.length
         ? invoices
               .map(
                   (invoice, index) => `<tr>
-                    <td>${escapeHtml(invoice.ID || index + 1)}</td>
+                    <td>${escapeHtml(index + 1)}</td>
                     <td>${escapeHtml(formatDate(invoice.INVOICE_DATE))}</td>
                     <td>${escapeHtml(invoice.INVOICE_NO || '')}</td>
                     <td>${escapeHtml(formatNumber(invoice.NET_PRICE))}</td>
@@ -574,7 +585,14 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
         <th>Net Price</th><th>VAT</th><th>Total Amount</th><th>Tax code</th><th>Reference</th>
-    </tr></thead><tbody>${rows}</tbody>`);
+    </tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr>
+        <th colspan="3" scope="row">Total</th>
+        <td>${escapeHtml(formatNumber(totals.netPrice))}</td>
+        <td>${escapeHtml(formatNumber(totals.vat))}</td>
+        <td>${escapeHtml(formatNumber(totals.totalAmount))}</td>
+        <td colspan="2"></td>
+    </tr></tfoot>`);
 }
 
 function collectInvoiceWht() {

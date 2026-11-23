@@ -16,10 +16,17 @@ export function getCurrentPrevFiles() {
 export function toggleChangeBox() {
     const selectedVal = $('input[name="REVIEW_DETAILS"]:checked').val();
     const $box = $('#change-detail-box');
+    const $spanRequired = $('#spanFileRequired');
+    const $btnTemplate = $('#btnDownloadAspectTemplate');
+
     if (selectedVal === 'CHANGE') {
         $box.removeClass('hidden').show();
+        $spanRequired.removeClass('hidden');
+        $btnTemplate.removeClass('hidden').show(); // แสดงปุ่มดาวน์โหลด Template ทันที
     } else {
         $box.addClass('hidden').hide();
+        $spanRequired.addClass('hidden');
+        $btnTemplate.addClass('hidden').hide(); // ซ่อนปุ่มดาวน์โหลด Template
     }
 }
 
@@ -29,11 +36,11 @@ export function renderPrevFile(prevData) {
     const $docNoTxt = $('#prev-doc-no');
     const $container = $('#prev-file-list').empty();
 
-    // เช็คว่ามีข้อมูล header หรือไม่
     const header = prevData?.header;
     const files = prevData?.files || [];
 
-    if (header) {
+    // ต้องมี header และมีเลขที่เอกสาร DOC_NO จริงๆ ถึงจะถือว่ามี Revision ก่อนหน้า
+    if (header && header.DOC_NO) {
         const empno = (
             $('#EMPNOHid').val() ||
             $('#REQUEST_BY_EMPNO').val() ||
@@ -58,12 +65,16 @@ export function renderPrevFile(prevData) {
         baseHost = baseHost.replace(/\/+$/, '');
         const backPath = encodeURIComponent('/formtest/workflow/mineList.asp');
 
-        // 1. อัปเดตลิงก์เปิดฟอร์มเอกสารล่าสุด
+        // 1. อัปเดตข้อมูล Revision เดิม
+        const rev = header.DOC_REVISION || '*';
+        $('#prev-rev-txt').text(rev);
+        $docNoTxt.text(`${header.DOC_NO} (Rev.${rev})`);
+
+        // 2. ลิงก์เปิดเอกสารเดิม
         const docUrl = `${baseHost}/feform/FE-ASP/form/main?no=${header.NFRMNO}&orgNo=${header.VORGNO}&y=${header.CYEAR}&y2=${header.CYEAR2}&runNo=${header.NRUNNO}&m=3&empno=${empno}&bp=${backPath}&menu=1`;
         $btnDoc.attr('href', docUrl).removeClass('hidden');
-        $docNoTxt.text(header.DOC_NO || '');
 
-        // 2. เรนเดอร์ไฟล์ หรือ แสดงข้อความถ้าไม่มีไฟล์
+        // 3. แสดงรายการไฟล์แนบเดิม
         if (Array.isArray(files) && files.length > 0) {
             files.forEach((file) => {
                 const formattedBaseDir = (file.FILE_PATH || '').replace(
@@ -94,9 +105,10 @@ export function renderPrevFile(prevData) {
             `);
         }
 
-        // แสดงกล่อง Active Revision ออกมา
+        // แสดงกล่องเมื่อมีเอกสาร Approved ก่อนหน้าจริง
         $zone.removeClass('hidden').show();
     } else {
+        // กรณีเป็นฉบับแรกเริ่มที่ไม่มี Approved ก่อนหน้า -> ซ่อนกล่องทั้งหมดทิ้งไป
         $btnDoc.attr('href', '#').addClass('hidden');
         $zone.addClass('hidden').hide();
     }
@@ -174,6 +186,11 @@ export function initFormControls() {
                             '<option value="00">00 : No Section</option>',
                         );
                         $sec.val('00');
+                    }
+                    if ($('#SecDrp').val() === '00') {
+                        $('#SecDrp').hide();
+                    } else {
+                        $('#SecDrp').show();
                     }
 
                     // 4. แสดงผลกล่อง Active Revision PDF ประจำ Control
@@ -390,6 +407,66 @@ export function applyReviewPeriodRules() {
         .trim();
     const isManual = createMode === 'MANUAL';
     const isAdmin = Boolean(window.IS_ADMIN || window.IS_SUPER_ADMIN);
+    const hasExistingDoc = Boolean(
+        $('#DocHeaderIDHid').val() || $('#NRUNNOHid').val(),
+    );
+
+    const $radioYearly = $('#radio_yearly');
+    const $radioChanging = $('#radio_changing');
+
+    // ตรวจสอบค่าที่เลือกอยู่เดิมก่อน
+    let currentVal = $('input[name="REVIEW_PERIOD"]:checked').val();
+
+    if (isManual) {
+        if (isAdmin) {
+            $radioChanging.prop('disabled', false);
+            $radioYearly.prop('disabled', false);
+            $radioChanging
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+            $radioYearly
+                .closest('label')
+                .removeClass(
+                    'opacity-40 cursor-not-allowed pointer-events-none',
+                )
+                .addClass('cursor-pointer');
+
+            // ถ้าเป็นเอกสารสร้างใหม่ และยังไม่มีการเลือกค่า ให้ default CHANGING
+            if (!hasExistingDoc && !currentVal) {
+                $radioChanging.prop('checked', true);
+            }
+        } else {
+            // ถ้าเป็นเอกสารสร้างใหม่เท่านั้น ถึงจะบังคับ CHANGING
+            // แต่ถ้าเป็นเอกสารเดิมที่มีอยู่แล้ว (เช่น เปิดดูใบงาน) ห้ามไปแก้ค่าเดิมของเขา
+            if (!hasExistingDoc) {
+                $radioChanging.prop('checked', true).prop('disabled', false);
+                $radioYearly.prop('checked', false).prop('disabled', true);
+            }
+
+            $radioYearly
+                .closest('label')
+                .addClass('opacity-40 cursor-not-allowed pointer-events-none')
+                .removeClass('cursor-pointer');
+        }
+    } else {
+        // โหมด AUTO (Yearly Job): บังคับเลือก YEARLY เสมอ
+        $radioYearly.prop('checked', true).prop('disabled', false);
+        $radioChanging.prop('checked', false).prop('disabled', true);
+    }
+
+    // เรียก Toggle ตาราง Confirmation ทันทีตามค่าจริง
+    toggleConfirmationTable();
+}
+
+export function applyReviewPeriodRules0() {
+    const createMode = ($('#CREATE_MODEHid').val() || 'MANUAL')
+        .toUpperCase()
+        .trim();
+    const isManual = createMode === 'MANUAL';
+    const isAdmin = Boolean(window.IS_ADMIN || window.IS_SUPER_ADMIN);
 
     const $radioYearly = $('#radio_yearly');
     const $radioChanging = $('#radio_changing');
@@ -453,9 +530,10 @@ export function applyReviewPeriodRules() {
 
     $('input[name="REVIEW_PERIOD"]:checked').trigger('change');
 }
+
 /**
  * ซ่อน/แสดงตาราง Confirmation:
- * แสดงเฉพาะกรณี YEARLY (Auto Job) เท่านั้น
+ * แสดงเมื่อเป็น YEARLY
  */
 export function toggleConfirmationTable() {
     const period = $('input[name="REVIEW_PERIOD"]:checked').val();

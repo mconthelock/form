@@ -27,7 +27,4 @@
             </div>
             <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><button id="add-checkpoint" type="button" class="btn btn-sm border-slate-200 bg-white text-indigo-700">+ เพิ่ม Check Point</button><p class="text-xs text-slate-400">กรอก MIN / MAX ก่อน Measured · ค่าในช่วงรวมขอบเขต = OK</p></div>
         </section>
-        @if ($pageMode === 'create')
-        <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>
-        @endif
         </fieldset>

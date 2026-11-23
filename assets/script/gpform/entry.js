@@ -50,4 +50,7 @@ module.exports = {
     //GP-RB
     gpRB: './assets/script/gpform/GP-RB/actionsForm.js',
     gpRBview: './assets/script/gpform/GP-RB/show.js',
+
+    //GP-LY01
+    gpLY01: './assets/script/gpform/GP-LY01/index.js',
 };
