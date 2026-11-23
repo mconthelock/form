@@ -31,38 +31,14 @@ $(document).ready(async function () {
         await formFlowApproval(data[0].form);
         await formApprovalBtn(data[0].form, {
             approve: true,
+            reject: true,
             remark: true,
             empno: $('#EMPNO').val(),
-            onApprove: async ({ action, remark, form }) => {
-                try {
-                    const res = await approveTax({
-                        NFRMNO: Number(form.NFRMNO),
-                        VORGNO: String(form.VORGNO),
-                        CYEAR: String(form.CYEAR),
-                        CYEAR2: String(form.CYEAR2),
-                        NRUNNO: Number(form.NRUNNO),
-                        ACTION: action,
-                        EMPNO: String($('#EMPNO').val()),
-                        REMARK: remark,
-                    });
-                    if (!res?.status) {
-                        throw new Error(res?.message || 'Approval failed');
-                    }
-                    showMessage('Approved successfully', 'success');
-                    window.location.reload();
-                } catch (error) {
-                    console.error('Error approving form:', error);
-                    showMessage(
-                        error?.responseJSON?.message ||
-                            error?.message ||
-                            'Error approving form',
-                        'error',
-                    );
-                }
-            },
+            onApprove: handleFormAction,
+            onReject: handleFormAction,
         });
 
-        const currentData = await getCurrent(data[0].EMPCOD);
+        const currentData = data[0].current; //await getCurrent(data[0].EMPCOD);
         await renderFormTable(itemsData);
         await fillFormValues(data[0], currentData);
         await calculateCurrentTotal();
@@ -71,6 +47,37 @@ $(document).ready(async function () {
         console.error('Error initializing tax form:', error);
     }
 });
+
+async function handleFormAction({ action, remark, form }) {
+    try {
+        const res = await approveTax({
+            NFRMNO: Number(form.NFRMNO),
+            VORGNO: String(form.VORGNO),
+            CYEAR: String(form.CYEAR),
+            CYEAR2: String(form.CYEAR2),
+            NRUNNO: Number(form.NRUNNO),
+            ACTION: action,
+            EMPNO: String($('#EMPNO').val()),
+            REMARK: remark,
+        });
+        if (!res?.status) {
+            throw new Error(res?.message || `${action} failed`);
+        }
+        showMessage(
+            action === 'reject' ? 'Rejected successfully' : 'Approved successfully',
+            'success',
+        );
+        window.location.reload();
+    } catch (error) {
+        console.error(`Error ${action} form:`, error);
+        showMessage(
+            error?.responseJSON?.message ||
+                error?.message ||
+                `Error ${action} form`,
+            'error',
+        );
+    }
+}
 
 async function renderFormTable(items) {
     const gropsList = (item) => {
@@ -345,7 +352,7 @@ function fillFormValues(data, currentData) {
 
     $('[data-tax-current]').each(function () {
         const id = $(this).data('tax-current');
-        const curr = currentData[id];
+        const curr = currentData?.[id] ?? 0;
         $(this).text(curr > 0 ? showDigits(curr, 2) : '-');
     });
 }
