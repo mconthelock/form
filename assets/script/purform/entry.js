@@ -18,13 +18,6 @@ module.exports = {
     // PUR-VMM
     purVmm: './assets/script/purform/PUR-VMM/create.js',
     purVmmView: './assets/script/purform/PUR-VMM/view.js',
-
-    // PUR-CPC
-    purCpc: './assets/script/purform/PUR-CPC/index.js',
-    purCpcView: './assets/script/purform/PUR-CPC/view.js',
-
-    // PUR-PRA
-    purPra: './assets/script/purform/PUR-PRA/index.js',
     purVmmrpt: './assets/script/purform/PUR-VMM/report.js',
 
     // PUR-CPC

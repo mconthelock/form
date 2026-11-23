@@ -64,3 +64,21 @@ export async function requestSaveTax(data) {
         });
     });
 }
+
+export async function approveTax(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/gpform/gp-ly01/approve`,
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
+}

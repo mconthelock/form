@@ -6,7 +6,13 @@ import {
     formFlowApproval,
     formApprovalBtn,
 } from '../../service';
-import { getItems, getForm, requestSaveTax, getCurrent } from './data';
+import {
+    getItems,
+    getForm,
+    requestSaveTax,
+    getCurrent,
+    approveTax,
+} from './data';
 
 $(document).ready(async function () {
     try {
@@ -27,6 +33,33 @@ $(document).ready(async function () {
             approve: true,
             remark: true,
             empno: $('#EMPNO').val(),
+            onApprove: async ({ action, remark, form }) => {
+                try {
+                    const res = await approveTax({
+                        NFRMNO: Number(form.NFRMNO),
+                        VORGNO: String(form.VORGNO),
+                        CYEAR: String(form.CYEAR),
+                        CYEAR2: String(form.CYEAR2),
+                        NRUNNO: Number(form.NRUNNO),
+                        ACTION: action,
+                        EMPNO: String($('#EMPNO').val()),
+                        REMARK: remark,
+                    });
+                    if (!res?.status) {
+                        throw new Error(res?.message || 'Approval failed');
+                    }
+                    showMessage('Approved successfully', 'success');
+                    window.location.reload();
+                } catch (error) {
+                    console.error('Error approving form:', error);
+                    showMessage(
+                        error?.responseJSON?.message ||
+                            error?.message ||
+                            'Error approving form',
+                        'error',
+                    );
+                }
+            },
         });
 
         const currentData = await getCurrent(data[0].EMPCOD);

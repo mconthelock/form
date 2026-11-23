@@ -269,9 +269,12 @@ export async function formApprovalBtn(form, opt = {}) {
         reject: false,
         return: false,
         delete: false,
-        print: false,
+        print: true,
         remark: false,
         empno: $('#EMPNO').val(),
+        onPrint: async () => {
+            window.print();
+        },
         ...opt,
     };
 
@@ -317,4 +320,90 @@ export async function formApprovalBtn(form, opt = {}) {
     }
 
     $('#form-button-container-loading').addClass('hidden');
+
+    // ผูก click event ให้ทุกปุ่มในกลุ่ม form-action โดยจัดการ disabled + loading อัตโนมัติ
+    const handlerMap = {
+        approve: opts.onApprove,
+        reject: opts.onReject,
+        return: opts.onReturn,
+        delete: opts.onDelete,
+        print: opts.onPrint,
+    };
+
+    $(document)
+        .off('click.formAction', '#form-button-container button')
+        .on(
+            'click.formAction',
+            '#form-button-container button',
+            async function (e) {
+                const $container = $('#form-button-container');
+                if (
+                    $container.data('action-loading') ||
+                    $(this).prop('disabled')
+                ) {
+                    return;
+                }
+
+                const action = $(this).data('attr');
+                const remark = ($('#form-remark').val() || '').trim();
+                const specificHandler = handlerMap[action];
+                const handler =
+                    typeof specificHandler === 'function'
+                        ? specificHandler
+                        : typeof opts.onAction === 'function'
+                          ? opts.onAction
+                          : null;
+
+                toggleFormActionLoading(this, true);
+
+                if (!handler) return;
+
+                try {
+                    if (typeof specificHandler === 'function') {
+                        await specificHandler({
+                            action,
+                            remark,
+                            form,
+                            event: e,
+                        });
+                    } else {
+                        await opts.onAction(action, remark, { form, event: e });
+                    }
+                } finally {
+                    toggleFormActionLoading(null, false);
+                }
+            },
+        );
+}
+
+/**
+ * Toggle disabled และ loading spinner ของปุ่มในกลุ่ม #form-button-container
+ * เพื่อป้องกันการกดปุ่มซ้ำระหว่างประมวลผล
+ * @param {HTMLElement|jQuery|string|null} [activeBtn=null] - ปุ่มที่ถูกกด (แสดง spinner เฉพาะปุ่มนี้)
+ * @param {boolean} [loading] - true = disable ทั้งกลุ่มและแสดง spinner, false = คืนค่าปกติ (ถ้าไม่ส่งจะ toggle อัตโนมัติ)
+ */
+export function toggleFormActionLoading(activeBtn = null, loading) {
+    const $container = $('#form-button-container');
+    const $buttons = $container.find('button');
+    const isLoading =
+        typeof loading === 'boolean'
+            ? loading
+            : !$container.data('action-loading');
+
+    $container.data('action-loading', isLoading);
+    $buttons.prop('disabled', isLoading);
+    $('#form-remark').prop('disabled', isLoading);
+
+    // รีเซ็ต spinner และ icon ของทุกปุ่มก่อน
+    $buttons.each(function () {
+        const $btn = $(this);
+        $btn.find('.loading-spinner').addClass('hidden');
+        $btn.find('i').closest('span').removeClass('hidden');
+    });
+
+    if (isLoading && activeBtn) {
+        const $target = $(activeBtn);
+        $target.find('.loading-spinner').removeClass('hidden');
+        $target.find('i').closest('span').addClass('hidden');
+    }
 }
