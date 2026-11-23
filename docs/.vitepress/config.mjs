@@ -32,6 +32,9 @@ export default defineConfig({
         image: {
             lazyLoading: true,
         },
+        config(md) {
+            md.use(mermaidPlugin);
+        },
     },
     vite: {
         resolve: {
@@ -75,6 +78,11 @@ export default defineConfig({
                     roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
                 },
                 {
+                    text: 'PUR Form',
+                    link: '/form/purform/pur-cpc/create',
+                    roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                },
+                {
                     text: 'QA Form',
                     link: '/form/qaform/qa-ins',
                     roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
@@ -86,6 +94,7 @@ export default defineConfig({
                 },
             ],
             '/form/isform/': sidebar.isFormItem,
+            '/form/purform/': sidebar.purFormItem,
             '/form/qaform/': sidebar.qaFormItem,
             '/form/tool/': sidebar.toolItem,
         },

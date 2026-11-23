@@ -133,6 +133,7 @@ export const PAGE_ROLE_RULES = [
   { pattern: '/changelog', roles: ['*'] },
   { pattern: '/form/tool/', roles: ['ADMIN', 'MANAGER'] },
   { pattern: '/form/isform/', roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'] },
+  { pattern: '/form/purform/', roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'] },
   { pattern: '/form/qaform/', roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'] },
   { pattern: '/form/gpform/', roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER', 'HR'] },
   { pattern: '/form/', roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER', 'HR'] },

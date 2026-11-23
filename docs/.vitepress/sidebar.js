@@ -1,6 +1,6 @@
 /**
  * โครงสร้างเมนู Sidebar แบบแยกตามหมวดหมู่ (Multi-Sidebar Pattern แบบเดียวกับ Procurement)
- * เมื่อคลิกเลือกกลุ่ม (เช่น IS Form, QA Form, Advanced Features) จะแสดงเมนูย่อยของกลุ่มนั้นพร้อมปุ่ม Back to Home
+ * เมื่อคลิกเลือกกลุ่ม (เช่น IS Form, PUR Form, QA Form, Advanced Features) จะแสดงเมนูย่อยของกลุ่มนั้นพร้อมปุ่ม Back to Home
  */
 
 const quickStartItem = {
@@ -44,6 +44,60 @@ const isForm = [
     },
 ];
 
+const purForm = [
+    {
+        text: 'PUR Form',
+        collapsed: false,
+        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+        items: [
+            {
+                text: 'Price Comparison',
+                collapsed: false,
+                roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                items: [
+                    {
+                        text: 'Create Form',
+                        link: '/form/purform/pur-cpc/create',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                    {
+                        text: 'Search Form',
+                        link: '/form/purform/pur-cpc/search',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                ],
+            },
+            {
+                text: 'Price Approval',
+                collapsed: false,
+                roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                items: [
+                    {
+                        text: 'Create Form',
+                        link: '/form/purform/pur-pra/create',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                    {
+                        text: 'View',
+                        link: '/form/purform/pur-pra/view',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                    {
+                        text: 'Return',
+                        link: '/form/purform/pur-pra/return',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                    {
+                        text: 'Specification',
+                        link: '/form/purform/pur-pra/spec',
+                        roles: ['ADMIN', 'REQUESTER', 'APPROVER', 'MANAGER'],
+                    },
+                ],
+            },
+        ],
+    },
+];
+
 const qaForm = [
     {
         text: 'QA Form',
@@ -75,5 +129,6 @@ const tool = [
 ];
 
 export const isFormItem = [...isForm, quickStartItem];
+export const purFormItem = [...purForm, quickStartItem];
 export const qaFormItem = [...qaForm, quickStartItem];
 export const toolItem = [...tool, quickStartItem];
