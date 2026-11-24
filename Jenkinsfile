@@ -245,7 +245,7 @@ pipeline {
                         npm update @amec/webasset
                         npm run build
                         # รัน docs:build เฉพาะเมื่อไฟล์ใน docs/ เปลี่ยน หรือยังไม่มี docs/dist
-                        DOCS_HASH=$(find docs -type f ! -path 'docs/dist/*' ! -path 'docs/.vitepress/cache/*' | sort | tr '\n' '\0' | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}')
+                        DOCS_HASH=$(find docs -type f ! -path 'docs/dist/*' ! -path 'docs/.vitepress/cache/*' -exec sha256sum {} + 2>/dev/null | sort | sha256sum | awk '{print $1}')
                         if [ ! -d docs/dist ] || [ ! -f .docs_build_hash ] || [ "$(cat .docs_build_hash)" != "${DOCS_HASH}" ]; then
                             npm run docs:build
                             echo "${DOCS_HASH}" > .docs_build_hash
