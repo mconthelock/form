@@ -19,6 +19,7 @@ const REDIRECT_TARGET_MAP = {
 };
 
 const MIN_IFRAME_HEIGHT = 500;
+const MAX_IFRAME_HEIGHT = 12000;
 const STABILIZE_DELAY = 0;
 const MAX_WAIT = 15000;
 
@@ -116,14 +117,47 @@ $(document).ready(async function () {
     let resizeRaf = null;
     let resizeObserver = null;
     let lastAppliedHeight = 0;
+    let ignoreResizeUntil = 0;
+    let consecutiveGrowCount = 0;
+    let lastGrowTime = 0;
     let hidden = false;
 
     const applyIframeHeight = (height) => {
-        const nextHeight = Math.max(Math.ceil(Number(height) || 0), MIN_IFRAME_HEIGHT);
-        if (Math.abs(nextHeight - lastAppliedHeight) <= 4) return;
-        lastAppliedHeight = nextHeight;
-        iframe.style.height = `${nextHeight}px`;
-        $('#frame-container').css('height', `${nextHeight}px`);
+        const clamped = Math.min(
+            Math.max(Math.ceil(Number(height) || 0), MIN_IFRAME_HEIGHT),
+            MAX_IFRAME_HEIGHT,
+        );
+        if (Math.abs(clamped - lastAppliedHeight) <= 4) return;
+
+        const now = performance.now();
+        if (clamped > lastAppliedHeight) {
+            if (now - lastGrowTime < 1500) {
+                consecutiveGrowCount += 1;
+            } else {
+                consecutiveGrowCount = 1;
+            }
+            lastGrowTime = now;
+
+            // ตัด loop อัตโนมัติถ้าขยายติดกันเกิน 5 รอบในช่วง 1.5 วิ (เช่น child มี 100vh)
+            if (consecutiveGrowCount > 5) {
+                if (resizeObserver) {
+                    resizeObserver.disconnect();
+                    resizeObserver = null;
+                }
+                console.warn(
+                    'Stopped iframe auto-resize to prevent feedback loop',
+                );
+                return;
+            }
+        } else {
+            consecutiveGrowCount = 0;
+        }
+
+        lastAppliedHeight = clamped;
+        // กัน ResizeObserver ยิงซ้ำจากการที่เราเพิ่งเปลี่ยนความสูง iframe เอง
+        ignoreResizeUntil = now + 200;
+        iframe.style.height = `${clamped}px`;
+        $('#frame-container').css('height', `${clamped}px`);
     };
 
     // ปรับความสูง iframe ให้พอดีเนื้อหาจริง โดยตัด min-h-screen (100vh) feedback loop
@@ -135,13 +169,23 @@ $(document).ready(async function () {
             const html = doc?.documentElement;
             if (!body || !html) return;
 
-            html.style.height = 'auto';
-            html.style.minHeight = '0';
-            body.style.height = 'auto';
-            body.style.minHeight = '0';
+            // ไม่ปรับขนาดระหว่างที่ SweetAlert2 modal เปิดอยู่
+            if (body.classList.contains('swal2-shown')) return;
+
+            html.style.setProperty('height', 'auto', 'important');
+            html.style.setProperty('min-height', '0', 'important');
+            body.style.setProperty('height', 'auto', 'important');
+            body.style.setProperty('min-height', '0', 'important');
 
             let maxBottom = 0;
             for (const child of Array.from(body.children)) {
+                if (
+                    child.classList.contains('swal2-container') ||
+                    child.tagName === 'SCRIPT' ||
+                    child.tagName === 'STYLE'
+                ) {
+                    continue;
+                }
                 const style = doc.defaultView?.getComputedStyle(child);
                 if (
                     !style ||
@@ -152,6 +196,7 @@ $(document).ready(async function () {
                     continue;
                 }
                 const rect = child.getBoundingClientRect();
+                if (rect.height <= 0) continue;
                 const marginBottom = parseFloat(style.marginBottom) || 0;
                 const bottom = rect.bottom + marginBottom;
                 if (bottom > maxBottom) {
@@ -159,10 +204,8 @@ $(document).ready(async function () {
                 }
             }
 
-            const bodyHeight = body.getBoundingClientRect().height || 0;
-            const measured = Math.max(maxBottom, bodyHeight);
-            if (measured > 0) {
-                applyIframeHeight(measured + 24);
+            if (maxBottom > 0) {
+                applyIframeHeight(maxBottom + 16);
             }
         } catch (error) {
             console.warn(
@@ -173,6 +216,7 @@ $(document).ready(async function () {
     };
 
     const scheduleResize = () => {
+        if (performance.now() < ignoreResizeUntil) return;
         if (resizeRaf) cancelAnimationFrame(resizeRaf);
         resizeRaf = requestAnimationFrame(resizeIframeToContent);
     };
@@ -224,6 +268,8 @@ $(document).ready(async function () {
 
         if (isSameOriginUrl(iframe.src)) {
             lastAppliedHeight = 0;
+            consecutiveGrowCount = 0;
+            ignoreResizeUntil = 0;
             scheduleResize();
             try {
                 const doc =
