@@ -113,29 +113,56 @@ $(document).ready(async function () {
     const startTime = performance.now();
     let loadStabilizeTimer;
     let maxWaitTimer;
+    let resizeRaf = null;
     let resizeObserver = null;
+    let lastAppliedHeight = 0;
     let hidden = false;
 
-    // ปรับความสูง iframe ให้เท่ากับ/มากกว่าเนื้อหาภายใน เพื่อไม่ให้เกิด scrollbar (ใช้ได้เฉพาะ same-origin)
+    const applyIframeHeight = (height) => {
+        const nextHeight = Math.max(Math.ceil(Number(height) || 0), MIN_IFRAME_HEIGHT);
+        if (Math.abs(nextHeight - lastAppliedHeight) <= 4) return;
+        lastAppliedHeight = nextHeight;
+        iframe.style.height = `${nextHeight}px`;
+        $('#frame-container').css('height', `${nextHeight}px`);
+    };
+
+    // ปรับความสูง iframe ให้พอดีเนื้อหาจริง โดยตัด min-h-screen (100vh) feedback loop
     const resizeIframeToContent = () => {
         try {
             const doc =
                 iframe.contentDocument || iframe.contentWindow?.document;
-            if (!doc) return;
-            const body = doc.body;
-            const html = doc.documentElement;
-            const height = Math.max(
-                body?.scrollHeight || 0,
-                body?.offsetHeight || 0,
-                html?.clientHeight || 0,
-                html?.scrollHeight || 0,
-                html?.offsetHeight || 0,
-            );
+            const body = doc?.body;
+            const html = doc?.documentElement;
+            if (!body || !html) return;
 
-            if (height > 0) {
-                const nextHeight = Math.max(height, MIN_IFRAME_HEIGHT);
-                iframe.style.height = `${nextHeight}px`;
-                $('#frame-container').css('height', `${nextHeight}px`);
+            html.style.height = 'auto';
+            html.style.minHeight = '0';
+            body.style.height = 'auto';
+            body.style.minHeight = '0';
+
+            let maxBottom = 0;
+            for (const child of Array.from(body.children)) {
+                const style = doc.defaultView?.getComputedStyle(child);
+                if (
+                    !style ||
+                    style.display === 'none' ||
+                    style.position === 'fixed' ||
+                    style.position === 'absolute'
+                ) {
+                    continue;
+                }
+                const rect = child.getBoundingClientRect();
+                const marginBottom = parseFloat(style.marginBottom) || 0;
+                const bottom = rect.bottom + marginBottom;
+                if (bottom > maxBottom) {
+                    maxBottom = bottom;
+                }
+            }
+
+            const bodyHeight = body.getBoundingClientRect().height || 0;
+            const measured = Math.max(maxBottom, bodyHeight);
+            if (measured > 0) {
+                applyIframeHeight(measured + 24);
             }
         } catch (error) {
             console.warn(
@@ -143,6 +170,11 @@ $(document).ready(async function () {
                 error,
             );
         }
+    };
+
+    const scheduleResize = () => {
+        if (resizeRaf) cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(resizeIframeToContent);
     };
 
     const hideLoading = () => {
@@ -191,12 +223,13 @@ $(document).ready(async function () {
         }
 
         if (isSameOriginUrl(iframe.src)) {
-            resizeIframeToContent();
+            lastAppliedHeight = 0;
+            scheduleResize();
             try {
                 const doc =
                     iframe.contentDocument || iframe.contentWindow?.document;
                 if (doc?.body && 'ResizeObserver' in window) {
-                    resizeObserver = new ResizeObserver(resizeIframeToContent);
+                    resizeObserver = new ResizeObserver(scheduleResize);
                     resizeObserver.observe(doc.body);
                 }
             } catch {
