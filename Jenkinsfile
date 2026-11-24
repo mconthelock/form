@@ -35,11 +35,6 @@ pipeline {
             }
         }
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
         // ============================================================
         // Prepare Version
         // ============================================================
@@ -320,6 +315,10 @@ pipeline {
                         --exclude='.new_version' \
                         --exclude='assets/script' \
                         --exclude='assets/style' \
+                        --exclude='*.map' \
+                        --exclude='docs/.vitepress' \
+                        --exclude='docs/public' \
+                        --exclude='docs/form' \
                         --exclude='Jenkinsfile' \
                         --exclude='application/cache' \
                         --exclude='application/logs' \

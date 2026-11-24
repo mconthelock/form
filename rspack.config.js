@@ -20,64 +20,69 @@ const getEntries = () => {
     return { ...baseEntries, ...moduleEntries };
 };
 
-module.exports = {
-    entry: getEntries(),
-    output: {
-        filename: '[name].js',
-        path: path.resolve(__dirname, 'assets/dist/js'),
-        clean: true,
-    },
-    mode: process.env.STATE || 'development',
-    module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
-                type: 'javascript/auto',
-            },
-            {
-                test: /\.md$/,
-                type: 'asset/source',
-            },
-        ],
-    },
-    optimization: {
-        minimize: false,
-    },
-    plugins: [
-        new Dotenv(),
-        new rspack.DefinePlugin({
-            __WEBASSET_CONFIG__: JSON.stringify(defaultConfig({})),
-        }),
-        new rspack.ProvidePlugin({
-            $: 'jquery',
-            jQuery: 'jquery',
-            datatables: 'DataTables',
-        }),
-        new rspack.CopyRspackPlugin({
-            patterns: [
+module.exports = (_env, argv = {}) => {
+    const isProd = argv.mode === 'production';
+
+    return {
+        entry: getEntries(),
+        output: {
+            filename: '[name].js',
+            path: path.resolve(__dirname, 'assets/dist/js'),
+            clean: true,
+        },
+        mode: argv.mode || process.env.STATE || 'development',
+        devtool: isProd ? false : 'source-map',
+        module: {
+            rules: [
                 {
-                    from: path.resolve(
-                        __dirname,
-                        'node_modules/@amec/webasset/src/fonts',
-                    ),
-                    to: path.resolve(__dirname, 'assets/fonts'),
-                    noErrorOnMissing: true,
+                    test: /\.css$/,
+                    use: ['style-loader', 'css-loader'],
+                    type: 'javascript/auto',
                 },
                 {
-                    from: path.resolve(
-                        __dirname,
-                        'node_modules/@amec/webasset/src/images',
-                    ),
-                    to: path.resolve(__dirname, 'assets/images'),
-                    noErrorOnMissing: true,
+                    test: /\.md$/,
+                    type: 'asset/source',
                 },
             ],
-        }),
-    ],
-    resolve: {
-        alias: {
-            jquery: require.resolve('jquery'),
         },
-    },
+        optimization: {
+            minimize: isProd,
+        },
+        plugins: [
+            new Dotenv(),
+            new rspack.DefinePlugin({
+                __WEBASSET_CONFIG__: JSON.stringify(defaultConfig({})),
+            }),
+            new rspack.ProvidePlugin({
+                $: 'jquery',
+                jQuery: 'jquery',
+                datatables: 'DataTables',
+            }),
+            new rspack.CopyRspackPlugin({
+                patterns: [
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'node_modules/@amec/webasset/src/fonts',
+                        ),
+                        to: path.resolve(__dirname, 'assets/fonts'),
+                        noErrorOnMissing: true,
+                    },
+                    {
+                        from: path.resolve(
+                            __dirname,
+                            'node_modules/@amec/webasset/src/images',
+                        ),
+                        to: path.resolve(__dirname, 'assets/images'),
+                        noErrorOnMissing: true,
+                    },
+                ],
+            }),
+        ],
+        resolve: {
+            alias: {
+                jquery: require.resolve('jquery'),
+            },
+        },
+    };
 };
