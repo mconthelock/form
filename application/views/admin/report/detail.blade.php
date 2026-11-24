@@ -6,6 +6,12 @@
     </div>
 
     <div class="space-y-1">
+        <label class="block text-xs uppercase font-bold wf-mute" for="report-desc">Report Description</label>
+        <textarea class="textarea textarea-sm min-h-20 w-full text-sm" placeholder="Report Description"
+            id="report-desc"></textarea>
+    </div>
+
+    <div class="space-y-1">
         <label class="block text-xs uppercase font-bold wf-mute" for="report-owner">Owner</label>
         <select class="select select-sm h-9.5 w-full req" id="report-owner">
             <option value=""></option>

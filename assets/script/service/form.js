@@ -112,8 +112,9 @@ export async function formHeader(data) {
     $('#form-header-status-th').html(stat.th);
 }
 
-export async function formHeaderInfo(data) {
+export async function formHeaderInfo(data = {}, opt = {}) {
     const setEmpInfo = (emp, el) => {
+        if (!emp) return;
         $(el)
             .find('.img')
             .html(
@@ -128,16 +129,199 @@ export async function formHeaderInfo(data) {
         $(el).find('.email').html(emp.SRECMAIL);
     };
     const master = data.formmst;
-    const no = `${master.VANAME}${data.CYEAR2.slice(2)}-${('000000' + data.NRUNNO).slice(-6)}`;
-    const date = `${dayjs(data.DREQDATE).format('YYYY-MM-DD')} ${data.CREQTIME}`;
+    const no =
+        master && data.CYEAR2 && data.NRUNNO
+            ? `${master.VANAME}${String(data.CYEAR2).slice(2)}-${('000000' + data.NRUNNO).slice(-6)}`
+            : 'Draft';
+    const date = data.DREQDATE
+        ? `${dayjs(data.DREQDATE).format('YYYY-MM-DD')} ${data.CREQTIME || ''}`.trim()
+        : dayjs().format('YYYY-MM-DD');
     $('#form-header-no').html(no);
     $('#form-header-date').html(date);
-    $('#form-header-remark').html(data.VREMARK);
+    $('#form-header-remark').html(data.VREMARK || '');
 
-    const req = await displayEmpInfo(data.VREQNO);
-    const inputter = await displayEmpInfo(data.VINPUTER);
+    const reqNo = String(data.VREQNO || $('#EMPNO').val() || '').trim();
+    const req = reqNo ? await displayEmpInfo(reqNo) : null;
+    const inputterNo = String(data.VINPUTER || $('#EMPNO').val() || '').trim();
+    const inputter = inputterNo ? await displayEmpInfo(inputterNo) : null;
     setEmpInfo(req, '#form-header-req');
     setEmpInfo(inputter, '#form-header-inputted');
+    if (req?.SEMPNO) {
+        $('#form-header-req-no').val(req.SEMPNO);
+    }
+
+    const updateOnBehalfBadge = (selectedReqNo) => {
+        const isDifferent =
+            Boolean(selectedReqNo) &&
+            Boolean(inputter?.SEMPNO || inputterNo) &&
+            String(selectedReqNo).trim() !==
+                String(inputter?.SEMPNO || inputterNo).trim();
+        $('#form-header-req-badge').toggleClass('hidden', !isDifferent);
+    };
+    updateOnBehalfBadge(req?.SEMPNO || reqNo);
+
+    if (opt.editableReq) {
+        const $changeBtn = $('#form-header-req-change-btn');
+        const $editor = $('#form-header-req-editor');
+        const $input = $('#form-header-req-input');
+        const $confirmBtn = $('#form-header-req-confirm');
+        const $error = $('#form-header-req-error');
+
+        $changeBtn.removeClass('hidden');
+
+        const showError = (msg) => {
+            if (!msg) {
+                $error.addClass('hidden').find('span').text('');
+            } else {
+                $error.removeClass('hidden').find('span').text(msg);
+            }
+        };
+
+        const openEditor = () => {
+            showError('');
+            $input.val('');
+            $editor.removeClass('hidden');
+            $input.trigger('focus');
+        };
+
+        const closeEditor = () => {
+            showError('');
+            $editor.addClass('hidden');
+        };
+
+        const applyRequester = async () => {
+            const empNo = String($input.val() || '').trim();
+            if (!empNo) {
+                showError('กรุณากรอกรหัสพนักงาน');
+                $input.trigger('focus');
+                return;
+            }
+
+            showError('');
+            $confirmBtn.prop('disabled', true);
+            $confirmBtn.find('.loading-spinner').removeClass('hidden');
+            try {
+                const emp = await displayEmpInfo(empNo);
+                if (!emp) {
+                    showError(`ไม่พบข้อมูลพนักงานรหัส ${empNo}`);
+                    $input.trigger('focus').trigger('select');
+                    return;
+                }
+
+                setEmpInfo(emp, '#form-header-req');
+                $('#form-header-req-no').val(emp.SEMPNO);
+                updateOnBehalfBadge(emp.SEMPNO);
+                closeEditor();
+
+                if (typeof opt.onChangeRequester === 'function') {
+                    await opt.onChangeRequester(emp);
+                }
+            } catch (err) {
+                console.error('Error fetching requester info:', err);
+                showError('เกิดข้อผิดพลาดในการค้นหาข้อมูลพนักงาน');
+            } finally {
+                $confirmBtn.prop('disabled', false);
+                $confirmBtn.find('.loading-spinner').addClass('hidden');
+            }
+        };
+
+        $(document)
+            .off('click.reqChange', '#form-header-req-change-btn')
+            .on('click.reqChange', '#form-header-req-change-btn', function (e) {
+                e.preventDefault();
+                if ($editor.hasClass('hidden')) {
+                    openEditor();
+                } else {
+                    closeEditor();
+                }
+            });
+
+        $(document)
+            .off('click.reqChange', '#form-header-req-cancel')
+            .on('click.reqChange', '#form-header-req-cancel', function (e) {
+                e.preventDefault();
+                closeEditor();
+            });
+
+        $(document)
+            .off('click.reqChange', '#form-header-req-confirm')
+            .on('click.reqChange', '#form-header-req-confirm', function (e) {
+                e.preventDefault();
+                applyRequester();
+            });
+
+        $(document)
+            .off('keydown.reqChange', '#form-header-req-input')
+            .on('keydown.reqChange', '#form-header-req-input', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyRequester();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeEditor();
+                }
+            });
+    } else {
+        $('#form-header-req-change-btn').addClass('hidden');
+        $('#form-header-req-editor').addClass('hidden');
+    }
+}
+
+function sortFlowSteps(flow) {
+    if (!Array.isArray(flow) || flow.length <= 1) return flow || [];
+
+    const byStepNo = new Map();
+    const nextStepSet = new Set();
+
+    for (const item of flow) {
+        const stepNo = String(item.CSTEPNO ?? '').trim();
+        const nextNo = String(item.CSTEPNEXTNO ?? '').trim();
+        if (!byStepNo.has(stepNo)) {
+            byStepNo.set(stepNo, []);
+        }
+        byStepNo.get(stepNo).push(item);
+        if (nextNo && nextNo !== '00') {
+            nextStepSet.add(nextNo);
+        }
+    }
+
+    let startStep = byStepNo.has('--')
+        ? '--'
+        : [...byStepNo.keys()].find((stepNo) => !nextStepSet.has(stepNo));
+
+    if (startStep === undefined) {
+        startStep = String(flow[0].CSTEPNO ?? '').trim();
+    }
+
+    const ordered = [];
+    const visited = new Set();
+    const queue = [startStep];
+
+    while (queue.length > 0) {
+        const currentKey = queue.shift();
+        if (!currentKey || currentKey === '00' || visited.has(currentKey)) {
+            continue;
+        }
+        const items = byStepNo.get(currentKey);
+        if (!items) continue;
+
+        visited.add(currentKey);
+        for (const item of items) {
+            ordered.push(item);
+            const nextKey = String(item.CSTEPNEXTNO ?? '').trim();
+            if (nextKey && nextKey !== '00' && !visited.has(nextKey)) {
+                queue.push(nextKey);
+            }
+        }
+    }
+
+    for (const item of flow) {
+        if (!ordered.includes(item)) {
+            ordered.push(item);
+        }
+    }
+
+    return ordered;
 }
 
 export async function formFlowApproval(data) {
@@ -258,9 +442,10 @@ export async function formFlowApproval(data) {
         $('#form-flow-table tbody').html(table);
     };
 
-    currentStep(data);
-    setStepInfo(data.flow);
-    setStepTable(data.flow);
+    const orderedFlow = sortFlowSteps(data.flow);
+    currentStep({ ...data, flow: orderedFlow });
+    setStepInfo(orderedFlow);
+    setStepTable(orderedFlow);
 }
 
 export async function formApprovalBtn(form, opt = {}) {

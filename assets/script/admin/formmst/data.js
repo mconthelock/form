@@ -105,10 +105,11 @@ export async function updateFormAuthen(data) {
 export async function addFlowMaster(data) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${process.env.APP_API}/formmst/flow/add`,
+            url: `${process.env.APP_API}/flowmst/create`,
             type: 'post',
+            contentType: 'application/json',
             dataType: 'json',
-            data: data,
+            data: JSON.stringify(data),
             success: function (res) {
                 resolve(res);
             },
@@ -145,6 +146,23 @@ export async function deleteFlowMaster(data) {
             type: 'post',
             dataType: 'json',
             data: data,
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(xhr, err);
+                reject(xhr);
+            },
+        });
+    });
+}
+
+export async function getStepMaster() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_ENV}/admin/formmaster/getStepMaster`,
+            type: 'get',
+            dataType: 'json',
             success: function (res) {
                 resolve(res);
             },

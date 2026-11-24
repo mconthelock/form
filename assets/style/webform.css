@@ -140,9 +140,7 @@ body:has(.webform-theme)
     .select2-container--default
     .select2-search--dropdown
     .select2-search__field,
-body:has(.webform-theme)
-    .select2-container--default
-    .select2-results__option,
+body:has(.webform-theme) .select2-container--default .select2-results__option,
 body:has(.webform-theme) .select2-results__options li {
     font-size: 0.75rem !important;
     line-height: 1.125rem !important;
@@ -184,6 +182,7 @@ body:has(.webform-theme) .select2-dropdown {
     letter-spacing: 0.05em !important;
     border-bottom: none !important;
     padding: 0.625rem 0.75rem !important;
+    font-family: var(--font-sans) !important;
 }
 
 .webform-theme
@@ -201,10 +200,6 @@ body:has(.webform-theme) .select2-dropdown {
     > th
     span.dt-column-order::after {
     color: var(--color-primary-content) !important;
-}
-
-.webform-theme div.dt-container table.dataTable tbody {
-    font-size: 0.75rem !important;
 }
 
 .webform-theme div.dt-container table.dataTable tbody > tr {
@@ -550,7 +545,8 @@ html.flow-dragging * {
     padding: 0 0.25rem;
     font-size: 0.6875rem;
     font-weight: 700;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono);
+    font-size-adjust: cap-height 0.71;
     background-color: var(--color-base-200);
     color: var(--color-base-content);
     border: 1px solid var(--color-base-300);
@@ -566,10 +562,13 @@ html.flow-dragging * {
     display: none;
     font-size: 0.625rem;
     color: var(--color-primary);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-family: var(--font-mono);
+    font-size-adjust: cap-height 0.71;
 }
 
-.webform-theme .flow-step-item:has(.flow-drag-handle:focus-visible) .flow-kbd-hint,
+.webform-theme
+    .flow-step-item:has(.flow-drag-handle:focus-visible)
+    .flow-kbd-hint,
 .webform-theme .flow-step-item[data-grabbed='true'] .flow-kbd-hint {
     display: inline-block;
 }

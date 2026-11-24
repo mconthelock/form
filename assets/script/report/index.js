@@ -1,84 +1,241 @@
-import { initApp } from '../utils';
+import 'select2/dist/css/select2.min.css';
+import select2 from 'select2';
+import { showLoader } from '@amec/webasset/preloader';
+import { showMessage } from '@amec/webasset/utils';
+import { setSelect2 } from '@amec/webasset/select2';
+import { createTable } from '@amec/webasset/dataTable';
+import { getTagColor, initApp, tableOption, tableFillSelect } from '../utils';
 import { getReportAuthen, getFormDept } from '../service';
 
+select2();
+
+let table = null;
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function escapeRegex(value) {
+    return String(value ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 $(document).ready(async function () {
-    await initApp();
-    const user = $('#user-login').attr('empno');
-    const data = await getReportAuthen(user);
-    const dataFilter = data.filter((item) => item.CAUTHNO != '003');
-    const formDept = await getFormDept();
-    const extContainer = $('#list-report');
-    extContainer.html('');
-    formDept.forEach((el) => {
-        const card = setExtContainer(dataFilter, el);
-        if (card) {
-            extContainer.append(card);
-        }
-    });
+    try {
+        await createReportTable();
+    } catch (error) {
+        console.log(error);
+        await showMessage(error.responseJSON?.message || 'Error fetching data');
+    } finally {
+        await showLoader({ show: false });
+    }
 });
 
-function setExtContainer(dataFilter, el) {
-    const report = [];
-    for (const dept of el.link) {
-        const reportDept = dataFilter
-            .filter((item) => item.REPORT_MASTER.VORGNO === dept)
-            .sort((a, b) => a.REPORT_MASTER.NSEQ - b.REPORT_MASTER.NSEQ);
-        reportDept.map((rpt) => {
-            report.push(rpt);
-        });
+async function createReportTable() {
+    await initApp();
+    const user = $('#user-login').attr('empno');
+    const [data, formDept] = await Promise.all([
+        getReportAuthen(user),
+        getFormDept(),
+    ]);
+
+    const dataFilter = (Array.isArray(data) ? data : []).filter(
+        (item) => item && item.CAUTHNO != '003' && item.REPORT_MASTER,
+    );
+
+    const rows = [];
+    (Array.isArray(formDept) ? formDept : []).forEach((el) => {
+        for (const dept of el.link || []) {
+            const reportDept = dataFilter
+                .filter((item) => item.REPORT_MASTER.VORGNO === dept)
+                .sort(
+                    (a, b) =>
+                        Number(a.REPORT_MASTER.NSEQ ?? 0) -
+                        Number(b.REPORT_MASTER.NSEQ ?? 0),
+                );
+            reportDept.forEach((rpt) => {
+                rows.push({
+                    deptId: String(el.id ?? ''),
+                    deptName: el.name || '',
+                    seq: Number(rpt.REPORT_MASTER.NSEQ ?? 0),
+                    name: rpt.REPORT_MASTER.VNAME || '',
+                    url: rpt.REPORT_MASTER.VURL || '',
+                });
+            });
+        }
+    });
+
+    $('#report-count-badge').text(
+        `${rows.length} ${rows.length === 1 ? 'REPORT' : 'REPORTS'}`,
+    );
+
+    const usedDepts = [...new Set(rows.map((r) => r.deptName))];
+    const deptOptions = usedDepts.map((name) => ({
+        value: name,
+        text: name,
+    }));
+    await tableFillSelect('#dept-filter', deptOptions, 'value', 'text');
+    await setSelect2({
+        element: $('#dept-filter'),
+        placeholder: 'All Departments',
+    });
+
+    if (table) {
+        table.clear();
+        table.rows.add(rows);
+        table.draw();
+        return;
     }
 
-    if (report.length == 0) return;
+    const opt = { ...tableOption };
+    opt.dom =
+        '<"overflow-x-auto"t><"dt-footer-bar px-4 py-3 bg-base-100 border-t border-base-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs wf-mute"<"table-info"i><"table-page"p>>';
+    opt.pagingType = 'simple_numbers';
+    opt.language = {
+        ...tableOption.language,
+        emptyTable: 'No reports available.',
+        zeroRecords: 'No matching reports found.',
+        info: 'Showing <strong class="text-primary">_START_ - _END_</strong> of <strong class="text-primary">_TOTAL_</strong> reports',
+        infoEmpty:
+            'Showing <strong class="text-primary">0 - 0</strong> of <strong class="text-primary">0</strong> reports',
+        paginate: {
+            previous: '«',
+            next: '»',
+            first: '«',
+            last: '»',
+        },
+    };
+    opt.data = rows;
+    opt.pageLength = 10;
+    opt.order = [];
+    opt.columns = [
+        {
+            data: 'deptName',
+            title: 'Department',
+            className: 'text-nowrap align-middle',
+            render: function (data, type, row) {
+                if (type === 'display') {
+                    const tagColor = getTagColor(row.deptId || data || '');
+                    return `<span class="badge badge-outline font-mono font-bold uppercase text-md ${tagColor}">${escapeHtml(data)}</span>`;
+                }
+                return data || '';
+            },
+        },
+        {
+            data: 'name',
+            title: 'Report Name',
+            className: 'text-left min-w-[280px]',
+            render: function (data, type) {
+                if (type === 'display') {
+                    return `<div class="flex items-center gap-2 text-sm font-semibold text-base-content leading-snug">
+                        <i class="fi fi-rs-paper-plane-top text-primary/70 shrink-0"></i>
+                        <span>${escapeHtml(data)}</span>
+                    </div>`;
+                }
+                return data || '';
+            },
+        },
+        {
+            data: null,
+            title: 'Action',
+            orderable: false,
+            searchable: false,
+            className: 'text-center text-nowrap! align-middle',
+            render: function (_data, _type, row) {
+                return `<a href="${escapeHtml(row.url)}"
+                    class="btn btn-xs btn-outline btn-primary inline-flex items-center gap-1 open-report">
+                    <i class="fi fi-rr-play text-xs"></i>
+                    <span>Open</span>
+                </a>`;
+            },
+        },
+    ];
 
-    const header = `<div class="px-4 py-3 border-b border-base-200 flex items-center justify-between gap-2 bg-base-100">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-primary">${el.name}</h3>
-        <span class="badge badge-xs badge-primary font-mono font-bold">${report.length}</span>
-    </div>`;
+    opt.createdRow = function (rowEl) {
+        $(rowEl).addClass('cursor-pointer');
+    };
 
-    let items = '';
-    report.map((rpt) => {
-        items += `<li class="report-item border-b border-base-200 last:border-b-0 border-l-2 border-l-transparent hover:border-l-primary hover:bg-primary/[0.05] transition-colors">
-                <a href="${rpt.REPORT_MASTER.VURL}" class="flex items-center justify-between gap-2 px-4 py-2.5 w-full h-full text-xs text-base-content hover:text-primary font-medium">
-                    <span class="flex items-center gap-2"><i class="fi fi-rs-paper-plane-top text-primary/70"></i><span>${rpt.REPORT_MASTER.VNAME}</span></span>
-                    <i class="fi fi-rr-angle-small-right wf-mute text-sm"></i>
-                </a>
-            </li>`;
-    });
+    const stylePagination = function () {
+        const pagination = $(this).closest('.dt-container').find('.dt-paging');
+        const nav = pagination.find('nav');
+        nav.addClass('join');
+        nav.find('.dt-paging-button').each(function () {
+            const btn = $(this);
+            const isCurrent = btn.hasClass('current');
+            const isDisabled = btn.hasClass('disabled');
 
-    return `<div class="report-dept-card bg-base-100 border border-base-300 border-t-4 border-t-primary shadow-sm flex flex-col">
-        ${header}
-        <ul class="flex flex-col">${items}</ul>
-    </div>`;
-}
+            btn.removeClass(
+                'btn-primary btn-outline border-base-300 btn-disabled',
+            ).addClass('join-item btn btn-xs');
 
-function filterReports() {
-    const query = ($('#search-form').val() || '').trim().toLowerCase();
-    $('#list-report .report-dept-card').each(function () {
-        const card = $(this);
-        const deptName = card.find('h3').text().toLowerCase();
-        const deptMatch = query !== '' && deptName.includes(query);
-        let visibleCount = 0;
+            if (isCurrent) {
+                btn.addClass('btn-primary');
+            } else {
+                btn.addClass('btn-outline border-base-300');
+            }
 
-        card.find('.report-item').each(function () {
-            const item = $(this);
-            const text = item.text().toLowerCase();
-            const match = query === '' || deptMatch || text.includes(query);
-            item.toggle(match);
-            if (match) visibleCount += 1;
+            if (isDisabled && !isCurrent) {
+                btn.addClass('btn-disabled');
+            }
         });
 
-        card.toggle(visibleCount > 0);
-    });
+        nav.find('.ellipsis').addClass(
+            'join-item btn btn-xs btn-outline border-base-300 btn-disabled',
+        );
+    };
+
+    opt.drawCallback = stylePagination;
+    opt.initComplete = function (settings, json) {
+        tableOption.initComplete.call(this, settings, json);
+        stylePagination.call(this);
+    };
+
+    table = await createTable(opt);
 }
 
-$(document).on('keyup', '#search-form', function () {
-    filterReports();
+$(document).on('click', '#table tbody tr', function (e) {
+    if ($(e.target).closest('button, a').length) return;
+    const link = $(this).find('a.open-report');
+    const href = link.attr('href');
+    if (href) {
+        window.location.href = href;
+    }
+});
+
+$(document).on('input', '#search-form', function () {
+    if (!table) return;
+    table.search($(this).val() || '').draw();
 });
 
 $(document).on('click', '.clear-search-form', function () {
     const input = $('#search-form');
-    input.val('').trigger('keyup');
-    input.focus();
+    input.val('').trigger('input').focus();
+});
+
+$(document).on('change', '#dept-filter', function () {
+    if (!table) return;
+    const val = $(this).val() || '';
+    if (val === '') {
+        table.column(0).search('').draw();
+    } else {
+        table
+            .column(0)
+            .search(`^${escapeRegex(val)}$`, true, false)
+            .draw();
+    }
+});
+
+$(document).on('click', '#reset-filter', function () {
+    if (!table) return;
+    $('#search-form').val('');
+    $('#dept-filter').val('').trigger('change.select2');
+    table.search('');
+    table.columns().search('');
+    table.page('first').draw('full-reset');
 });
 
 $(document).on('keydown', function (e) {

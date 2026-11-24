@@ -10,6 +10,16 @@ import { createReport, updateReport } from './data';
 
 var table;
 select2();
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 $(document).ready(async function (e) {
     try {
         await reloadTable();
@@ -108,14 +118,32 @@ async function createTableOption(data) {
         [1, 'asc'],
     ];
     opt.columns = [
-        { data: 'deptname.name', title: 'Owner', className: 'text-nowrap font-semibold text-primary' },
+        {
+            data: 'deptname.name',
+            title: 'Owner',
+            className: 'text-nowrap font-semibold text-primary',
+        },
         { data: 'NSEQ', title: 'Seq.', className: 'text-center font-mono' },
         {
             data: 'VNAME',
             title: 'Report Name',
             className: 'font-medium',
+            render: function (data, type, row) {
+                const desc = row.VDESC == null ? '' : String(row.VDESC).trim();
+                if (type === 'display') {
+                    return `<div class="flex flex-col gap-0.5">
+                        <div class="font-medium text-base-content leading-snug">${escapeHtml(data)}</div>
+                        ${desc ? `<div class="text-xs wf-mute line-clamp-2">${escapeHtml(desc)}</div>` : ''}
+                    </div>`;
+                }
+                return `${data || ''} ${desc}`;
+            },
         },
-        { data: 'VURL', title: 'Link', className: 'font-mono text-xs wf-mute break-all' },
+        {
+            data: 'VURL',
+            title: 'Link',
+            className: 'font-mono text-xs wf-mute break-all',
+        },
         {
             data: 'CSTATUS',
             title: 'Status',
@@ -213,6 +241,7 @@ $(document).on('click', '#save-report', async function (e) {
         const data = {
             VORGNO: $('#report-owner').val(),
             VNAME: $('#report-name').val(),
+            VDESC: $('#report-desc').val(),
             VURL: $('#report-url').val(),
             NSEQ: $('#report-seq').val(),
             CSTATUS: $('input[name="reportstatus"]:checked').val(),
@@ -225,7 +254,8 @@ $(document).on('click', '#save-report', async function (e) {
             await updateReport(update, $('#report-id').val());
         }
         reloadTable();
-        el.find('.input, .select').val('');
+        el.find('.input, .select, .textarea').val('');
+        $('#report-owner').trigger('change.select2');
     } catch (error) {
         console.error(error);
     } finally {
@@ -238,6 +268,7 @@ $(document).on('click', '.row-edit', function (e) {
     const rowData = table.row($(this).closest('tr')).data();
     $('#report-id').val(rowData.ID);
     $('#report-name').val(rowData.VNAME);
+    $('#report-desc').val(rowData.VDESC || '');
     $('#report-owner').val(rowData.VORGNO).trigger('change');
     $('#report-url').val(rowData.VURL);
     $('#report-seq').val(rowData.NSEQ);

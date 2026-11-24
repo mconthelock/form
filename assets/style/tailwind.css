@@ -64,6 +64,10 @@
         --font-sans:
             'LINE Seed EN', 'LINE Seed EN Bold', 'LINE Seed TH',
             'LINE Seed TH Bold', 'LINE Seed JP', 'LINE Seed JP Bold', sans-serif;
+        --font-mono:
+            ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+            'Liberation Mono', 'Courier New', 'LINE Seed TH',
+            'LINE Seed TH Bold', monospace;
         --font-head: Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
 
@@ -81,6 +85,13 @@
 
     body {
         @apply font-sans;
+    }
+
+    code,
+    kbd,
+    samp,
+    pre {
+        font-size-adjust: cap-height 0.71;
     }
 
     /* Top navigation progress bar (instant feedback on link click) */
@@ -177,6 +188,17 @@
     .text-center {
         text-align: center !important;
     }
+}
+
+/* Harmonize optical size of font-mono with LINE Seed Sans (cap-height: 0.734) */
+@utility font-mono {
+    font-family: var(--font-mono);
+    font-size-adjust: cap-height 0.71;
+}
+
+@utility font-sans {
+    font-family: var(--font-sans);
+    font-size-adjust: none;
 }
 
 /* The main splash screen container */

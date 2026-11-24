@@ -191,7 +191,10 @@ function bindEvents() {
             }
 
             const statusFilter = $('#table-status-filter').val() || '';
-            if (statusFilter && String(form.CST ?? '') !== String(statusFilter)) {
+            if (
+                statusFilter &&
+                String(form.CST ?? '') !== String(statusFilter)
+            ) {
                 return false;
             }
 
@@ -296,6 +299,11 @@ async function reloadTable() {
 async function createFormTable(data) {
     const pageId = $('body').attr('menutitle');
     const pagestatus = $('#status').val();
+    const showNextApprover = !(
+        pagestatus == '0' ||
+        pagestatus == '1' ||
+        pagestatus == '6'
+    );
     const status = FORM_STATUS_META;
     const lastApproved = getLastApproved;
 
@@ -336,21 +344,50 @@ async function createFormTable(data) {
                         ? data.VFORMPAGE.startsWith('https')
                             ? data.VFORMPAGE
                             : window.location.protocol === 'https:'
-                              ? data.VFORMPAGE.replace(/^http:\/\//i, 'https://')
+                              ? data.VFORMPAGE.replace(
+                                    /^http:\/\//i,
+                                    'https://',
+                                )
                               : data.VFORMPAGE
                         : `https://webflow.mitsubishielevatorasia.co.th/${String(data.VFORMPAGE || '').replace(/^\/+/, '')}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
-                    const statusTargetMap = { 0: 'draft', 1: 'waitapprove', 2: 'comming', 3: 'mine', 4: 'approved', 5: 'represent', 6: 'finish' };
+                    const statusTargetMap = {
+                        0: 'draft',
+                        1: 'waitapprove',
+                        2: 'comming',
+                        3: 'mine',
+                        4: 'approved',
+                        5: 'represent',
+                        6: 'finish',
+                    };
                     const callbackBp = `${process.env.APP_ENV}/webform/form/callback?to=${statusTargetMap[pagestatus] || 'waitapprove'}`;
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(callbackBp)}`;
-                    const formName = String(data.formmst?.VNAME || '').replace(/"/g, '&quot;');
-                    return `<a class="font-mono font-bold text-primary hover:underline link-self" href="#" data-title="${pageId || 'nav-form-waitapprove'}" data-code="${formno}" data-name="${formName}" data-url="${url}">${formno}</a>`;
+                    const formName = String(data.formmst?.VNAME || '').replace(
+                        /"/g,
+                        '&quot;',
+                    );
+                    return `<div class="inline-flex items-center gap-1.5">
+                        <a class="inline-flex items-center font-mono text-sm font-bold text-primary bg-primary/10 border border-primary/25 px-2.5 py-1 hover:bg-primary hover:text-primary-content transition-colors link-self" href="#" data-title="${pageId || 'nav-form-waitapprove'}" data-code="${formno}" data-name="${formName}" data-url="${url}">${formno}</a>
+                        <button type="button" class="btn btn-xs btn-ghost btn-square border border-base-300 text-base-content/70 hover:text-primary hover:border-primary copy-formno" data-formno="${formno}" title="Copy Form No." aria-label="Copy Form No.">
+                            <i class="fi fi-rr-copy text-xs"></i>
+                        </button>
+                    </div>`;
                     //return `<a class="text-primary" href="${url}">${formno}</a>`;
                 }
                 return formno;
             },
         },
-        { data: 'form.formmst.VNAME', title: 'Detail' },
+        {
+            data: 'form.formmst.VNAME',
+            title: 'Detail',
+            className: 'text-left! min-w-[200px]',
+            render: (data, type) => {
+                if (type === 'display') {
+                    return `<div class="text-sm font-medium text-base-content leading-snug">${data || ''}</div>`;
+                }
+                return data || '';
+            },
+        },
         {
             data: 'form',
             title: 'Request By',
@@ -358,16 +395,21 @@ async function createFormTable(data) {
             className: 'text-left!',
             render: (data, type, row) => {
                 if (type === 'display') {
-                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-[220px]" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                    const reqDate =
+                        data.DREQDATE != null
+                            ? `${dayjs(data.DREQDATE).format('DD/MM/YYYY')} ${((data.CREQTIME || '').trim() + ':00').substring(0, 8)}`
+                            : '';
+                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-55" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-11 h-11 rounded-md border border-base-300 bg-base-200 overflow-hidden shrink-0">
+                            <div class="w-11 h-11 rounded-full border border-base-300 bg-base-200 overflow-hidden shrink-0">
                                 <img src="" class="hidden w-full h-full object-cover object-top" />
                                 <div class="skeleton h-full w-full"></div>
                             </div>
                         </div>
                         <div class="min-w-0 flex flex-col gap-0.5">
-                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-[220px]"><div class="skeleton h-3.5 w-28"></div></div>
-                            <div class="detail text-[11px] wf-mute leading-tight truncate max-w-[220px]"><div class="skeleton h-3 w-24"></div></div>
+                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-55"><div class="skeleton h-3.5 w-28"></div></div>
+                            <div class="detail text-[11px] wf-mute leading-tight truncate max-w-55"><div class="skeleton h-3 w-24"></div></div>
+                            ${showNextApprover && reqDate ? `<div class="text-[11px] wf-mute leading-tight font-mono"><span class="font-sans font-semibold text-primary me-1">Requested:</span>${reqDate}</div>` : ''}
                         </div>
                     </div>`;
                 }
@@ -377,6 +419,7 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Request Date',
+            visible: !showNextApprover,
             className: 'text-left!',
             render: (data, type) => {
                 if (type === 'display') {
@@ -399,15 +442,15 @@ async function createFormTable(data) {
                 if (type === 'display') {
                     if (!latest) return '';
                     const apvDate = `${dayjs(latest.DAPVDATE).format('DD/MM/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
-                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-[220px]" id="apv-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-55" id="apv-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-11 h-11 rounded-md border border-base-300 bg-base-200 overflow-hidden shrink-0">
+                            <div class="w-11 h-11 rounded-full border border-base-300 bg-base-200 overflow-hidden shrink-0">
                                 <img src="" class="hidden w-full h-full object-cover object-top" />
                                 <div class="skeleton h-full w-full"></div>
                             </div>
                         </div>
                         <div class="min-w-0 flex flex-col gap-0.5">
-                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-[220px]"><div class="skeleton h-3.5 w-28"></div></div>
+                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-55"><div class="skeleton h-3.5 w-28"></div></div>
                             <div class="text-[11px] wf-mute leading-tight font-mono"><span class="font-sans font-semibold text-primary me-1">Approved:</span>${apvDate}</div>
                         </div>
                     </div>`;
@@ -418,38 +461,78 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Next Approver',
-            className: `${pagestatus == '0' || pagestatus == '1' || pagestatus == '6' ? 'hidden' : ''}`,
-            render: (data, type, row) => {
+            type: 'string',
+            visible: showNextApprover,
+            className: 'text-left!',
+            render: (data, type) => {
                 if (type === 'display') {
                     const next = nextApprover(data.flow);
+                    if (!next.length) return '';
+
+                    if (next.length === 1) {
+                        const n = next[0];
+                        const apvNo = String(n.VAPVNO || '').trim();
+                        const repNo = String(n.VREPNO || '').trim();
+                        const hasDiffRep =
+                            Boolean(repNo) && Boolean(apvNo) && repNo !== apvNo;
+
+                        return `<div class="next-apv-single flex items-center justify-start gap-2.5 text-left min-w-55" id="next-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                            <div class="avatar border-0">
+                                <div class="w-11 h-11 rounded-full border border-base-300 bg-base-200 overflow-hidden shrink-0">
+                                    <img src="" class="hidden w-full h-full object-cover object-top" />
+                                    <div class="skeleton h-full w-full"></div>
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex flex-col gap-0.5">
+                                <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-55"><div class="skeleton h-3.5 w-28"></div></div>
+                                <div class="detail text-[11px] wf-mute leading-tight truncate max-w-55"><div class="skeleton h-3 w-24"></div></div>
+                                ${hasDiffRep ? `<div class="rep-badge inline-flex items-center gap-1 px-1.5 py-0.5 mt-0.5 text-[11px] font-mono font-semibold bg-black text-white border border-black rounded-sm w-fit max-w-55 truncate" title="Representative: ${repNo}">REP: ${repNo}</div>` : ''}
+                            </div>
+                        </div>`;
+                    }
+
                     const visibleNext = next.slice(0, 2);
                     const remaining = Math.max(
                         next.length - visibleNext.length,
                         0,
                     );
+                    const diffReps = [next[0]].filter((n) => {
+                        const apvNo = String(n.VAPVNO || '').trim();
+                        const repNo = String(n.VREPNO || '').trim();
+                        return (
+                            Boolean(repNo) && Boolean(apvNo) && repNo !== apvNo
+                        );
+                    });
 
-                    return `<div class="flex items-center" id="next-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
-                        <div class="avatar-group -space-x-3">
-                        ${visibleNext
-                            .map(
-                                (n) => `<div class="avatar">
-                                <div class="w-10 h-10">
-                                    <img src="" class="hidden w-full h-full object-cover object-top" />
-                                    <div class="skeleton h-full w-full"></div>
-                                </div>
-                            </div>`,
-                            )
-                            .join('')}
+                    return `<div class="next-apv-group flex flex-col gap-1 text-left" id="next-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                        <div class="avatar-group -space-x-4 rtl:space-x-reverse">
+                            ${visibleNext
+                                .map(
+                                    () => `<div class="avatar">
+                                    <div class="w-10 h-10 bg-base-200">
+                                        <img src="" class="hidden w-full h-full object-cover object-top" />
+                                        <div class="skeleton h-full w-full"></div>
+                                    </div>
+                                </div>`,
+                                )
+                                .join('')}
                             ${
                                 remaining > 0
                                     ? `<div class="avatar avatar-placeholder">
-                                <div class="bg-neutral text-neutral-content w-10 h-10 text-xs font-mono">
-                                    <span>+${remaining}</span>
-                                </div>
-                            </div>`
+                                    <div class="bg-neutral text-neutral-content w-10 h-10 text-xs font-mono font-bold">
+                                        <span>+${remaining}</span>
+                                    </div>
+                                </div>`
                                     : ''
                             }
                         </div>
+                        ${diffReps
+                            .slice(0, 2)
+                            .map((n) => {
+                                const repNo = String(n.VREPNO || '').trim();
+                                return `<div class="rep-badge inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-mono font-semibold bg-black text-white border border-black rounded-sm w-fit max-w-55 truncate" data-rep="${repNo}" title="Representative: ${repNo}">REP: ${repNo}</div>`;
+                            })
+                            .join('')}
                     </div>`;
                 }
                 return '';
@@ -587,29 +670,69 @@ async function fillNextApproverInfo(row, flow, id) {
     if (!wrap.length) return;
 
     const next = nextApprover(flow);
-    const visibleNext = next.slice(0, 2);
-    const remaining = Math.max(next.length - visibleNext.length, 0);
+    if (!next.length) return;
 
-    if (remaining > 0) {
-        const placeholder = $(wrap).find('.avatar-placeholder span');
-        if (placeholder.length) {
-            placeholder.text(`+${remaining}`);
+    if (next.length === 1 && wrap.hasClass('next-apv-single')) {
+        const item = next[0];
+        const apvNo = String(item.VAPVNO || '').trim();
+        const repNo = String(item.VREPNO || '').trim();
+        const empNo = apvNo || repNo;
+        if (!empNo) return;
+
+        const info = await displayEmpInfo(empNo);
+        wrap.find('img').attr('src', info.image).removeClass('hidden');
+        wrap.find('.avatar .skeleton').addClass('hidden');
+
+        const fullName = `${info.SNAME || ''} (${info.SEMPNO || ''})`.trim();
+        const orgText = [info.SDIV, info.SDEPT, info.SSEC]
+            .filter((v) => v && String(v).trim() && String(v).trim() !== '-')
+            .join(' / ');
+
+        wrap.find('.name')
+            .attr('title', fullName)
+            .html(
+                `${info.SNAME || ''}<span class="font-mono text-[11px] font-normal wf-mute ms-1">(${info.SEMPNO || ''})</span>`,
+            );
+        wrap.find('.detail').attr('title', orgText).text(orgText);
+
+        if (repNo && apvNo && repNo !== apvNo) {
+            const repInfo = await displayEmpInfo(repNo);
+            const repText = repInfo?.SNAME
+                ? `REP: ${repInfo.SNAME} (${repNo})`
+                : `REP: ${repNo}`;
+            wrap.find('.rep-badge').attr('title', repText).text(repText);
         }
+        return;
     }
 
-    const avatars = $(wrap).find('.avatar:not(.avatar-placeholder)');
+    const visibleNext = next.slice(0, 2);
+    const avatars = wrap.find('.avatar:not(.avatar-placeholder)');
 
     for (let index = 0; index < avatars.length; index++) {
         const item = visibleNext[index];
         if (!item) continue;
 
-        const empNo = item.VAPVNO || item.VREPNO;
+        const empNo = String(item.VAPVNO || item.VREPNO || '').trim();
         if (!empNo) continue;
 
         const info = await displayEmpInfo(empNo);
         const avatar = $(avatars[index]);
+        const fullName = `${info.SNAME || ''} (${info.SEMPNO || ''})`.trim();
+        avatar.attr('title', fullName);
         avatar.find('img').attr('src', info.image).removeClass('hidden');
         avatar.find('.skeleton').addClass('hidden');
+    }
+
+    const repBadges = wrap.find('.rep-badge');
+    for (let index = 0; index < repBadges.length; index++) {
+        const badge = $(repBadges[index]);
+        const repNo = String(badge.attr('data-rep') || '').trim();
+        if (!repNo) continue;
+        const repInfo = await displayEmpInfo(repNo);
+        const repText = repInfo?.SNAME
+            ? `REP: ${repInfo.SNAME} (${repNo})`
+            : `REP: ${repNo}`;
+        badge.attr('title', repText).text(repText);
     }
 }
 
@@ -628,5 +751,37 @@ $(document).on('click', '#table a.link-self', async function (e) {
         window.location.href = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(targetUrlObj.href)}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
     } catch {
         window.location.href = url;
+    }
+});
+
+$(document).on('click', '#table button.copy-formno', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const btn = $(this);
+    const formno = String(btn.attr('data-formno') || '').trim();
+    if (!formno) return;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(formno);
+        } else {
+            const textarea = document.createElement('textarea');
+            textarea.value = formno;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        const icon = btn.find('i');
+        icon.removeClass('fi-rr-copy').addClass('fi-rr-check text-success');
+        setTimeout(() => {
+            icon.removeClass('fi-rr-check text-success').addClass('fi-rr-copy');
+        }, 1500);
+    } catch (err) {
+        console.warn('Copy formno failed', err);
     }
 });

@@ -152,7 +152,7 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <label
                             class="inline-flex items-center gap-1.5 cursor-pointer select-none font-medium text-base-content">
-                            <input type="checkbox" id="filter-has-tel" class="checkbox checkbox-xs checkbox-primary" />
+                            <input type="checkbox" id="filter-has-tel" class="checkbox checkbox-xs checkbox-primary" checked />
                             <span>Has Tel. Only</span>
                         </label>
 

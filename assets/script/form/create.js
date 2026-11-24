@@ -5,7 +5,12 @@ import { showMessage } from '@amec/webasset/utils';
 import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
 import { getTagColor, initApp, tableOption, tableFillSelect } from '../utils';
-import { getFormMaster, getFormDept, getFormMasterGroup } from '../service';
+import {
+    getFormMaster,
+    getFormDept,
+    getFormMasterGroup,
+    getFormAuthenList,
+} from '../service';
 
 select2();
 
@@ -210,17 +215,42 @@ function normalizeVorgno(value) {
     return String(value ?? '').replace(/^0+/, '') || '0';
 }
 
+function buildFormAuthKey(nno, vorgno, cyear) {
+    return `${String(nno ?? '').trim()}|${normalizeVorgno(vorgno)}|${String(cyear ?? '').trim()}`;
+}
+
 async function createFormTable() {
     await initApp();
     const id = $('#deptid').val();
     const user = $('#user-login').attr('empno') || '';
     const bp = encodeURIComponent(getCallbackBpUrl('waitapprove'));
 
-    const [formMaster, formdept, formGroup] = await Promise.all([
+    const [formMaster, formdept, formGroup, formAuthen] = await Promise.all([
         getFormMaster(),
         getFormDept(),
         getFormMasterGroup(),
+        user ? getFormAuthenList(user) : Promise.resolve([]),
     ]);
+
+    const authList = Array.isArray(formAuthen)
+        ? formAuthen
+        : Array.isArray(formAuthen?.data)
+          ? formAuthen.data
+          : [];
+    const allowedFormKeys = new Set(
+        authList
+            .filter((item) => {
+                const authNo = String(item?.CAUTHNO ?? '').trim();
+                return authNo !== '' && authNo !== '003' && authNo !== '004';
+            })
+            .map((item) =>
+                buildFormAuthKey(
+                    item.NFRMNO ?? item.NNO,
+                    item.VORGNO,
+                    item.CYEAR,
+                ),
+            ),
+    );
 
     const selectdDept = formdept.find((d) => String(d.id) === String(id));
     const linkedDeptIds = Array.isArray(selectdDept?.link)
@@ -238,7 +268,9 @@ async function createFormTable() {
         .filter(
             (f) =>
                 linkedDeptIds.includes(normalizeVorgno(f.VORGNO)) &&
-                String(f.CSTATUS) === '1',
+                String(f.CSTATUS) === '1' &&
+                String(f.CCREATED) === '1' &&
+                allowedFormKeys.has(buildFormAuthKey(f.NNO, f.VORGNO, f.CYEAR)),
         )
         .map((item) => {
             const uri = String(item.VFORMPAGE || '').includes('?') ? '&' : '?';

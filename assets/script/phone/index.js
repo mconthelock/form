@@ -1,9 +1,15 @@
 import '@flaticon/flaticon-uicons/css/all/all.css';
+import 'select2/dist/css/select2.min.css';
+import select2 from 'select2';
 import { showLoader } from '@amec/webasset/preloader';
 import { showErrorMessage } from '@amec/webasset/utils';
+import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
+import { displayEmpImage } from '@amec/webasset/indexDB';
 import { tableOption } from '../utils';
 import { getAmecUsers, getOrganizations } from '../service';
+
+select2();
 
 const PAGE_SIZE = 18;
 
@@ -152,6 +158,7 @@ function normalizeUser(raw) {
     const secFull = String(raw.SSECTION ?? secRef?.full ?? '').trim();
 
     const email = String(raw.SRECMAIL ?? '').trim();
+    const melgit = String(raw.MELGIT ?? '').trim();
     const empno = String(raw.SEMPNO ?? '').trim();
     const posCode = String(raw.SPOSCODE ?? '').trim();
 
@@ -177,6 +184,7 @@ function normalizeUser(raw) {
         SDEPCODE: deptCode,
         SSECCODE: secCode,
         SRECMAIL: email,
+        MELGIT: melgit,
         TEL: tel === '0' || tel === '-' ? '' : tel,
         IS_OUTSOURCE: isOutsource,
         CATEGORY: raw.CATEGORY || (isOutsource ? 'OUTSOURCE' : 'EMPLOYEE'),
@@ -195,6 +203,7 @@ function normalizeUser(raw) {
             secFull,
             secCode,
             email,
+            melgit,
             tel,
         ]
             .join(' ')
@@ -212,16 +221,103 @@ function getInitials(name) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+const empImageCache = new Map();
+const empImagePending = new Map();
+
+function fetchEmpPhoto(empno) {
+    const key = String(empno || '').trim();
+    if (!key) return Promise.resolve(null);
+    if (empImageCache.has(key)) return Promise.resolve(empImageCache.get(key));
+    if (empImagePending.has(key)) return empImagePending.get(key);
+
+    const promise = displayEmpImage(key)
+        .then((src) => {
+            const valid =
+                typeof src === 'string' && src.startsWith('data:image/')
+                    ? src
+                    : null;
+            empImageCache.set(key, valid);
+            return valid;
+        })
+        .catch(() => {
+            empImageCache.set(key, null);
+            return null;
+        })
+        .finally(() => {
+            empImagePending.delete(key);
+        });
+
+    empImagePending.set(key, promise);
+    return promise;
+}
+
+function renderAvatarHtml(u, sizeClass = 'w-14 h-14 text-base') {
+    const empno = String(u?.SEMPNO || '').trim();
+    const canLoadPhoto = Boolean(empno && u?.CATEGORY !== 'OTHER');
+    const cached = canLoadPhoto ? empImageCache.get(empno) : null;
+    const needsLoad = canLoadPhoto && !empImageCache.has(empno);
+    const initials = escapeHtml(getInitials(u?.SNAME));
+    const alt = escapeHtml(u?.SNAME || empno);
+
+    return `<div class="phone-avatar ${sizeClass} rounded-full bg-primary/10 border border-primary/25 text-primary font-mono font-bold flex items-center justify-center overflow-hidden shrink-0"${needsLoad ? ` data-empno="${escapeHtml(empno)}"` : ''}>
+        ${
+            cached
+                ? `<img src="${cached}" alt="${alt}" class="w-full h-full object-cover object-top" /><span class="phone-avatar-initials hidden">${initials}</span>`
+                : `<span class="phone-avatar-initials">${initials}</span>`
+        }
+    </div>`;
+}
+
+function hydrateAvatars(container) {
+    if (!container) return;
+    const nodes = container.querySelectorAll('.phone-avatar[data-empno]');
+    if (!nodes.length) return;
+
+    const groups = new Map();
+    nodes.forEach((el) => {
+        const empno = el.getAttribute('data-empno');
+        if (!empno) return;
+        if (!groups.has(empno)) groups.set(empno, []);
+        groups.get(empno).push(el);
+    });
+
+    groups.forEach((elements, empno) => {
+        fetchEmpPhoto(empno).then((src) => {
+            elements.forEach((el) => {
+                if (!el.isConnected) return;
+                el.removeAttribute('data-empno');
+                if (!src) return;
+                const initialsEl = el.querySelector('.phone-avatar-initials');
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = empno;
+                img.className = 'w-full h-full object-cover object-top';
+                initialsEl?.classList.add('hidden');
+                el.prepend(img);
+            });
+        });
+    });
+}
+
 function populateSelectOptions(selector, values, placeholder) {
     const el = $(selector);
     const currentVal = el.val() || '';
+    const nextVal = currentVal && values.includes(currentVal) ? currentVal : '';
     el.empty();
-    el.append(`<option value="">${placeholder}</option>`);
+    el.append('<option value=""></option>');
     values.forEach((v) => {
         el.append(`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`);
     });
-    if (currentVal && values.includes(currentVal)) {
-        el.val(currentVal);
+    el.val(nextVal);
+    if (el.hasClass('select2-hidden-accessible')) {
+        el.trigger('change.select2');
+    } else {
+        setSelect2({
+            element: el,
+            placeholder,
+            width: '100%',
+            emptyValue: false,
+        });
     }
 }
 
@@ -257,7 +353,7 @@ function updateCascadingFilters() {
     populateSelectOptions('#position', positions, 'All');
 
     if (selectedDept && !depts.includes(selectedDept)) {
-        $('#department').val('');
+        $('#department').val('').trigger('change.select2');
     }
 }
 
@@ -329,7 +425,9 @@ function applyFilters(resetPage = true) {
         OUTSOURCE: 'Outsource Personnel Directory',
         OTHER: 'Company Hotlines & Important Numbers',
     };
-    $('#result-heading').text(headings[currentCategory] || 'Employee Directory');
+    $('#result-heading').text(
+        headings[currentCategory] || 'Employee Directory',
+    );
     $('#result-count-badge').text(filteredEmployees.length.toLocaleString());
     $('#kpi-matched').text(filteredEmployees.length.toLocaleString());
 
@@ -397,23 +495,25 @@ function renderCards() {
             const orgBlock = `<div class="mt-2.5 space-y-1.5 bg-base-200/60 border border-base-300 px-2.5 py-2 text-[11px]">
                 ${orgRows
                     .map(
-                        (r) => `<div class="flex items-start gap-2 leading-snug">
+                        (
+                            r,
+                        ) => `<div class="flex items-start gap-2 leading-snug">
                             <i class="fi ${r.icon} text-primary text-xs shrink-0 mt-0.5" title="${r.tag}"></i>
                             ${r.code ? `<button type="button" class="copy-btn px-1.5 py-0.5 bg-base-100 border border-primary/50 text-primary font-mono text-[10px] font-bold leading-none shrink-0 mt-0.5 hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(r.code)}" title="Click to copy ${r.tag} code">${escapeHtml(r.code)}</button>` : ''}
-                            <span class="text-base-content break-words min-w-0">${escapeHtml(r.name)}</span>
+                            <span class="text-base-content wrap-break-word min-w-0">${escapeHtml(r.name)}</span>
                         </div>`,
                     )
                     .join('')}
             </div>`;
             const telBlock = u.TEL
-                ? `<button type="button" class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white font-mono text-xs font-bold hover:opacity-90 cursor-pointer shrink-0" data-copy="${escapeHtml(u.TEL)}" title="Click to copy telephone">
-                        <i class="fi fi-rr-phone-call text-xs"></i>
+                ? `<button type="button" class="copy-btn inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white font-mono text-base font-bold hover:opacity-90 cursor-pointer shrink-0" data-copy="${escapeHtml(u.TEL)}" title="Click to copy telephone">
+                        <i class="fi fi-rr-phone-call text-sm"></i>
                         <span>${escapeHtml(u.TEL)}</span>
                    </button>`
-                : `<span class="inline-flex items-center gap-1 px-2 py-1 bg-base-200 border border-base-300 font-mono text-[11px] wf-mute shrink-0">No Ext.</span>`;
+                : `<span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-base-200 border border-base-300 font-mono text-xs wf-mute shrink-0">No Ext.</span>`;
 
-            const emailBlock = u.SRECMAIL
-                ? `<div class="flex items-center justify-between gap-2 pt-2.5 mt-2.5 border-t border-base-200 text-xs">
+            const emailRow = u.SRECMAIL
+                ? `<div class="flex items-center justify-between gap-2 text-xs">
                         <a href="mailto:${escapeHtml(u.SRECMAIL)}" class="flex items-center gap-1.5 text-primary hover:underline truncate min-w-0">
                             <i class="fi fi-rr-envelope text-xs shrink-0"></i>
                             <span class="truncate font-mono text-[11px]">${escapeHtml(u.SRECMAIL)}</span>
@@ -422,29 +522,54 @@ function renderCards() {
                             <i class="fi fi-rr-copy text-xs"></i>
                         </button>
                    </div>`
-                : `<div class="pt-2.5 mt-2.5 border-t border-base-200 text-[11px] wf-mute font-mono">No email listed</div>`;
+                : `<div class="text-[11px] wf-mute font-mono">No email listed</div>`;
 
-            return `<article class="bg-base-100 border border-base-300 border-l-4 border-l-primary p-4 hover:bg-primary/[0.03] transition-colors flex flex-col justify-between">
+            const melgitRow = u.MELGIT
+                ? `<div class="flex items-center justify-between gap-2 text-xs">
+                        ${
+                            u.MELGIT.includes('@')
+                                ? `<a href="mailto:${escapeHtml(u.MELGIT)}" class="flex items-center gap-1.5 text-primary hover:underline truncate min-w-0">
+                                    <span class="px-1 py-0.5 bg-base-200 border border-base-300 text-[9px] font-mono font-bold uppercase leading-none wf-mute shrink-0">MELGIT</span>
+                                    <span class="truncate font-mono text-[11px]">${escapeHtml(u.MELGIT)}</span>
+                                   </a>`
+                                : `<div class="flex items-center gap-1.5 text-base-content truncate min-w-0">
+                                    <span class="px-1 py-0.5 bg-base-200 border border-base-300 text-[9px] font-mono font-bold uppercase leading-none wf-mute shrink-0">MELGIT</span>
+                                    <span class="truncate font-mono text-[11px]">${escapeHtml(u.MELGIT)}</span>
+                                   </div>`
+                        }
+                        <button type="button" class="copy-btn btn btn-xs btn-ghost px-1.5 wf-mute hover:text-primary shrink-0" data-copy="${escapeHtml(u.MELGIT)}" title="Copy melgit">
+                            <i class="fi fi-rr-copy text-xs"></i>
+                        </button>
+                   </div>`
+                : `<div class="flex items-center gap-1.5 text-[11px] wf-mute font-mono">
+                        <span class="px-1 py-0.5 bg-base-200 border border-base-300 text-[9px] font-bold uppercase leading-none shrink-0">MELGIT</span>
+                        <span>—</span>
+                   </div>`;
+
+            const emailBlock = `<div class="pt-2.5 mt-2.5 border-t border-base-200 space-y-1">
+                ${emailRow}
+                ${melgitRow}
+            </div>`;
+
+            return `<article class="bg-base-100 border border-base-300 border-l-4 border-l-primary p-4 hover:bg-primary/3 transition-colors flex flex-col justify-between">
                 <div>
                     <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <div class="w-10 h-10 rounded-full bg-primary/10 border border-primary/25 text-primary font-mono font-bold text-xs flex items-center justify-center shrink-0">
-                                ${escapeHtml(getInitials(u.SNAME))}
-                            </div>
+                        <div class="flex items-center gap-3 min-w-0">
+                            ${renderAvatarHtml(u, 'w-14 h-14 text-base')}
                             <div class="min-w-0">
-                                <div class="text-sm font-bold text-base-content truncate" title="${escapeHtml(u.SNAME)}">${escapeHtml(u.SNAME || '-')}</div>
-                                <div class="text-xs wf-mute truncate" title="${escapeHtml(u.STNAME)}">${escapeHtml(u.STNAME || '—')}</div>
+                                <div class="text-base font-bold text-base-content truncate" title="${escapeHtml(u.SNAME)}">${escapeHtml(u.SNAME || '-')}</div>
+                                <div class="text-sm font-medium wf-mute truncate" title="${escapeHtml(u.STNAME)}">${escapeHtml(u.STNAME || '—')}</div>
                             </div>
                         </div>
                         ${telBlock}
                     </div>
 
-                    <div class="mt-3 flex flex-wrap items-center gap-1.5">
-                        <button type="button" class="copy-btn inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 border border-primary/50 font-mono text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(u.SEMPNO)}" title="Click to copy employee no.">
+                    <div class="mt-3 flex flex-wrap items-center gap-2">
+                        <button type="button" class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/50 font-mono text-sm font-bold text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(u.SEMPNO)}" title="Click to copy employee no.">
                             <span>${escapeHtml(u.SEMPNO || '-')}</span>
-                            <i class="fi fi-rr-copy text-[10px] opacity-75"></i>
+                            <i class="fi fi-rr-copy text-xs opacity-75"></i>
                         </button>
-                        ${u.SPOSITION ? `<span class="badge badge-xs bg-base-200 border-base-300 text-base-content font-medium">${escapeHtml(u.SPOSITION)}</span>` : ''}
+                        ${u.SPOSITION ? `<span class="inline-flex items-center px-2.5 py-1 bg-base-200 border border-base-300 text-base-content text-sm font-semibold">${escapeHtml(u.SPOSITION)}</span>` : ''}
                     </div>
 
                     ${orgBlock}
@@ -455,6 +580,7 @@ function renderCards() {
         .join('');
 
     grid.html(html);
+    hydrateAvatars(grid[0]);
 
     $('#phone-cards-info').html(
         `Showing <strong class="text-primary">${(startIdx + 1).toLocaleString()} - ${endIdx.toLocaleString()}</strong> of <strong class="text-primary">${total.toLocaleString()}</strong> contacts`,
@@ -525,9 +651,9 @@ async function renderDataTable() {
             render: (data, type) => {
                 if (type !== 'display') return data;
                 if (!data) return '<span class="wf-mute">—</span>';
-                return `<button type="button" class="copy-btn inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 border border-primary/50 font-mono text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(data)}" title="Click to copy employee no.">
+                return `<button type="button" class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/50 font-mono text-sm font-bold text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(data)}" title="Click to copy employee no.">
                     <span>${escapeHtml(data)}</span>
-                    <i class="fi fi-rr-copy text-[10px] opacity-75"></i>
+                    <i class="fi fi-rr-copy text-xs opacity-75"></i>
                 </button>`;
             },
         },
@@ -536,11 +662,20 @@ async function renderDataTable() {
             title: 'Name (EN / TH)',
             render: (data, type, row) => {
                 if (type !== 'display') return `${data} ${row.STNAME}`;
-                return `<div class="font-bold text-base-content">${escapeHtml(data)}</div>
-                        <div class="text-[11px] wf-mute">${escapeHtml(row.STNAME || '—')}</div>`;
+                return `<div class="flex items-center gap-3 min-w-0">
+                    ${renderAvatarHtml(row, 'w-11 h-11 text-sm')}
+                    <div class="min-w-0">
+                        <div class="text-sm font-bold text-base-content">${escapeHtml(data)}</div>
+                        <div class="text-sm wf-mute">${escapeHtml(row.STNAME || '—')}</div>
+                    </div>
+                </div>`;
             },
         },
-        { data: 'SPOSITION', title: 'Position', className: 'text-nowrap' },
+        {
+            data: 'SPOSITION',
+            title: 'Position',
+            className: 'text-nowrap text-sm font-medium',
+        },
         {
             data: 'SDIV',
             title: 'Organization (DIV / DEPT / SEC)',
@@ -576,7 +711,7 @@ async function renderDataTable() {
                             (r) => `<div class="flex items-start gap-1.5">
                                 <i class="fi ${r.icon} text-primary text-xs shrink-0 mt-0.5" title="${r.tag}"></i>
                                 ${r.code ? `<button type="button" class="copy-btn px-1.5 py-0.5 bg-base-100 border border-primary/50 text-primary font-mono text-[10px] font-bold leading-none shrink-0 mt-0.5 hover:bg-primary hover:text-white transition-colors cursor-pointer" data-copy="${escapeHtml(r.code)}" title="Click to copy ${r.tag} code">${escapeHtml(r.code)}</button>` : ''}
-                                <span class="break-words">${escapeHtml(r.name)}</span>
+                                <span class="wrap-break-word">${escapeHtml(r.name)}</span>
                             </div>`,
                         )
                         .join('')}
@@ -590,24 +725,41 @@ async function renderDataTable() {
             render: (data, type) => {
                 if (type !== 'display') return data;
                 if (!data) return '<span class="wf-mute">—</span>';
-                return `<button type="button" class="copy-btn inline-flex items-center gap-1 px-2 py-0.5 bg-primary text-white font-mono text-xs font-bold hover:opacity-90 cursor-pointer" data-copy="${escapeHtml(data)}" title="Click to copy">
-                    <i class="fi fi-rr-phone-call text-[11px]"></i>
+                return `<button type="button" class="copy-btn inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary text-white font-mono text-sm font-bold hover:opacity-90 cursor-pointer" data-copy="${escapeHtml(data)}" title="Click to copy">
+                    <i class="fi fi-rr-phone-call text-xs"></i>
                     <span>${escapeHtml(data)}</span>
                 </button>`;
             },
         },
         {
             data: 'SRECMAIL',
-            title: 'Email',
-            render: (data, type) => {
-                if (type !== 'display') return data;
-                if (!data) return '<span class="wf-mute">—</span>';
-                return `<div class="inline-flex items-center gap-1.5">
-                    <a href="mailto:${escapeHtml(data)}" class="font-mono text-xs text-primary hover:underline">${escapeHtml(data)}</a>
-                    <button type="button" class="copy-btn btn btn-xs btn-ghost px-1 wf-mute hover:text-primary shrink-0" data-copy="${escapeHtml(data)}" title="Copy email">
-                        <i class="fi fi-rr-copy text-xs"></i>
-                    </button>
-                </div>`;
+            title: 'Email / Melgit',
+            render: (data, type, row) => {
+                if (type !== 'display') {
+                    return `${data || ''} ${row.MELGIT || ''}`.trim();
+                }
+                const emailPart = data
+                    ? `<div class="inline-flex items-center gap-1.5">
+                        <a href="mailto:${escapeHtml(data)}" class="font-mono text-xs text-primary hover:underline">${escapeHtml(data)}</a>
+                        <button type="button" class="copy-btn btn btn-xs btn-ghost px-1 wf-mute hover:text-primary shrink-0" data-copy="${escapeHtml(data)}" title="Copy email">
+                            <i class="fi fi-rr-copy text-xs"></i>
+                        </button>
+                    </div>`
+                    : '<div class="wf-mute">—</div>';
+                const melgitPart = row.MELGIT
+                    ? `<div class="inline-flex items-center gap-1.5">
+                        <span class="px-1 py-0.5 bg-base-200 border border-base-300 text-[9px] font-mono font-bold uppercase leading-none wf-mute shrink-0">MELGIT</span>
+                        ${
+                            row.MELGIT.includes('@')
+                                ? `<a href="mailto:${escapeHtml(row.MELGIT)}" class="font-mono text-xs text-primary hover:underline">${escapeHtml(row.MELGIT)}</a>`
+                                : `<span class="font-mono text-xs text-base-content">${escapeHtml(row.MELGIT)}</span>`
+                        }
+                        <button type="button" class="copy-btn btn btn-xs btn-ghost px-1 wf-mute hover:text-primary shrink-0" data-copy="${escapeHtml(row.MELGIT)}" title="Copy melgit">
+                            <i class="fi fi-rr-copy text-xs"></i>
+                        </button>
+                    </div>`
+                    : '';
+                return `<div class="flex flex-col gap-0.5">${emailPart}${melgitPart}</div>`;
             },
         },
     ];
@@ -640,10 +792,14 @@ async function renderDataTable() {
         );
     };
 
-    opt.drawCallback = stylePagination;
+    opt.drawCallback = function () {
+        stylePagination.call(this);
+        hydrateAvatars(this[0] || this);
+    };
     opt.initComplete = function (settings, json) {
         tableOption.initComplete.call(this, settings, json);
         stylePagination.call(this);
+        hydrateAvatars(this[0] || this);
     };
 
     dataTable = await createTable(opt, { id: '#amec-employee' });
@@ -663,6 +819,7 @@ function exportFilteredCsv() {
         'Section',
         'Tel / Ext.',
         'Email',
+        'Melgit',
     ];
     const rows = filteredEmployees.map((u) => [
         u.SEMPNO,
@@ -677,6 +834,7 @@ function exportFilteredCsv() {
         u.SSEC,
         u.TEL,
         u.SRECMAIL,
+        u.MELGIT,
     ]);
     const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv =
@@ -705,14 +863,14 @@ function bindEvents() {
     });
 
     $('#division').on('change', function () {
-        $('#department').val('');
-        $('#section').val('');
+        $('#department').val('').trigger('change.select2');
+        $('#section').val('').trigger('change.select2');
         updateCascadingFilters();
         applyFilters(true);
     });
 
     $('#department').on('change', function () {
-        $('#section').val('');
+        $('#section').val('').trigger('change.select2');
         updateCascadingFilters();
         applyFilters(true);
     });
@@ -723,11 +881,11 @@ function bindEvents() {
 
     $('#reset-filter').on('click', function () {
         $('#phone-search').val('');
-        $('#division').val('');
-        $('#department').val('');
-        $('#section').val('');
-        $('#position').val('');
-        $('#filter-has-tel').prop('checked', false);
+        $('#division').val('').trigger('change.select2');
+        $('#department').val('').trigger('change.select2');
+        $('#section').val('').trigger('change.select2');
+        $('#position').val('').trigger('change.select2');
+        $('#filter-has-tel').prop('checked', true);
         currentLetter = '';
         $('.alpha-btn')
             .removeClass('btn-primary')
@@ -814,12 +972,29 @@ function bindEvents() {
             await navigator.clipboard.writeText(text);
             const btn = $(this);
             const originalHtml = btn.html();
-            btn.html('<i class="fi fi-rr-check text-xs"></i><span>Copied</span>');
+            btn.html(
+                '<i class="fi fi-rr-check text-xs"></i><span>Copied</span>',
+            );
             setTimeout(() => btn.html(originalHtml), 1200);
         } catch {
             // Fallback ignored if clipboard blocked
         }
     });
+
+    document.addEventListener(
+        'error',
+        (e) => {
+            const img = e.target;
+            if (!(img instanceof HTMLImageElement)) return;
+            const wrap = img.closest('.phone-avatar');
+            if (!wrap) return;
+            img.remove();
+            wrap.querySelector('.phone-avatar-initials')?.classList.remove(
+                'hidden',
+            );
+        },
+        true,
+    );
 
     $(document).on('keydown', function (e) {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {

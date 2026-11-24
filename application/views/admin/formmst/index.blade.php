@@ -14,7 +14,7 @@
                         ADMINISTRATION
                     </span>
                 </div>
-                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary line-clamp-1" id="page-title">
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary line-clamp-1 uppercase" id="page-title">
                     Form Master Management
                 </h1>
                 <p class="text-sm wf-mute leading-relaxed" id="page-description">
@@ -76,12 +76,13 @@
                 class="px-4 py-2.5 bg-base-100 border-b border-base-200 flex flex-wrap items-center justify-between gap-2 text-xs wf-mute">
                 <div class="flex items-center gap-2">
                     <span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
-                    <span class="font-semibold uppercase tracking-wider text-[11px] text-primary">Form Master Directory</span>
+                    <span class="font-semibold uppercase tracking-wider text-[11px] text-primary">Form Master
+                        Directory</span>
                 </div>
             </div>
             <div class="overflow-x-auto tableArea">
                 @include('layouts/datatable_load')
-                <table id="table" class="table table-sm w-full border-collapse text-left text-xs"></table>
+                <table id="table" class="table w-full border-collapse text-left text-sm!"></table>
             </div>
         </section>
     </main>

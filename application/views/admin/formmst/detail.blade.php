@@ -7,17 +7,17 @@
             class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 bg-base-100 p-5 md:p-6 shadow-sm border border-base-300 border-t-4 border-t-primary">
             <div class="space-y-1.5 max-w-3xl">
                 <div class="flex items-center gap-2">
-                    <span class="badge badge-primary font-mono text-[11px] uppercase tracking-wider font-bold">
+                    <span class="badge badge-primary font-mono text-xs uppercase tracking-wider font-bold">
                         AMEC-WEBFLOW
                     </span>
-                    <span class="badge badge-xs badge-outline font-mono font-bold uppercase">
+                    <span class="badge badge-sm badge-outline font-mono font-bold uppercase">
                         FORM CONFIGURATION
                     </span>
                 </div>
                 <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-primary line-clamp-1" id="page-title">
                     Form Master Management
                 </h1>
-                <p class="text-sm wf-mute leading-relaxed" id="page-description">
+                <p class="text-base wf-mute leading-relaxed" id="page-description">
                     Configure form master metadata, organization owner, and approval workflow steps.
                 </p>
             </div>
@@ -40,7 +40,7 @@
                 {{-- Footer Action Strip --}}
                 <div
                     class="px-5 py-3.5 bg-base-200 border-t border-base-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-                    <div class="flex items-center gap-2 text-xs wf-mute font-mono">
+                    <div class="flex items-center gap-2 text-sm wf-mute font-mono">
                         <span class="inline-block w-2 h-2 rounded-full bg-primary"></span>
                         <span>AMEC Webflow Form Master Registry</span>
                     </div>
@@ -54,20 +54,20 @@
                     <div
                         class="px-4 py-3 bg-base-200 border-b border-base-300 flex items-center justify-between gap-2 shrink-0">
                         <div class="flex items-center gap-2 min-w-0">
-                            <span class="w-1.5 h-4 bg-primary shrink-0"></span>
+                            <span class="w-1.5 h-5 bg-primary shrink-0"></span>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold uppercase tracking-wider text-primary">Form Flow</span>
-                                    <span class="badge badge-xs badge-primary font-mono font-bold"
+                                    <span class="text-sm font-bold uppercase tracking-wider text-primary">Form Flow</span>
+                                    <span class="badge badge-sm badge-primary font-mono font-bold"
                                         id="flow-step-count">0</span>
                                 </div>
-                                <div class="wf-mute text-[11px] truncate">Approval sequence · drag or use arrows to reorder
+                                <div class="wf-mute text-xs truncate">Approval sequence · drag or use arrows to reorder
                                 </div>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-xs btn-primary gap-1 shrink-0 add-flow" id="add-flow"
+                        <button type="button" class="btn btn-sm btn-primary gap-1 shrink-0 add-flow" id="add-flow"
                             title="Add Flow Step">
-                            <i class="fi fi-rr-plus-small text-sm"></i>
+                            <i class="fi fi-rr-plus-small text-base"></i>
                             <span>Add Step</span>
                         </button>
                     </div>
