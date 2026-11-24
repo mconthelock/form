@@ -21,22 +21,22 @@ const FORM_STATUS_META = [
     {
         id: '0',
         name: 'Draft',
-        badge: 'badge badge-xs badge-outline badge-neutral font-mono font-bold uppercase',
+        badge: 'badge badge-md badge-outline badge-neutral font-mono font-bold uppercase whitespace-nowrap',
     },
     {
         id: '1',
         name: 'Running',
-        badge: 'badge badge-xs badge-outline badge-info font-mono font-bold uppercase',
+        badge: 'badge badge-md badge-outline badge-info font-mono font-bold uppercase whitespace-nowrap',
     },
     {
         id: '2',
         name: 'Approved',
-        badge: 'badge badge-xs badge-success font-mono font-bold uppercase',
+        badge: 'badge badge-md badge-success font-mono font-bold uppercase whitespace-nowrap',
     },
     {
         id: '3',
         name: 'Rejected',
-        badge: 'badge badge-xs badge-outline badge-error font-mono font-bold uppercase',
+        badge: 'badge badge-md badge-outline badge-error font-mono font-bold uppercase whitespace-nowrap',
     },
 ];
 
@@ -335,11 +335,16 @@ async function createFormTable(data) {
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.startsWith('https')
                             ? data.VFORMPAGE
-                            : data.VFORMPAGE.replace('http', 'https')
-                        : `https://webflow.mitsubishielevatorasia.co.th${data.VFORMPAGE}`;
+                            : window.location.protocol === 'https:'
+                              ? data.VFORMPAGE.replace(/^http:\/\//i, 'https://')
+                              : data.VFORMPAGE
+                        : `https://webflow.mitsubishielevatorasia.co.th/${String(data.VFORMPAGE || '').replace(/^\/+/, '')}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
-                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(document.URL)}`;
-                    return `<a class="font-mono font-bold text-primary hover:underline link-self" href="#" data-title="${pageId}" data-url="${url}">${formno}</a>`;
+                    const statusTargetMap = { 0: 'draft', 1: 'waitapprove', 2: 'comming', 3: 'mine', 4: 'approved', 5: 'represent', 6: 'finish' };
+                    const callbackBp = `${process.env.APP_ENV}/webform/form/callback?to=${statusTargetMap[pagestatus] || 'waitapprove'}`;
+                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(callbackBp)}`;
+                    const formName = String(data.formmst?.VNAME || '').replace(/"/g, '&quot;');
+                    return `<a class="font-mono font-bold text-primary hover:underline link-self" href="#" data-title="${pageId || 'nav-form-waitapprove'}" data-code="${formno}" data-name="${formName}" data-url="${url}">${formno}</a>`;
                     //return `<a class="text-primary" href="${url}">${formno}</a>`;
                 }
                 return formno;
@@ -349,19 +354,20 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Request By',
-            className: 'text-start',
+            type: 'string',
+            className: 'text-left!',
             render: (data, type, row) => {
                 if (type === 'display') {
-                    return `<div class="flex items-center" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-[220px]" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-12 rounded-full border border-slate-300 shadow-md">
-                                <img src=""  class="hidden" />
-                                <div class="skeleton h-32 w-32"></div>
+                            <div class="w-11 h-11 rounded-md border border-base-300 bg-base-200 overflow-hidden shrink-0">
+                                <img src="" class="hidden w-full h-full object-cover object-top" />
+                                <div class="skeleton h-full w-full"></div>
                             </div>
                         </div>
-                        <div class="ml-2 flex flex-col gap-1">
-                            <div class="name"><div class="skeleton h-6 w-32"></div></div>
-                            <div class="detail text-xs text-gray-500"><div class="skeleton h-4 w-32"></div></div>
+                        <div class="min-w-0 flex flex-col gap-0.5">
+                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-[220px]"><div class="skeleton h-3.5 w-28"></div></div>
+                            <div class="detail text-[11px] wf-mute leading-tight truncate max-w-[220px]"><div class="skeleton h-3 w-24"></div></div>
                         </div>
                     </div>`;
                 }
@@ -371,7 +377,7 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Request Date',
-            className: 'text-start',
+            className: 'text-left!',
             render: (data, type) => {
                 if (type === 'display') {
                     if (data.DREQDATE == null || data.DREQDATE == undefined)
@@ -386,22 +392,23 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Latest Approver',
-            className: 'text-start',
+            type: 'string',
+            className: 'text-left!',
             render: (data, type) => {
                 const latest = lastApproved(data.flow);
                 if (type === 'display') {
                     if (!latest) return '';
                     const apvDate = `${dayjs(latest.DAPVDATE).format('DD/MM/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
-                    return `<div class="flex items-center" id="apv-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                    return `<div class="flex items-center justify-start gap-2.5 text-left min-w-[220px]" id="apv-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-12 rounded-full border border-slate-300 shadow-md">
-                                <img src=""  class="hidden" />
-                                <div class="skeleton h-32 w-32"></div>
+                            <div class="w-11 h-11 rounded-md border border-base-300 bg-base-200 overflow-hidden shrink-0">
+                                <img src="" class="hidden w-full h-full object-cover object-top" />
+                                <div class="skeleton h-full w-full"></div>
                             </div>
                         </div>
-                        <div class="ml-2 flex flex-col gap-1">
-                            <div class="name"><div class="skeleton h-6 w-32"></div></div>
-                            <div class="text-xs text-gray-500"><span class="font-semibold text-primary me-2">Approve At:</span>${apvDate}</div>
+                        <div class="min-w-0 flex flex-col gap-0.5">
+                            <div class="name text-xs font-semibold text-base-content leading-tight truncate max-w-[220px]"><div class="skeleton h-3.5 w-28"></div></div>
+                            <div class="text-[11px] wf-mute leading-tight font-mono"><span class="font-sans font-semibold text-primary me-1">Approved:</span>${apvDate}</div>
                         </div>
                     </div>`;
                 }
@@ -422,13 +429,13 @@ async function createFormTable(data) {
                     );
 
                     return `<div class="flex items-center" id="next-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
-                        <div class="avatar-group -space-x-6">
+                        <div class="avatar-group -space-x-3">
                         ${visibleNext
                             .map(
                                 (n) => `<div class="avatar">
-                                <div class="w-12">
-                                    <img src=""  class="hidden" />
-                                    <div class="skeleton h-32 w-32"></div>
+                                <div class="w-10 h-10">
+                                    <img src="" class="hidden w-full h-full object-cover object-top" />
+                                    <div class="skeleton h-full w-full"></div>
                                 </div>
                             </div>`,
                             )
@@ -436,7 +443,7 @@ async function createFormTable(data) {
                             ${
                                 remaining > 0
                                     ? `<div class="avatar avatar-placeholder">
-                                <div class="bg-neutral text-neutral-content w-12">
+                                <div class="bg-neutral text-neutral-content w-10 h-10 text-xs font-mono">
                                     <span>+${remaining}</span>
                                 </div>
                             </div>`
@@ -455,7 +462,7 @@ async function createFormTable(data) {
             render: (data, type) => {
                 const stat = status.find((s) => s.id == data.CST);
                 if (type === 'display') {
-                    return `<div class="badge ${stat?.badge || 'badge badge-outline border-base-300'}">${stat?.name || 'Unknown'}</div>`;
+                    return `<div class="${stat?.badge || 'badge badge-md badge-outline border-base-300 whitespace-nowrap'}">${stat?.name || 'Unknown'}</div>`;
                 }
                 return stat?.name || '';
             },
@@ -469,13 +476,13 @@ async function createFormTable(data) {
                 if (type === 'display') {
                     let badge = '';
                     if (diffDays >= 30)
-                        badge = `<div class="badge badge-xs badge-error font-mono font-bold">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-md badge-error font-mono font-bold whitespace-nowrap">${diffDays} days</div>`;
                     else if (diffDays >= 15)
-                        badge = `<div class="badge badge-xs badge-warning font-mono font-bold">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-md badge-warning font-mono font-bold whitespace-nowrap">${diffDays} days</div>`;
                     else if (diffDays >= 7)
-                        badge = `<div class="badge badge-xs badge-info font-mono font-bold">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-md badge-info font-mono font-bold whitespace-nowrap">${diffDays} days</div>`;
                     else
-                        badge = `<div class="badge badge-xs badge-outline badge-primary font-mono font-bold">${diffDays} days</div>`;
+                        badge = `<div class="badge badge-md badge-outline badge-primary font-mono font-bold whitespace-nowrap">${diffDays} days</div>`;
                     return `<div class="text-center">${badge}</div>`;
                 }
 
@@ -560,10 +567,19 @@ $(document).on(
 async function fillUserinfo(row, data, id) {
     const wrap = $(row).find(id);
     const info = await displayEmpInfo(data);
-    $(wrap).find('img').attr('src', info.image);
-    $(wrap).find('img').removeClass('hidden');
-    $(wrap).find('.name').html(`${info.SNAME} (${info.SEMPNO})`);
-    $(wrap).find('.detail').html(`${info.SDIV} - ${info.SDEPT} - ${info.SSEC}`);
+    $(wrap).find('img').attr('src', info.image).removeClass('hidden');
+    $(wrap).find('.avatar .skeleton').addClass('hidden');
+    const fullName = `${info.SNAME || ''} (${info.SEMPNO || ''})`.trim();
+    const orgText = [info.SDIV, info.SDEPT, info.SSEC]
+        .filter((v) => v && String(v).trim() && String(v).trim() !== '-')
+        .join(' / ');
+    $(wrap)
+        .find('.name')
+        .attr('title', fullName)
+        .html(
+            `${info.SNAME || ''}<span class="font-mono text-[11px] font-normal wf-mute ms-1">(${info.SEMPNO || ''})</span>`,
+        );
+    $(wrap).find('.detail').attr('title', orgText).text(orgText);
 }
 
 async function fillNextApproverInfo(row, flow, id) {
@@ -602,5 +618,19 @@ $(document).on('click', '#table a.link-self', async function (e) {
     const url = $(this).attr('data-url');
     // เด้งออกจาก iframe ของพอร์ทัลไปยัง top window โดยตรง แทนการพึ่ง listener ฝั่งพอร์ทัลภายนอก
     //window.top.location.href = url;
-    window.location.href = url;
+    const title = $(this).attr('data-title') || 'nav-form-waitapprove';
+    const code = $(this).attr('data-code') || '';
+    const name = $(this).attr('data-name') || '';
+    if (!url) return;
+
+    try {
+        const targetUrlObj = new URL(url, window.location.origin);
+        if (targetUrlObj.origin === window.location.origin) {
+            window.location.href = targetUrlObj.href;
+            return;
+        }
+        window.location.href = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(targetUrlObj.href)}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
+    } catch {
+        window.location.href = url;
+    }
 });

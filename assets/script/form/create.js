@@ -24,6 +24,86 @@ function escapeRegex(value) {
     return String(value ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function getCallbackBpUrl(to = 'waitapprove') {
+    return `${process.env.APP_ENV}/webform/form/callback?to=${encodeURIComponent(to)}`;
+}
+
+function normalizeTargetUrl(rawUrl) {
+    let target = String(rawUrl || '').trim();
+    if (!target) return '';
+
+    if (!/^https?:\/\//i.test(target)) {
+        const cleanPath = target.replace(/^\/+/, '');
+        target = `https://webflow.mitsubishielevatorasia.co.th/${cleanPath}`;
+    } else if (
+        window.location.protocol === 'https:' &&
+        target.startsWith('http://')
+    ) {
+        target = target.replace(/^http:\/\//i, 'https://');
+    }
+
+    return target;
+}
+
+function buildFormDestination({ formCode, formName, url }) {
+    const normalized = normalizeTargetUrl(url);
+    if (!normalized) return '';
+
+    const targetUrlObj = new URL(normalized, window.location.origin);
+    const isSameOrigin = targetUrlObj.origin === window.location.origin;
+
+    if (isSameOrigin) {
+        return targetUrlObj.href;
+    }
+
+    return `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(targetUrlObj.href)}&code=${encodeURIComponent(formCode || '')}&name=${encodeURIComponent(formName || '')}`;
+}
+
+function normalizeRecentItem(item) {
+    if (!item || typeof item !== 'object') return null;
+
+    let rawTarget = item.targetUrl || '';
+    if (!rawTarget && item.link) {
+        try {
+            const linkUrl = new URL(item.link, window.location.origin);
+            if (linkUrl.pathname.includes('/webform/form/detail')) {
+                rawTarget = linkUrl.searchParams.get('data') || '';
+            } else {
+                rawTarget = linkUrl.href;
+            }
+        } catch {
+            rawTarget = item.link;
+        }
+    }
+
+    const normalizedTarget = normalizeTargetUrl(rawTarget);
+    if (!normalizedTarget) return item;
+
+    let updatedTarget = normalizedTarget;
+    try {
+        const parsed = new URL(normalizedTarget, window.location.origin);
+        const currentBp = parsed.searchParams.get('bp');
+        if (currentBp && currentBp.includes('/webform/form/createdetail')) {
+            parsed.searchParams.set('bp', getCallbackBpUrl('waitapprove'));
+            updatedTarget = parsed.href;
+        }
+    } catch {
+        // Keep normalizedTarget as-is
+    }
+
+    const destination = buildFormDestination({
+        formCode: item.code || '',
+        formName: item.name || '',
+        url: updatedTarget,
+    });
+
+    return {
+        ...item,
+        targetUrl: updatedTarget,
+        link: destination || item.link,
+    };
+}
+
 $(document).ready(function () {
     loadCreatePage();
 });
@@ -52,7 +132,11 @@ window.addEventListener('pageshow', (event) => {
 
 function getRecentCreatedForms() {
     try {
-        return JSON.parse(localStorage.getItem('recent-created-forms') || '[]');
+        const stored = JSON.parse(
+            localStorage.getItem('recent-created-forms') || '[]',
+        );
+        if (!Array.isArray(stored)) return [];
+        return stored.map(normalizeRecentItem).filter(Boolean);
     } catch (error) {
         console.log(error);
         return [];
@@ -67,7 +151,10 @@ function saveRecentCreatedForm(form) {
             createdAt: new Date().toISOString(),
         },
         ...recent.filter(
-            (item) => item.link !== form.link && item.name !== form.name,
+            (item) =>
+                item.targetUrl !== form.targetUrl &&
+                item.link !== form.link &&
+                item.name !== form.name,
         ),
     ].slice(0, 10);
 
@@ -133,7 +220,7 @@ async function createFormTable() {
     await initApp();
     const id = $('#deptid').val();
     const user = $('#user-login').attr('empno') || '';
-    const bp = document.URL;
+    const bp = encodeURIComponent(getCallbackBpUrl('waitapprove'));
 
     const [formMaster, formdept, formGroup] = await Promise.all([
         getFormMaster(),
@@ -322,24 +409,32 @@ async function createFormTable() {
 async function openFormDetail({ formCode, formName, formDesc, url }) {
     try {
         await showLoader();
-        let target = url;
-        if (target.includes('index.asp')) {
-            target = `https://webflow.mitsubishielevatorasia.co.th/${target}`;
+        const normalizedTarget = normalizeTargetUrl(url);
+        const destination = buildFormDestination({
+            formCode,
+            formName,
+            url: normalizedTarget,
+        });
+
+        if (!destination) {
+            throw new Error('Invalid form URL');
         }
 
-        const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(target)}`;
         saveRecentCreatedForm({
             code: formCode,
             name: formName,
             desc: formDesc,
-            link: detailUrl,
+            targetUrl: normalizedTarget,
+            link: destination,
             group: $('#deptid').val(),
         });
-        window.location.href = detailUrl;
+        window.location.href = destination;
     } catch (error) {
         console.log(error);
         await showMessage(
-            error.responseJSON?.message || 'Error navigating to form detail',
+            error.responseJSON?.message ||
+                error.message ||
+                'Error navigating to form detail',
         );
     } finally {
         await showLoader({ show: false });
