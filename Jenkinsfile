@@ -22,11 +22,13 @@ pipeline {
                         env.TARGET_DIR = "${TARGET_PATH}/development/form"
                         env.ENV_DIR = "${ENV_BASE_PATH}/.env.form.development"
                         env.DEPLOY_ENV = 'development'
+                        env.RSPACK_CACHE = 'true'
                         echo ">>> MR merged → develop → DEPLOY DEVELOPMENT"
                     } else if (env.BRANCH_NAME == 'main') {
                         env.TARGET_DIR = "${TARGET_PATH}/production/form"
                         env.ENV_DIR = "${ENV_BASE_PATH}/.env.form.production"
                         env.DEPLOY_ENV = 'production'
+                        env.RSPACK_CACHE = 'false'
                         echo ">>> MR merged → main → DEPLOY PRODUCTION"
                     } else {
                         error "❌ Branch ${env.BRANCH_NAME} is not deployable"
@@ -232,10 +234,24 @@ pipeline {
                         trap cleanup_git EXIT
                         git config --global url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf "https://webhub.mitsubishielevatorasia.co.th/"
 
-                        npm install --include=dev
+                        # รัน npm install เฉพาะเมื่อ package.json / package-lock.json เปลี่ยน หรือยังไม่มี node_modules
+                        NPM_HASH=$(sha256sum package.json package-lock.json 2>/dev/null | sha256sum | awk '{print $1}')
+                        if [ ! -d node_modules ] || [ ! -f .npm_install_hash ] || [ "$(cat .npm_install_hash)" != "${NPM_HASH}" ]; then
+                            npm install --include=dev
+                            echo "${NPM_HASH}" > .npm_install_hash
+                        else
+                            echo "⚡ Skip npm install (package.json & package-lock.json unchanged)"
+                        fi
                         npm update @amec/webasset
                         npm run build
-                        npm run docs:build
+                        # รัน docs:build เฉพาะเมื่อไฟล์ใน docs/ เปลี่ยน หรือยังไม่มี docs/dist
+                        DOCS_HASH=$(find docs -type f ! -path 'docs/dist/*' ! -path 'docs/.vitepress/cache/*' | sort | tr '\n' '\0' | xargs -0 sha256sum 2>/dev/null | sha256sum | awk '{print $1}')
+                        if [ ! -d docs/dist ] || [ ! -f .docs_build_hash ] || [ "$(cat .docs_build_hash)" != "${DOCS_HASH}" ]; then
+                            npm run docs:build
+                            echo "${DOCS_HASH}" > .docs_build_hash
+                        else
+                            echo "⚡ Skip docs:build (docs unchanged)"
+                        fi
 
                         # cleanup_git จะทำงานอัตโนมัติผ่าน trap EXIT
                     '''
@@ -313,6 +329,8 @@ pipeline {
                         --exclude='.env-sample' \
                         --exclude='.current_version' \
                         --exclude='.new_version' \
+                        --exclude='.npm_install_hash' \
+                        --exclude='.docs_build_hash' \
                         --exclude='assets/script' \
                         --exclude='assets/style' \
                         --exclude='*.map' \

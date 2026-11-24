@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const rspack = require('@rspack/core');
 const Dotenv = require('dotenv-webpack');
@@ -20,17 +22,49 @@ const getEntries = () => {
     return { ...baseEntries, ...moduleEntries };
 };
 
-module.exports = (_env, argv = {}) => {
-    const isProd = argv.mode === 'production';
+const getCacheVersion = (mode) => {
+    const hash = crypto.createHash('sha256');
+    hash.update(`mode:${mode}`);
 
-    return {
+    // Track rspack.config.js
+    try {
+        hash.update(fs.readFileSync(__filename, 'utf8'));
+    } catch {
+        // ignore
+    }
+
+    // Track .env (ignore VERSION= so patch bumps don't invalidate cache,
+    // while APP_ENV / APP_API / STATE changes DO invalidate cache)
+    const envPath = path.resolve(__dirname, './.env');
+    if (fs.existsSync(envPath)) {
+        const envContent = fs
+            .readFileSync(envPath, 'utf8')
+            .replace(/^VERSION=.*$/gm, '');
+        hash.update(envContent);
+    }
+
+    // Track package-lock.json (captures @amec/webasset git commit & dep updates)
+    const lockPath = path.resolve(__dirname, './package-lock.json');
+    if (fs.existsSync(lockPath)) {
+        hash.update(fs.readFileSync(lockPath));
+    }
+
+    return hash.digest('hex').slice(0, 16);
+};
+
+module.exports = (_env, argv = {}) => {
+    const mode = argv.mode || process.env.STATE || 'development';
+    const isProd = mode === 'production';
+    const usePersistentCache = process.env.RSPACK_CACHE === 'true';
+
+    const config = {
         entry: getEntries(),
         output: {
             filename: '[name].js',
             path: path.resolve(__dirname, 'assets/dist/js'),
             clean: true,
         },
-        mode: argv.mode || process.env.STATE || 'development',
+        mode,
         devtool: isProd ? false : 'source-map',
         module: {
             rules: [
@@ -85,4 +119,17 @@ module.exports = (_env, argv = {}) => {
             },
         },
     };
+
+    if (usePersistentCache) {
+        config.cache = true;
+        config.experiments = {
+            cache: {
+                type: 'persistent',
+                version: getCacheVersion(mode),
+                buildDependencies: [__filename],
+            },
+        };
+    }
+
+    return config;
 };
