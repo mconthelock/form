@@ -5,27 +5,29 @@ pipeline {
         nodejs 'node'
     }
 
+    environment {
+        GIT_SSL_NO_VERIFY = 'true'
+        BASE_APP_NAME = 'form'
+        STACK_NAME    = 'form'
+        ENV_BASE_PATH = '/var/amecweb/file/env/form'
+        TARGET_PATH   = '/var/amecweb/wwwroot'
+        NODE_ENV = 'development'
+    }
+
     stages {
         stage('Setup Environment') {
             steps {
                 script {
                     if (env.BRANCH_NAME == 'develop') {
-                        env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
-                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.form.development'
-                        env.NODE_ENV = 'development'
+                        env.TARGET_DIR = "${TARGET_PATH}/development/form"
+                        env.ENV_DIR = "${ENV_BASE_PATH}/.env.form.development"
                         env.DEPLOY_ENV = 'development'
-
                         echo ">>> MR merged → develop → DEPLOY DEVELOPMENT"
-
                     } else if (env.BRANCH_NAME == 'main') {
-
-                        env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
-                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.form.production'
-                        env.NODE_ENV = 'development'
+                        env.TARGET_DIR = "${TARGET_PATH}/production/form"
+                        env.ENV_DIR = "${ENV_BASE_PATH}/.env.form.production"
                         env.DEPLOY_ENV = 'production'
-
                         echo ">>> MR merged → main → DEPLOY PRODUCTION"
-
                     } else {
                         error "❌ Branch ${env.BRANCH_NAME} is not deployable"
                     }
@@ -53,6 +55,10 @@ pipeline {
         // ============================================================
         stage('Prepare Version') {
             steps {
+                script {
+                    env.START_TIME_CHANGE = System.currentTimeMillis()
+                    echo "⏱️ [START] Prepare Version : ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+                }
                 sh '''
                     # --------------------------------------------------
                     # อ่าน VERSION ปัจจุบันจาก ENV_DIR
@@ -168,6 +174,11 @@ pipeline {
                     echo "Build Version:"
                     grep "^VERSION=" .env
                 '''
+
+                script {
+                    def duration = (System.currentTimeMillis() - env.START_TIME_CHANGE.toLong()) / 1000
+                    echo "✅ [END] Check Version ใช้เวลาทั้งหมด: ${duration} วินาที"
+                }
             }
         }
 
@@ -199,6 +210,11 @@ pipeline {
         stage('Install & Build') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'gitlab-auth-id', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
+                    script {
+                        env.START_TIME_BUILD = System.currentTimeMillis()
+                        echo "⏱️ [START] Install & Build : ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+                    }
+
                     sh '''
                         # อ่าน Version ที่เตรียมไว้
                         NEW_VERSION=$(cat .new_version)
@@ -215,6 +231,10 @@ pipeline {
                         #
                         # และ Stage Deploy to NAS จะไม่ถูก execute
                         # --------------------------------------------------
+                        cleanup_git() {
+                            git config --global --unset url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf || true
+                        }
+                        trap cleanup_git EXIT
                         git config --global url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf "https://webhub.mitsubishielevatorasia.co.th/"
 
                         npm install --include=dev
@@ -222,18 +242,30 @@ pipeline {
                         npm run build
                         npm run docs:build
 
-                        git config --global --unset url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf
+                        # cleanup_git จะทำงานอัตโนมัติผ่าน trap EXIT
                     '''
+
+                    script {
+                        def duration = (System.currentTimeMillis() - env.START_TIME_BUILD.toLong()) / 1000
+                        echo "✅ [END] Install & Build ใช้เวลาทั้งหมด: ${duration} วินาที"
+                    }
                 }
             }
         }
 
         stage('PHP Prep (Composer)') {
             steps {
-                dir('application') {
-                    sh 'composer update --optimize-autoloader'
+                script {
+                    env.START_TIME_COMPOSER = System.currentTimeMillis()
+                    echo "⏱️ [START] PHP Prep (Composer) : ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
                 }
-                echo "PHP preparation with Composer done."
+                dir('application') {
+                    sh 'composer install --no-dev --optimize-autoloader --no-interaction'
+                }
+                script {
+                    def duration = (System.currentTimeMillis() - env.START_TIME_COMPOSER.toLong()) / 1000
+                    echo "✅ [END] PHP Prep (Composer) ใช้เวลาทั้งหมด: ${duration} วินาที"
+                }
             }
         }
         // ============================================================
@@ -252,16 +284,17 @@ pipeline {
         // ============================================================
         stage('Deploy to NAS') {
             steps {
+                script {
+                    env.START_TIME_DEPLOY = System.currentTimeMillis()
+                    echo "⏱️ [START] Deploy to NAS : ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+                }
                 sh '''
                     # --------------------------------------------------
                     # สร้าง Directory ที่จำเป็นบน NAS
                     # --------------------------------------------------
                     mkdir -p ${TARGET_DIR}
-
                     mkdir -p ${TARGET_DIR}/application/cache
-
                     mkdir -p ${TARGET_DIR}/application/logs
-
 
                     # --------------------------------------------------
                     # Copy ไฟล์จาก Jenkins Workspace
@@ -273,11 +306,20 @@ pipeline {
                     # --exclude
                     #   ไม่ copy directory/file ที่กำหนด
                     # --------------------------------------------------
-                    rsync -av --delete \
+                    rsync -rltD --delete \
+                        --no-perms --no-owner --no-group \
+                        --omit-dir-times \
+                        --modify-window=2 \
+                        --inplace \
+                        --stats \
                         --exclude='node_modules' \
                         --exclude='.git' \
                         --exclude='.gitignore' \
                         --exclude='.env-sample' \
+                        --exclude='.current_version' \
+                        --exclude='.new_version' \
+                        --exclude='assets/script' \
+                        --exclude='assets/style' \
                         --exclude='Jenkinsfile' \
                         --exclude='application/cache' \
                         --exclude='application/logs' \
@@ -301,6 +343,11 @@ pipeline {
                     echo "Deploy to NAS completed successfully"
                     echo "========================================"
                 '''
+
+                script {
+                    def duration = (System.currentTimeMillis() - env.START_TIME_DEPLOY.toLong()) / 1000
+                    echo "✅ [END] Deploy to NAS ใช้เวลาทั้งหมด: ${duration} วินาที"
+                }
             }
         }
 
@@ -373,10 +420,10 @@ pipeline {
                 def buildCauses = currentBuild.getBuildCauses()
                 def buildUser = ""
                 for (cause in buildCauses) {
-                    if (cause.shortDescription.contains('Started by user')) {
+                    if (cause?.shortDescription?.contains('Started by user')) {
                         buildUser = cause.shortDescription.replace('Started by user ', '')
                     }else{
-                        buildUser = cause.shortDescription.replace('Started by GitLab push by ', '')
+                        buildUser = (cause?.shortDescription ?: '').replace('Started by GitLab push by ', '')
                     }
                 }
 

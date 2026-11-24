@@ -42,7 +42,7 @@
 
         {{-- Iframe Container --}}
         <div id="frame-container"
-            class="relative w-full h-[calc(100vh-160px)] min-h-[500px] bg-white border border-base-300 shadow-sm overflow-hidden">
+            class="relative w-full h-[calc(100vh-160px)] min-h-125 bg-white border border-base-300 shadow-sm overflow-hidden">
             <div id="loading-indicator"
                 class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-base-100/95 backdrop-blur-sm transition-opacity duration-500 ease-in-out opacity-100">
                 <div class="w-10 h-10 border-4 border-base-300 border-t-primary rounded-full animate-spin"></div>

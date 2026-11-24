@@ -625,10 +625,6 @@ $(document).on('click', '#table a.link-self', async function (e) {
 
     try {
         const targetUrlObj = new URL(url, window.location.origin);
-        if (targetUrlObj.origin === window.location.origin) {
-            window.location.href = targetUrlObj.href;
-            return;
-        }
         window.location.href = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(targetUrlObj.href)}&title=${encodeURIComponent(title)}&code=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
     } catch {
         window.location.href = url;

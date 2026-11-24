@@ -50,12 +50,6 @@ function buildFormDestination({ formCode, formName, url }) {
     if (!normalized) return '';
 
     const targetUrlObj = new URL(normalized, window.location.origin);
-    const isSameOrigin = targetUrlObj.origin === window.location.origin;
-
-    if (isSameOrigin) {
-        return targetUrlObj.href;
-    }
-
     return `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(targetUrlObj.href)}&code=${encodeURIComponent(formCode || '')}&name=${encodeURIComponent(formName || '')}`;
 }
 
@@ -189,7 +183,7 @@ function renderRecentCreatedForms(id) {
     const list = filteredForms
         .map((item) => {
             const tagColor = getTagColor(item.group);
-            return `<a href="${escapeHtml(item.link)}" class="block border border-base-300 border-l-2 border-l-base-300 bg-base-100 p-3 text-xs hover:border-l-primary hover:bg-primary/[0.04] transition-all">
+            return `<a href="${escapeHtml(item.link)}" class="block border border-base-300 border-l-2 border-l-base-300 bg-base-100 p-3 text-xs hover:border-l-primary hover:bg-primary/4 transition-all">
                     <div class="font-semibold text-base-content leading-snug"><span class="badge badge-xs badge-outline font-mono font-bold ${tagColor} me-1.5">${escapeHtml(item.code)}</span>${escapeHtml(item.name)}</div>
                     <div class="mt-1 line-clamp-2 text-[11px] wf-mute hidden">${escapeHtml(item.desc || '')}</div>
                 </a>
