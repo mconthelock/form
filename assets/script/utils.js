@@ -280,7 +280,10 @@ export function bindTableColumnSearch(table, searchSelector, columns) {
 }
 
 export const hexToRgb = (hex) => {
-    hex = hex.replace(/^#/, '');
+    if (!hex || typeof hex !== 'string') {
+        return '0,0,0';
+    }
+    hex = hex.trim().replace(/^#/, '');
     if (hex.length === 3) {
         hex = hex
             .split('')
@@ -288,6 +291,9 @@ export const hexToRgb = (hex) => {
             .join('');
     }
     const bigint = parseInt(hex, 16);
+    if (Number.isNaN(bigint)) {
+        return '0,0,0';
+    }
     return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255].join(',');
 };
 

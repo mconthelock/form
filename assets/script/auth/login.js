@@ -21,22 +21,47 @@ import { showLoader } from '@amec/webasset/preloader';
 
 var camera;
 $(document).ready(async function () {
+    const currentAppId = $('#appid').val();
+    const isCurrentApp =
+        String(currentAppId) === String(process.env.APP_ID || '1');
+    if (isCurrentApp && process.env.APP_NAME) {
+        const existingCookie = await getCookie(process.env.APP_NAME);
+        if (existingCookie) {
+            try {
+                const decrypted = await decryptText(
+                    existingCookie,
+                    process.env.APP_NAME,
+                );
+                const user = await getAppDataById(decrypted);
+                if (user && user.group != null) {
+                    const group = user.group.data?.GROUP_HOME || 'home';
+                    window.location.replace(`${process.env.APP_ENV}/${group}`);
+                    return;
+                }
+            } catch (err) {
+                console.warn('Invalid login cookie, clearing...', err);
+            }
+            await deleteCookie(process.env.APP_NAME);
+        }
+    }
     await splashScreen();
     await createCarousel('login');
     await initBarcodeScanner();
     const id = $('#appid').val();
     const appdata = await getAppsDB(id);
-    $('#login-title').text(appdata.APP_NAME);
-    const cookie = await getCookie(appdata.APP_NAME);
+    const cookieName = appdata?.APP_NAME || process.env.APP_NAME;
+    $('#login-title').text(cookieName || 'AMEC Webflow');
+    const cookie = cookieName ? await getCookie(cookieName) : null;
     if (cookie) {
-        const decrypted = await decryptText(cookie, appdata.APP_NAME);
+        const decrypted = await decryptText(cookie, cookieName);
         const user = await getAppDataById(decrypted);
         if (!user || user.group == null) {
             await deleteCookie(process.env.APP_NAME);
             window.location.href = `${process.env.APP_ENV}`;
         } else {
             const group = user.group.data.GROUP_HOME || 'home';
-            window.location.href = `${process.env.APP_ENV}/${group}`;
+            window.location.replace(`${process.env.APP_ENV}/${group}`);
+            return;
         }
     }
     const leaveNode = await getLeaveNode();
@@ -327,8 +352,8 @@ async function showCamera(target) {
 }
 
 async function getAppsDB(id) {
-    const appData = await getApp(id);
-    if (appData) return appData;
+    const appData = (await getApp(id)) || (await getApp(Number(id)));
+    if (appData) return appData.data || appData;
     const apps = await getAppsList();
     apps.forEach(async (app) => {
         await setApplication(app);
