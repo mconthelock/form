@@ -6,8 +6,8 @@ import { displayEmpInfo, fillImages } from '@amec/webasset/indexDB';
 import { setSelect2 } from '@amec/webasset/select2';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { showMessage, intVal, showDigits } from '@amec/webasset/utils';
+import { formHeader, formHeaderInfo, formApprovalBtn } from '../../service';
 import {
-    setRequester,
     getObjectiveMst,
     getDeviceMst,
     getPositionMst,
@@ -18,7 +18,6 @@ import {
     getFormIsDev,
     createFormIsDev,
     updateFormIsDev,
-    createFormIsDev,
 } from './data.js';
 select2();
 
@@ -26,7 +25,23 @@ $(document).ready(async function () {
     const mode = $('#MODE').val();
     const nrunno = intVal($('#NRUNNO').val());
 
-    await setRequester();
+    await formHeader({
+        CST: '0',
+        formmst: {
+            VANAME: 'IS-DEV',
+            VNAME: 'Computer Program Requisition Form',
+            VDESC: 'แบบฟอร์มขอพัฒนา / ปรับปรุงโปรแกรมคอมพิวเตอร์',
+        },
+    });
+    await formHeaderInfo(
+        {
+            VREQNO: $('#EMPNO').val(),
+            VINPUTER: $('#EMPNO').val(),
+        },
+        {
+            editableReq: true,
+        },
+    );
     const objectiveMst = await getObjectiveMst();
     const objectiveSelect = $('#req-objective');
     objectiveMst.forEach((obj) => {
@@ -45,6 +60,14 @@ $(document).ready(async function () {
     });
     $('.flatpickr-input').removeClass('input');
 
+    await formApprovalBtn(null, {
+        draft: true,
+        submit: true,
+        print: false,
+        onDraft: handleSaveDraft,
+        onSubmit: handleSubmitForm,
+    });
+
     if (mode == '2' || nrunno > 0) {
         await initEditForm();
     } else {
@@ -61,43 +84,6 @@ $(document).on('keyup', '.input-number', function (e) {
     const parts = value.split('.');
     if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
     $(this).val(value);
-});
-
-//Requester Information
-$(document).on('change', '#req-by-input', async function (e) {
-    e.preventDefault();
-    const inputuser = $(this).val();
-    const users = await displayEmpInfo(inputuser);
-    if (!users) {
-        await showMessage('Employee do not found.');
-        $(this).val('').focus();
-        return;
-    }
-
-    $('#req-by-img').find('img').attr('src', users.image);
-    $('#req-by-name').html(users.SNAME);
-    $('#req-by-id').html(users.SEMPNO);
-    $('#req-by-organization').html(
-        `${users.SDIV}` +
-            (users.SDEPT ? ` - ${users.SDEPT}` : '') +
-            (users.SSEC ? ` - ${users.SSEC}` : ''),
-    );
-    $('#req-by-info').removeClass('hidden');
-    $(this).val(users.SEMPNO).addClass('hidden');
-});
-
-$(document).on('click', '#change-req-employee', async function (e) {
-    e.preventDefault();
-    $('#req-by-input').removeClass('hidden');
-    $('#req-by-info').addClass('hidden');
-    $('#req-by-input').focus();
-});
-
-$(document).on('click', '#change-req-employee', async function (e) {
-    e.preventDefault();
-    $('#req-by-input').removeClass('hidden');
-    $('#req-by-info').addClass('hidden');
-    $('#req-by-input').focus();
 });
 
 $(document).on('click', '.request-type', async function (e) {
@@ -388,49 +374,24 @@ async function initEditForm() {
 
     const res = data[0];
 
-    // Requester Info
+    // Requester & Input By Info
+    if (res.form?.formmst) {
+        await formHeader(res.form);
+    }
     const reqBy =
         res.REQBY || res.REQ_PIC || res.form?.VREQNO || $('#EMPNO').val();
-    if (reqBy) {
-        $('#req-by-input').val(reqBy);
-        const reqUser = await displayEmpInfo(reqBy);
-        if (reqUser) {
-            $('#req-by-img')
-                .find('img')
-                .attr('src', reqUser.image)
-                .removeClass('hidden');
-            $('#req-by-name').html(reqUser.SNAME);
-            $('#req-by-id').html(reqUser.SEMPNO);
-            $('#req-by-organization').html(
-                `${reqUser.SDIV}` +
-                    (reqUser.SDEPT ? ` - ${reqUser.SDEPT}` : '') +
-                    (reqUser.SSEC ? ` - ${reqUser.SSEC}` : ''),
-            );
-            $('#req-by-info').removeClass('hidden');
-            $('#req-by-info').find('.skeleton').addClass('hidden');
-        }
-    }
-
-    // Input By Info
     const inputBy =
         res.INPUTBY || res.INPUT_BY || res.form?.VINPUTER || $('#EMPNO').val();
-    if (inputBy) {
-        const inputUser = await displayEmpInfo(inputBy);
-        if (inputUser) {
-            $('#input-by-img')
-                .find('img')
-                .attr('src', inputUser.image)
-                .removeClass('hidden');
-            $('#input-by-name').html(inputUser.SNAME);
-            $('#input-by-id').html(inputUser.SEMPNO);
-            $('#input-by-organization').html(
-                `${inputUser.SDIV}` +
-                    (inputUser.SDEPT ? ` - ${inputUser.SDEPT}` : '') +
-                    (inputUser.SSEC ? ` - ${inputUser.SSEC}` : ''),
-            );
-            $('#input-by-info').find('.skeleton').addClass('hidden');
-        }
-    }
+    await formHeaderInfo(
+        {
+            ...(res.form || {}),
+            VREQNO: reqBy,
+            VINPUTER: inputBy,
+        },
+        {
+            editableReq: true,
+        },
+    );
 
     if (res.CATEGORY !== undefined) {
         $('[data-map="CATEGORY"]').val(res.CATEGORY);
@@ -537,8 +498,7 @@ async function initEditForm() {
 }
 
 //Save Draft Form
-$(document).on('click', '#save-draft-form', async function (e) {
-    e.preventDefault();
+async function handleSaveDraft() {
     $('#STATUS').val('0');
     const formdata = await formData();
     if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
@@ -546,11 +506,10 @@ $(document).on('click', '#save-draft-form', async function (e) {
     } else {
         await createFormIsDev(formdata);
     }
-});
+}
 
 //Confirm Form
-$(document).on('click', '#confirm-form', async function (e) {
-    e.preventDefault();
+async function handleSubmitForm() {
     const form = $('#form-is-dev')[0];
     //Verify form
     const formValid = await verifyForm(form);
@@ -572,7 +531,7 @@ $(document).on('click', '#confirm-form', async function (e) {
     } else {
         await createFormIsDev(formdata);
     }
-});
+}
 
 async function verifyForm(form) {
     let check = true;
@@ -679,15 +638,20 @@ async function formData() {
                 formData.append(map, val);
             }
         });
+    formData.append('NFRMNO', $('#NFRMNO').val());
+    formData.append('VORGNO', $('#VORGNO').val());
+    formData.append('CYEAR', $('#CYEAR').val());
+    formData.append('INPUTBY', $('#EMPNO').val());
     if ($('#MODE').val() == '2' || intVal($('#NRUNNO').val()) > 0) {
         formData.append('CYEAR2', $('#CYEAR2').val());
         formData.append('NRUNNO', $('#NRUNNO').val());
     }
     formData.append('JOBTYPE', $('.request-type:checked').val());
     const requestor =
-        $('#req-by-input').val() ||
-        $('#req-by-id').text().trim() ||
-        $('#EMPNO').val();
+        $('#form-header-req-no').val() || $('#EMPNO').val();
+    formData.append('REQBY', requestor);
+    const remark = ($('#form-header-remark-input').val() || '').trim();
+    if (remark) formData.append('VREMARK', remark);
     const user = await displayEmpInfo(requestor);
     const org =
         user.SSECCODE != '00'

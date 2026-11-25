@@ -85,6 +85,9 @@
         <div class="flex-1">
             <h1 class="font-mono font-bold text-gray-600 mb-1">PURPOSE & JUSTIFICATION / REMARK</h1>
             <div class="border border-gray-300 border-dashed p-2 text-xs min-h-14" id="form-header-remark"></div>
+            <textarea id="form-header-remark-input" name="remark" rows="2"
+                class="hidden textarea w-full border border-dashed! border-gray-300 p-2 text-sm min-h-16 bg-white focus:border-primary focus:outline-none"
+                placeholder="ระบุวัตถุประสงค์ / เหตุผล หรือหมายเหตุเพิ่มเติม..."></textarea>
         </div>
     </div>
 </section>

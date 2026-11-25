@@ -6,239 +6,240 @@
         <input type="text" class="hidden" value="{{ $CATEGORY }}" data-map="CATEGORY" />
         <input type="text" class="hidden" value="{{ $PLANYEAR }}" data-map="PLANYEAR" />
         <input type="text" class="hidden" id="STATUS" value="1" data-map="STATUS" />
-        <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" data-map="NFRMNO" />
-        <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" data-map="VORGNO" />
-        <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" data-map="CYEAR" />
-        <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR2 ?? '' }}" />
-        <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO ?? 0 }}" />
-        <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by"
-            data-map="INPUTBY" />
-            <section class="flex flex-col gap-3 mb-4">
-                <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
-                {{-- Request User --}}
-                <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
-                    <legend class="font-semibold text-lg px-1">Requester</legend>
-                    <div class="flex gap-8">
-                        <fieldset class="fieldset flex-1">
-                            <legend class="fieldset-legend">Requrst By</legend>
-                            <input type="text" class="input hidden req-1" placeholder="Employee No." id="req-by-input"
-                                value="{{ $EMPNO }}" name="req_by" data-map="REQBY" />
-                            <div class="flex items-center gap-3" id="req-by-info">
-                                <div class="avatar flex-none">
-                                    <div class="w-16 rounded-full" id="req-by-img">
-                                        <div class="skeleton h-16 w-16"></div>
-                                        <img src="#" class="hidden" />
-                                    </div>
-                                </div>
-                                <div class="flex-none min-w-56 flex flex-col gap-2">
-                                    <h1 class="font-bold text-md" id="req-by-name">
-                                        <div class="skeleton h-6 w-48"></div>
-                                    </h1>
-                                    <h2 id="req-by-id">
-                                        <div class="skeleton h-6 w-32"></div>
-                                    </h2>
-                                    <div class="text-xs text-gray-500" id="req-by-organization">
-                                        <div class="skeleton h-6 w-56"></div>
-                                    </div>
-                                </div>
-                                <div class="tooltip" data-tip="เปลี่ยนผู้ขอ Request">
-                                    <a href="#" class="btn btn-ghost btn-circle" id="change-req-employee"><i
-                                            class="fi fi-rs-cross text-xl text-red-500"></i></a>
-                                </div>
 
-                            </div>
+        <main class="webform-theme flex flex-col gap-4 pb-8 text-base">
+            @include('layouts/form-header')
+            @include('layouts/form-header-info')
+
+            {{-- Section 01: Request Detail --}}
+            <section class="bg-gray-200 border border-gray-300">
+                <header class="flex items-center gap-3 px-4 py-3 border-b border-gray-300">
+                    <span class="bg-black text-white h-8 w-8 flex items-center justify-center text-base font-mono font-bold">01</span>
+                    <div>
+                        <h2 class="font-mono font-bold text-lg text-gray-700 uppercase">Request Detail</h2>
+                        <div class="text-sm text-gray-500">รายละเอียดคำขอพัฒนาหรือปรับปรุงโปรแกรม</div>
+                    </div>
+                </header>
+                <div class="bg-white p-5 flex flex-col gap-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">System Name</legend>
+                            <ul class="flex flex-wrap gap-5 pt-1">
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="system_name" class="radio radio-primary" checked />
+                                    <span>AS400 Application</span>
+                                </li>
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="system_name" class="radio radio-primary" />
+                                    <span>Windows Application</span>
+                                </li>
+                            </ul>
                         </fieldset>
-                        <fieldset class="fieldset flex-1">
-                            <legend class="fieldset-legend">Input By</legend>
-                            <div class="flex items-center gap-3" id="input-by-info">
-                                <div class="avatar flex-none">
-                                    <div class="w-16 rounded-full" id="input-by-img">
-                                        <div class="skeleton h-16 w-16"></div>
-                                        <img src="#" class="hidden" />
-                                    </div>
-                                </div>
-                                <div class="flex-1 flex flex-col gap-2">
-                                    <h1 class="font-bold text-md" id="input-by-name">
-                                        <div class="skeleton h-6 w-48"></div>
-                                    </h1>
-                                    <h2 id="input-by-id">
-                                        <div class="skeleton h-6 w-32"></div>
-                                    </h2>
-                                    <div class="text-xs text-gray-500" id="input-by-organization">
-                                        <div class="skeleton h-6 w-96"></div>
-                                    </div>
-                                </div>
-                            </div>
+
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Request Type</legend>
+                            <ul class="flex flex-wrap gap-4 pt-1">
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                        value="1" checked />
+                                    <span>New Program/Additional Request</span>
+                                </li>
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                        value="2" />
+                                    <span>Modify Program</span>
+                                </li>
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                        value="3" />
+                                    <span>Fixed Error Program</span>
+                                </li>
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                        value="4" />
+                                    <span>Data Change</span>
+                                </li>
+                                <li class="flex items-center gap-2.5 text-base">
+                                    <input type="radio" name="request_type" class="radio radio-primary request-type"
+                                        value="5" />
+                                    <span>Search Data</span>
+                                </li>
+                            </ul>
                         </fieldset>
                     </div>
-                </fieldset>
 
-                <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
-                    <legend class="font-semibold text-lg px-1">Request Detail</legend>
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">System Name</legend>
-                        <ul class="flex gap-5">
-                            <li class="flex items-center gap-3"><input type="radio" name="system_name"
-                                     class="radio radio-primary" checked />AS400 Application</li>
-                            <li class="flex items-center gap-3"><input type="radio" name="system_name"
-                                    class="radio radio-primary" />Windows Application</li>
-                        </ul>
-                    </fieldset>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Program Name</legend>
+                            <input type="text" class="input w-full text-base req-1" name="program_name"
+                                placeholder="ชื่อโปรแกรม เช่น Webflow, SCM, Cost Reduction หรือ Procurement เป็นต้น"
+                                data-map="SYSTEMNAME" />
+                        </fieldset>
 
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Request Type</legend>
-                        <ul class="flex gap-5">
-                            <li class="flex items-center gap-3"><input type="radio" name="request_type"
-                                    class="radio radio-primary request-type" value="1" checked />New
-                                Program/Additional
-                                Request
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <input type="radio" name="request_type" class="radio radio-primary request-type"
-                                    value="2" />Modify Program
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <input type="radio" name="request_type" class="radio radio-primary request-type"
-                                    value="3" />Fixed Error Program
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <input type="radio" name="request_type" class="radio radio-primary request-type"
-                                    value="4" />Data Change
-                            </li>
-                            <li class="flex items-center gap-3">
-                                <input type="radio" name="request_type" class="radio radio-primary request-type"
-                                    value="5" />Search Data
-                            </li>
-                        </ul>
-                    </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Title</legend>
+                            <input type="text" class="input w-full text-base req-1" name="title"
+                                placeholder="ตั้งชื่อ Request / ชื่อโปรเจค" data-map="TITLE" />
+                        </fieldset>
+                    </div>
 
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Program Name</legend>
-                        <input type="text" class="input w-full req-1" name="program_name"
-                            placeholder="ชื่อโปรแกรม เช่น Webflow, SCM, Cost Reduction หรือ Procurement เป็นต้น"
-                            data-map="SYSTEMNAME" />
-                    </fieldset>
-
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Title</legend>
-                        <input type="text" class="input w-full req-1" name="title"
-                            placeholder="ตั้งชื่อ Request / ชื่อโปรเจค" data-map="TITLE" />
-                    </fieldset>
-
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Detail</legend>
-                        <textarea class="textarea w-full h-56 text-comment req-1" name="detail" maxlength="500"
-                            placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้" data-map="PURPOSE"></textarea>
-                        <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
-                        <div class="label text-xs justify-end text-count"><span class="text-count-no"
-                                id="detail-count">0</span>/1000</div>
-                    </fieldset>
-
-                    <fieldset class="fieldset">
-                        <div class="flex">
-                            <legend class="flex-1 fieldset-legend">Additional Information</legend>
-                            <button class="btn btn-primary btn-sm" id="add-file" type="button">+</button>
+                        <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Detail</legend>
+                        <textarea class="textarea w-full h-52 text-base text-comment req-1" name="detail" maxlength="500"
+                            placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้"
+                            data-map="PURPOSE"></textarea>
+                        <div class="flex items-center justify-between mt-1">
+                            <div class="label text-sm justify-start text-red-500 text-comment-err p-0"></div>
+                            <div class="label text-sm justify-end text-count p-0 text-gray-500 font-mono">
+                                <span class="text-count-no" id="detail-count">0</span>/1000
+                            </div>
                         </div>
-                        <p class="label">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
+                    </fieldset>
+
+                    <fieldset class="fieldset">
+                        <div class="flex items-center justify-between mb-1">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700 p-0">
+                                Additional Information
+                            </legend>
+                            <button class="btn btn-sm btn-outline btn-primary gap-1" id="add-file" type="button">
+                                <i class="fi fi-rr-plus-small text-base"></i>
+                                <span>Add File</span>
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-2">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
                         <div class="flex flex-col gap-2 items-center file-input-wrap">
-                            <input type="file" class="file-input file-input-sm w-full attachments"
+                            <input type="file" class="file-input w-full attachments border-gray-300 text-sm"
                                 name="attachments[]" />
                         </div>
                     </fieldset>
-                </fieldset>
+                </div>
+            </section>
 
-                <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
-                    <legend class="font-semibold text-lg px-1">Expected Outcome</legend>
-                    <div class="flex gap-3">
-                        <div class="flex-1">
-                            <fieldset class="fieldset">
-                                <legend class="fieldset-legend">Objective</legend>
-                                <div class="flex items-center gap-3">
-                                    <select class="select s2 req-2" id="req-objective" data-map="OBJECTIVE">
+            {{-- Section 02: Expected Outcome --}}
+            <section class="bg-gray-200 border border-gray-300 form-roi">
+                <header class="flex items-center gap-3 px-4 py-3 border-b border-gray-300">
+                    <span class="bg-black text-white h-8 w-8 flex items-center justify-center text-base font-mono font-bold">02</span>
+                    <div>
+                        <h2 class="font-mono font-bold text-lg text-gray-700 uppercase">Expected Outcome</h2>
+                        <div class="text-sm text-gray-500">เป้าหมาย ผลลัพธ์ที่คาดหวัง และขั้นตอนการทำงาน</div>
+                    </div>
+                </header>
+                <div class="bg-white p-5 flex flex-col gap-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <fieldset class="fieldset lg:col-span-2">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Objective</legend>
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                                <div class="flex-1">
+                                    <select class="select w-full text-base s2 req-2" id="req-objective" data-map="OBJECTIVE">
                                         <option value=""></option>
                                     </select>
-                                    <input type="text" placeholder="Other Objective" class="input"
-                                        id="req-objective-other" readonly data-map="OBJECTIVE_OTHER" />
                                 </div>
-                            </fieldset>
-                        </div>
-                        <div class="flex-1">
-                            <fieldset class="fieldset">
-                                <legend class="fieldset-legend">ROI Payback Period</legend>
-                                <div class="flex items-center gap-3">
-                                    <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
-                                        value="1" id="req-roi-years" data-map="ROI_RETURN" />
-                                    <span class="text-gray-500 text-xs"> Year(s)</span>
-                                </div>
-                            </fieldset>
-                        </div>
+                                <input type="text" placeholder="Other Objective" class="input text-base flex-1"
+                                    id="req-objective-other" readonly data-map="OBJECTIVE_OTHER" />
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">ROI Payback Period</legend>
+                            <div class="flex items-center gap-2.5">
+                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input w-full text-base req-2"
+                                    value="1" id="req-roi-years" data-map="ROI_RETURN" />
+                                <span class="text-gray-600 text-sm whitespace-nowrap">Year(s)</span>
+                            </div>
+                        </fieldset>
                     </div>
 
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
-                        <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
-                        <label class="input">
-                            <input type="text" class="grow fdate req-2" placeholder="{{ Date('Y-M') }}"
+                        <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">
+                            Preferred Requirement Gathering Period
+                        </legend>
+                        <p class="text-sm text-gray-500 italic mb-1.5">
+                            กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้
+                        </p>
+                        <label class="input w-full sm:w-80 flex items-center gap-2 text-base">
+                            <input type="text" class="grow text-base fdate req-2" placeholder="{{ Date('Y-M') }}"
                                 data-map="SPEC_CONFIRM_PLAN" />
-                            <i class="icofont-calendar"></i>
+                            <i class="icofont-calendar text-gray-500 text-lg"></i>
                         </label>
                     </fieldset>
 
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Current Workflow</legend>
-                        <textarea class="textarea w-full h-56 text-comment req-2"
-                            placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"
-                            data-map="CURRENT_WORKFLOW"></textarea>
-                        <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
-                        <div class="label text-xs justify-end text-count"><span class="text-count-no"
-                                id="current-workflow-count">0</span>/1000</div>
-                    </fieldset>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Current Workflow</legend>
+                            <textarea class="textarea w-full h-52 text-base text-comment req-2"
+                                placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"
+                                data-map="CURRENT_WORKFLOW"></textarea>
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="label text-sm justify-start text-red-500 text-comment-err p-0"></div>
+                                <div class="label text-sm justify-end text-count p-0 text-gray-500 font-mono">
+                                    <span class="text-count-no" id="current-workflow-count">0</span>/1000
+                                </div>
+                            </div>
+                        </fieldset>
 
-                    <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Expected Workflow</legend>
-                        <textarea class="textarea w-full h-56 text-comment req-2" data-map="EXPECTED_WORKFLOW"
-                            placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
-                        <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
-                        <div class="label text-xs justify-end text-count"><span class="text-count-no"
-                                id="expected-workflow-count">0</span>/1000</div>
-                    </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend font-mono text-sm font-bold uppercase text-gray-700">Expected Workflow</legend>
+                            <textarea class="textarea w-full h-52 text-base text-comment req-2" data-map="EXPECTED_WORKFLOW"
+                                placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
+                            <div class="flex items-center justify-between mt-1">
+                                <div class="label text-sm justify-start text-red-500 text-comment-err p-0"></div>
+                                <div class="label text-sm justify-end text-count p-0 text-gray-500 font-mono">
+                                    <span class="text-count-no" id="expected-workflow-count">0</span>/1000
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
 
-
-                    <div class="table-wrap overflow-x-auto mt-3 border border-slate-300 rounded-xl">
+                    <div class="table-wrap overflow-x-auto mt-2 border border-gray-300">
                         @include('isform.FORM-1.table-benefit')
                     </div>
-                    <p class="label mt-1 text-xs"></p>
-                </fieldset>
+                </div>
+            </section>
 
-                <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
-                    <legend class="font-semibold text-lg px-1">Efficiency Gains</legend>
+            {{-- Section 03: Efficiency Gains --}}
+            <section class="bg-gray-200 border border-gray-300 form-roi">
+                <header class="flex items-center gap-3 px-4 py-3 border-b border-gray-300">
+                    <span class="bg-black text-white h-8 w-8 flex items-center justify-center text-base font-mono font-bold">03</span>
+                    <div>
+                        <h2 class="font-mono font-bold text-lg text-gray-700 uppercase">Efficiency Gains</h2>
+                        <div class="text-sm text-gray-500">การลดเวลาและค่าใช้จ่ายด้านกำลังคน</div>
+                    </div>
+                </header>
+                <div class="bg-white p-5">
                     <div class="table-wrap overflow-x-auto">
                         @include('isform.FORM-1.table-labor')
                     </div>
-                </fieldset>
+                </div>
+            </section>
 
-                <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
-                    <legend class="font-semibold text-lg px-1">Investment in equipment.</legend>
+            {{-- Section 04: Investment in Equipment --}}
+            <section class="bg-gray-200 border border-gray-300 form-roi">
+                <header class="flex items-center gap-3 px-4 py-3 border-b border-gray-300">
+                    <span class="bg-black text-white h-8 w-8 flex items-center justify-center text-base font-mono font-bold">04</span>
+                    <div>
+                        <h2 class="font-mono font-bold text-lg text-gray-700 uppercase">Investment in Equipment</h2>
+                        <div class="text-sm text-gray-500">การลงทุนอุปกรณ์และฮาร์ดแวร์เพิ่มเติม</div>
+                    </div>
+                </header>
+                <div class="bg-white p-5">
                     <div class="table-wrap overflow-x-auto">
                         @include('isform.FORM-1.table-investment')
                     </div>
-                </fieldset>
-
-                <div class="form-roi bg-accent/10 border border-accent rounded-xl p-5 mt-3">
-                    This project will return on investment (ROI)
-                    <span class="font-bold text-lg text-primary" id="roi-total-kb">0 KB</span>
-                    <span class="font-bold text-lg text-primary" id="roi-total-full">(0
-                        Baht)</span>
-                    <span class="font-bold text-lg text-primary mx-1" id="roi-total-year"></span>
-                </div>
-
-                <div class="flex gap-3 mt-3 ">
-                    <button class="btn btn-primary btn-outline" id="save-draft-form"><i
-                            class="fi fi-tr-circle-ellipsis-vertical"></i>Save
-                        Draft</button>
-                    <button class="btn btn-primary" id="confirm-form"><i class="fi fi-tr-multiple"></i>Confirm</button>
                 </div>
             </section>
+
+            {{-- ROI Summary --}}
+            <section class="form-roi bg-blue-50 border border-blue-300 p-4 flex flex-wrap items-center gap-2 text-base text-gray-700">
+                <i class="fi fi-rr-chart-histogram text-primary text-xl me-1"></i>
+                <span>This project will return on investment (ROI)</span>
+                <span class="font-mono font-bold text-lg text-primary" id="roi-total-kb">0 KB</span>
+                <span class="font-mono font-bold text-lg text-primary" id="roi-total-full">(0 Baht)</span>
+                <span class="font-mono font-bold text-lg text-primary mx-1" id="roi-total-year"></span>
+            </section>
+
+            {{-- Form Action Bar --}}
+            @include('layouts/form-action')
+        </main>
     </form>
 @endsection
 
@@ -248,9 +249,19 @@
 
 @section('styles')
     <style>
+        #form-is-dev .select2-container--default .select2-selection--single {
+            height: 2.5rem !important;
+            font-size: 1rem !important;
+        }
+
+        #form-is-dev .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: 1rem !important;
+            line-height: 2.35rem !important;
+        }
+
         .table-edit tbody tr th {
             font-weight: bold;
-
+            font-size: 0.95rem;
         }
 
         .table-edit tbody tr td {
@@ -260,7 +271,6 @@
         .table-edit tbody tr td:not(:last-child),
         .table-edit tbody tr th {
             border-right: 1px solid var(--color-gray-300);
-
         }
 
         .table-edit tbody tr td,
@@ -271,7 +281,7 @@
         .table-edit tbody tr td input {
             width: 100%;
             height: 100%;
-            min-height: 40px;
+            min-height: 42px;
             padding: 10px;
             border: none;
             text-align: right;

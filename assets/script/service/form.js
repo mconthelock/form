@@ -138,7 +138,18 @@ export async function formHeaderInfo(data = {}, opt = {}) {
         : dayjs().format('YYYY-MM-DD');
     $('#form-header-no').html(no);
     $('#form-header-date').html(date);
-    $('#form-header-remark').html(data.VREMARK || '');
+    const isEditableRemark = Boolean(opt.editableRemark ?? opt.editableReq);
+    if (isEditableRemark) {
+        $('#form-header-remark').addClass('hidden');
+        $('#form-header-remark-input')
+            .removeClass('hidden')
+            .val(data.VREMARK || '');
+    } else {
+        $('#form-header-remark-input').addClass('hidden');
+        $('#form-header-remark')
+            .removeClass('hidden')
+            .html(data.VREMARK || '');
+    }
 
     const reqNo = String(data.VREQNO || $('#EMPNO').val() || '').trim();
     const req = reqNo ? await displayEmpInfo(reqNo) : null;
@@ -450,6 +461,8 @@ export async function formFlowApproval(data) {
 
 export async function formApprovalBtn(form, opt = {}) {
     const opts = {
+        draft: false,
+        submit: false,
         approve: false,
         reject: false,
         return: false,
@@ -474,6 +487,8 @@ export async function formApprovalBtn(form, opt = {}) {
             String(currentStep.VREPNO || '').trim() === currentEmp);
 
     const visibleMap = {
+        draft: Boolean(opts.draft),
+        submit: Boolean(opts.submit),
         approve: isApprover && opts.approve,
         reject: isApprover && opts.reject,
         return: isApprover && opts.return,
@@ -508,6 +523,8 @@ export async function formApprovalBtn(form, opt = {}) {
 
     // ผูก click event ให้ทุกปุ่มในกลุ่ม form-action โดยจัดการ disabled + loading อัตโนมัติ
     const handlerMap = {
+        draft: opts.onDraft,
+        submit: opts.onSubmit,
         approve: opts.onApprove,
         reject: opts.onReject,
         return: opts.onReturn,
@@ -521,6 +538,7 @@ export async function formApprovalBtn(form, opt = {}) {
             'click.formAction',
             '#form-button-container button',
             async function (e) {
+                e.preventDefault();
                 const $container = $('#form-button-container');
                 if (
                     $container.data('action-loading') ||
