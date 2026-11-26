@@ -448,15 +448,51 @@ export async function formFlowApproval(data) {
         };
 
         const badgeLine = (dt, no) => {
-            if (parseInt(dt.CSTEPST) == 3)
-                return `<div class="w-8 h-8 bg-red-600 text-white font-bold text-md flex items-center justify-center">${no}</div>`;
+            const st = parseInt(dt.CSTEPST);
+            if (st == 3)
+                return `<div class="w-8 h-8 bg-primary text-white font-bold text-md flex items-center justify-center flow-step-aura">${no}</div>`;
+
+            if (st == 5)
+                return `<div class="w-8 h-8 bg-green-600 text-white font-bold text-md flex items-center justify-center">${no}</div>`;
+
+            if (st > 5)
+                return `<div class="w-8 h-8 bg-red-600 text-white font-bold text-md flex items-center justify-center" title="Rejected"><i class="fi fi-br-cross text-xs"></i></div>`;
 
             return `<div class="w-8 h-8 bg-gray-300 text-gray-600 font-bold text-md flex items-center justify-center">${no}</div>`;
         };
 
+        const MAX_VISIBLE_ROWS = 4;
+        const shouldCollapse = data.length > MAX_VISIBLE_ROWS;
+        const visibleIndices = new Set();
+
+        if (shouldCollapse) {
+            const activeIdx = data.findIndex((d) => parseInt(d.CSTEPST) == 3);
+            if (activeIdx >= 0) {
+                visibleIndices.add(0);
+                if (activeIdx - 1 >= 0) visibleIndices.add(activeIdx - 1);
+                visibleIndices.add(activeIdx);
+                if (activeIdx + 1 < data.length)
+                    visibleIndices.add(activeIdx + 1);
+            } else {
+                visibleIndices.add(0);
+                visibleIndices.add(1);
+                visibleIndices.add(data.length - 2);
+                visibleIndices.add(data.length - 1);
+            }
+        }
+
         let table = '';
         let no = 1;
-        for (let dt of data) {
+        for (let idx = 0; idx < data.length; idx++) {
+            const dt = data[idx];
+            const st = parseInt(dt.CSTEPST);
+            const isHidden = shouldCollapse && !visibleIndices.has(idx);
+            const rowClasses = [
+                st == 3 ? 'bg-blue-100' : '',
+                isHidden ? 'flow-row-extra hidden print:table-row' : '',
+            ]
+                .filter(Boolean)
+                .join(' ');
             const date =
                 dt.DAPVDATE == null
                     ? ''
@@ -466,7 +502,7 @@ export async function formFlowApproval(data) {
                 ? `${user.SNAME}${user.STNAME ? ` / ${user.STNAME}` : ''}`
                 : dt.VAPVNO || '-';
             const position = user?.SPOSITION || user?.SPOSNAME || '-';
-            table += `<tr>
+            table += `<tr class="${rowClasses}">
                 <td>${badgeLine(dt, no)}</td>
                 <td>${getStepName(dt)}</td>
                 <td>${dt.VAPVNO || ''}</td>
@@ -479,6 +515,36 @@ export async function formFlowApproval(data) {
             no++;
         }
         $('#form-flow-table tbody').html(table);
+
+        const hiddenCount = data.length - visibleIndices.size;
+        const $toggleBar = $('#form-flow-toggle-bar');
+        const $toggleBtn = $('#form-flow-toggle-btn');
+
+        if (shouldCollapse && hiddenCount > 0) {
+            const setToggleLabel = (expanded) => {
+                $toggleBtn.data('expanded', expanded);
+                $toggleBtn.html(
+                    expanded
+                        ? `<i class="fi fi-rr-angle-small-up text-base"></i><span>ย่อรายการ (${data.length} ขั้นตอน)</span>`
+                        : `<i class="fi fi-rr-angle-small-down text-base"></i><span>แสดงรายการทั้งหมด (${data.length} ขั้นตอน — ซ่อนอยู่ ${hiddenCount} รายการ)</span>`,
+                );
+            };
+            setToggleLabel(false);
+            $toggleBar.removeClass('hidden');
+
+            $(document)
+                .off('click.flowToggle', '#form-flow-toggle-btn')
+                .on('click.flowToggle', '#form-flow-toggle-btn', function () {
+                    const nextExpanded = !$(this).data('expanded');
+                    $('#form-flow-table tbody tr.flow-row-extra').toggleClass(
+                        'hidden',
+                        !nextExpanded,
+                    );
+                    setToggleLabel(nextExpanded);
+                });
+        } else {
+            $toggleBar.addClass('hidden');
+        }
     };
 
     const orderedFlow = sortFlowSteps(data.flow);

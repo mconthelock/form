@@ -1,10 +1,10 @@
 <?php
-class report extends MY_Controller {
+class datamanager extends MY_Controller {
     public function __construct(){
         parent::__construct();
     }
 
     public function index(){
-        // Your code here
+        $this->views('webform/datamanager/index',['title' => 'nav-data-manager']);
     }
 }

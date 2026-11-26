@@ -718,3 +718,22 @@ html.flow-dragging * {
     display: flex !important;
     align-items: center !important;
 }
+
+/* Active approval step aura pulse */
+@keyframes flow-step-aura {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 3px color-mix(in oklab, var(--color-primary) 28%, transparent),
+            0 0 12px color-mix(in oklab, var(--color-primary) 45%, transparent);
+    }
+    50% {
+        box-shadow:
+            0 0 0 6px color-mix(in oklab, var(--color-primary) 16%, transparent),
+            0 0 18px color-mix(in oklab, var(--color-primary) 55%, transparent);
+    }
+}
+
+.flow-step-aura {
+    animation: flow-step-aura 2s ease-in-out infinite;
+}

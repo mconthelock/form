@@ -1,5 +1,8 @@
 import '@flaticon/flaticon-uicons/css/all/all.css';
 import dayjs from 'dayjs';
+import { showMessage } from '@amec/webasset/utils';
+import { doaction } from '@amec/webasset/api/webform';
+import { redirectWebflow } from '@amec/webasset/form';
 import {
     formHeader,
     formHeaderInfo,
@@ -32,6 +35,30 @@ function escapeHtml(value) {
     return $('<div>')
         .text(value ?? '')
         .html();
+}
+
+async function handleFormAction({ action, remark }) {
+    try {
+        const res = await doaction({
+            NFRMNO: $('#NFRMNO').val(),
+            VORGNO: $('#VORGNO').val(),
+            CYEAR: $('#CYEAR').val(),
+            CYEAR2: $('#CYEAR2').val(),
+            NRUNNO: $('#NRUNNO').val(),
+            ACTION: action,
+            EMPNO: $('#EMPNO').val(),
+            REMARK: remark,
+        });
+
+        if (res && res.status) {
+            redirectWebflow();
+        } else {
+            await showMessage(res?.message || 'ไม่สามารถดำเนินการอนุมัติได้');
+        }
+    } catch (err) {
+        console.error('Approval action error:', err);
+        await showMessage('เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่อีกครั้ง');
+    }
 }
 
 async function initForm() {
@@ -104,7 +131,15 @@ async function initForm() {
     });
 
     await formApprovalBtn(row.form || null, {
+        approve: true,
+        reject: true,
+        return: true,
+        remark: true,
         print: true,
+        empno: $('#EMPNO').val(),
+        onApprove: handleFormAction,
+        onReject: handleFormAction,
+        onReturn: handleFormAction,
     });
 
     if (Array.isArray(row.form?.flow) && row.form.flow.length > 0) {
