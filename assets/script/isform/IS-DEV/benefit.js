@@ -1,0 +1,58 @@
+export const DEFAULT_BENEFIT_MASTER = [
+    {
+        BENEFIT_ID: 0,
+        GROUP_NAME: null,
+        ITEM_NAME: 'Running Cost',
+        IS_AUTO: 0,
+        SORT_ORDER: 1,
+    },
+    {
+        BENEFIT_ID: 1,
+        GROUP_NAME: null,
+        ITEM_NAME: 'Production Volumn/Output',
+        IS_AUTO: 0,
+        SORT_ORDER: 2,
+    },
+    {
+        BENEFIT_ID: 2,
+        GROUP_NAME: null,
+        ITEM_NAME: 'Lost (Material/Order)',
+        IS_AUTO: 0,
+        SORT_ORDER: 3,
+    },
+    {
+        BENEFIT_ID: 3,
+        GROUP_NAME: 'Manpower',
+        ITEM_NAME: 'Labor Cost',
+        IS_AUTO: 1,
+        SORT_ORDER: 4,
+    },
+    {
+        BENEFIT_ID: 4,
+        GROUP_NAME: 'Manpower',
+        ITEM_NAME: 'Subcon/Outsource Cost',
+        IS_AUTO: 0,
+        SORT_ORDER: 5,
+    },
+    {
+        BENEFIT_ID: 5,
+        GROUP_NAME: 'Other',
+        ITEM_NAME: 'Preparing Cost',
+        IS_AUTO: 0,
+        SORT_ORDER: 6,
+    },
+    {
+        BENEFIT_ID: 6,
+        GROUP_NAME: 'Other',
+        ITEM_NAME: 'Equipment Cost',
+        IS_AUTO: 0,
+        SORT_ORDER: 7,
+    },
+    {
+        BENEFIT_ID: 7,
+        GROUP_NAME: 'Other',
+        ITEM_NAME: 'Area Cost',
+        IS_AUTO: 0,
+        SORT_ORDER: 8,
+    },
+];

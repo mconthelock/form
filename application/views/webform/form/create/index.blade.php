@@ -41,7 +41,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-5">
                     @foreach ($department as $dept)
                         <a class="block bg-base-100 border border-base-300 border-t-2 border-t-base-300 hover:border-primary hover:border-t-primary hover:bg-primary/3 transition-all group"
-                            href="{{ base_url() . 'webform/form/createdetail/' . $dept['id'] }}">@include('form/create/deptcard', $dept)</a>
+                            href="{{ base_url() . 'webform/form/createdetail/' . $dept['id'] }}">@include('webform/form/create/deptcard', $dept)</a>
                     @endforeach
                 </div>
             </section>

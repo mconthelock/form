@@ -336,26 +336,50 @@ function sortFlowSteps(flow) {
 }
 
 export async function formFlowApproval(data) {
+    const getStepName = (dt) =>
+        dt?.steps?.VNAME ||
+        (dt?.CSTEPNO == '--' ? 'Requester' : `Step ${dt?.CSTEPNO ?? ''}`);
+
+    const safeEmpInfo = async (empno) => {
+        const code = String(empno ?? '').trim();
+        if (!code || code.toUpperCase() === 'SYSTEM') return null;
+        try {
+            return await displayEmpInfo(code);
+        } catch {
+            return null;
+        }
+    };
+
     const approvingStep = async (data) => {
         const currentStepNo = data.find((c) => c.CSTEPST == '3');
-        const curName = await displayEmpInfo(currentStepNo.VAPVNO);
+        if (!currentStepNo) return '';
+
+        const curName = await safeEmpInfo(currentStepNo.VAPVNO);
+        const curLabel = curName
+            ? `${curName.SNAME} / ${curName.STNAME} (${curName.SEMPNO})`
+            : currentStepNo.VAPVNO || '-';
 
         const lastStepNo = data.find(
             (n) => n.CSTEPNEXTNO == currentStepNo.CSTEPNO,
         );
 
+        const lastApprovedHtml =
+            lastStepNo && lastStepNo.DAPVDATE
+                ? `<div class="text-xs flex flex-row items-center gap-0.5 text-green-700">
+                    <i class="fi fi-rs-check-circle text-xl me-2"></i>
+                    <span class="font-bold">Last Approved:</span>
+                    <span>${dayjs(lastStepNo.DAPVDATE).format('YYYY-MM-DD')} ${lastStepNo.CAPVTIME || ''} <span class="bg-red-500 px-2 py-1 rounded-full text-white">(${dayjs().diff(dayjs(lastStepNo.DAPVDATE), 'day')} day ago)</span></span>
+                </div>`
+                : '';
+
         return `<div class="px-4 py-2 bg-amber-200 border border-amber-300 text-amber-700 flex flex-col gap-3">
             <div class="text-xs flex flex-row items-center gap-0.5">
                 <i class="fi fi-ts-arrow-circle-right text-xl me-2"></i>
                 <span class="font-bold">Current Step:</span>
-                <span class="bg-amber-700 rounded-full text-white px-2 py-1">${currentStepNo.steps.VNAME}</span>
-                <span>${curName.SNAME} / ${curName.STNAME} (${curName.SEMPNO})</span>
+                <span class="bg-amber-700 rounded-full text-white px-2 py-1">${getStepName(currentStepNo)}</span>
+                <span>${curLabel}</span>
             </div>
-            <div class="text-xs flex flex-row items-center gap-0.5 text-green-700">
-                <i class="fi fi-rs-check-circle text-xl me-2"></i>
-                <span class="font-bold">Last Approved:</span>
-                <span>${dayjs(lastStepNo.DAPVDATE).format('YYYY-MM-DD')} ${lastStepNo.CAPVTIME} <span class="bg-red-500 px-2 py-1 rounded-full text-white">(${dayjs().diff(dayjs(lastStepNo.DAPVDATE), 'day')} day ago)</span></span>
-            </div>
+            ${lastApprovedHtml}
         </div>`;
     };
 
@@ -436,14 +460,18 @@ export async function formFlowApproval(data) {
             const date =
                 dt.DAPVDATE == null
                     ? ''
-                    : `${dayjs(dt.DAPVDATE).format('YYYY-MM-DD')} ${dt.CAPVTIME}`;
-            const user = await displayEmpInfo(dt.VAPVNO);
+                    : `${dayjs(dt.DAPVDATE).format('YYYY-MM-DD')} ${dt.CAPVTIME || ''}`.trim();
+            const user = await safeEmpInfo(dt.VAPVNO);
+            const fullName = user
+                ? `${user.SNAME}${user.STNAME ? ` / ${user.STNAME}` : ''}`
+                : dt.VAPVNO || '-';
+            const position = user?.SPOSITION || user?.SPOSNAME || '-';
             table += `<tr>
                 <td>${badgeLine(dt, no)}</td>
-                <td>${dt.steps.VNAME}</td>
-                <td>${dt.VAPVNO}</td>
-                <td>${user.SNAME} / ${user.STNAME}</td>
-                <td>${user.SPOSITION}</td>
+                <td>${getStepName(dt)}</td>
+                <td>${dt.VAPVNO || ''}</td>
+                <td>${fullName}</td>
+                <td>${position}</td>
                 <td>${date}</td>
                 <td>${badgeStatus(dt)}</td>
                 <td>${dt.VREMARK == null ? '' : dt.VREMARK}</td>
@@ -454,9 +482,9 @@ export async function formFlowApproval(data) {
     };
 
     const orderedFlow = sortFlowSteps(data.flow);
-    currentStep({ ...data, flow: orderedFlow });
+    await currentStep({ ...data, flow: orderedFlow });
     setStepInfo(orderedFlow);
-    setStepTable(orderedFlow);
+    await setStepTable(orderedFlow);
 }
 
 export async function formApprovalBtn(form, opt = {}) {

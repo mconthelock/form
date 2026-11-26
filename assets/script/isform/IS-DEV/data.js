@@ -1,5 +1,6 @@
 import { displayEmpInfo, fillImages } from '@amec/webasset/indexDB';
 import { showMessage, intVal, showDigits } from '@amec/webasset/utils';
+import { DEFAULT_BENEFIT_MASTER } from './benefit';
 
 export async function setRequester() {
     const inputuser = $('#EMPNO').val();
@@ -91,6 +92,115 @@ export async function getLaborcost() {
                 reject(error);
             },
         });
+    });
+}
+
+const escapeHtml = (value) =>
+    $('<div>')
+        .text(value ?? '')
+        .html();
+
+export function renderBenefitTable({
+    readonly = false,
+    values = [],
+    master = DEFAULT_BENEFIT_MASTER,
+} = {}) {
+    const items = (master || [])
+        .filter((item) => item.STATUS == null || String(item.STATUS) !== '0')
+        .sort(
+            (a, b) =>
+                (intVal(a.SORT_ORDER) || intVal(a.BENEFIT_ID)) -
+                (intVal(b.SORT_ORDER) || intVal(b.BENEFIT_ID)),
+        );
+
+    const rowsHtml = [];
+    for (let i = 0; i < items.length; ) {
+        const groupName = String(items[i].GROUP_NAME || '').trim();
+        let groupSpan = 1;
+
+        if (groupName) {
+            while (
+                i + groupSpan < items.length &&
+                String(items[i + groupSpan].GROUP_NAME || '').trim() ===
+                    groupName
+            ) {
+                groupSpan++;
+            }
+        }
+
+        for (let offset = 0; offset < groupSpan; offset++) {
+            const cur = items[i + offset];
+            const isAuto =
+                String(cur.IS_AUTO ?? '0') === '1' ||
+                String(cur.SOURCE_TYPE || '').toUpperCase() === 'LABOR';
+            const roAttr = readonly || isAuto ? 'readonly' : '';
+            const safeItem = escapeHtml(cur.ITEM_NAME);
+
+            const labelCells = !groupName
+                ? `<th colspan="2">${safeItem}</th>`
+                : offset === 0
+                  ? `<th rowspan="${groupSpan}">${escapeHtml(groupName)}</th><th>${safeItem}</th>`
+                  : `<th>${safeItem}</th>`;
+
+            const presentId = isAuto ? ' id="labor-present-benefit"' : '';
+            const futureId = isAuto ? ' id="labor-future-benefit"' : '';
+            const totalId = isAuto ? ' id="labor-total-benefit"' : '';
+
+            rowsHtml.push(
+                `<tr data-benefit-id="${cur.BENEFIT_ID}" data-auto="${isAuto ? 1 : 0}">
+                    ${labelCells}
+                    <td><input type="text" class="input-number input-benefit present-cost"${presentId} ${roAttr}></td>
+                    <td><input type="text" class="input-number input-benefit future-cost"${futureId} ${roAttr}></td>
+                    <td><input type="text" class="input-number input-benefit subtotal-cost"${totalId} readonly></td>
+                </tr>`,
+            );
+        }
+
+        i += groupSpan;
+    }
+
+    $('#table-benefit tbody').html(rowsHtml.join(''));
+
+    if (values.length > 0) {
+        fillBenefitTable(values);
+    }
+}
+
+export function fillBenefitTable(benefits = []) {
+    if (!Array.isArray(benefits) || benefits.length === 0) return;
+
+    benefits.forEach((b) => {
+        const id = b.BENEFIT ?? b.BENEFIT_TYPE;
+        if (id == null) return;
+
+        const row = $(`#table-benefit tbody tr[data-benefit-id="${id}"]`);
+        if (!row.length || String(row.data('auto')) === '1') return;
+
+        const present = intVal(b.BENEFIT_CURRENT) || 0;
+        const after = intVal(b.BENEFIT_AFTER) || 0;
+        row.find('.present-cost').val(present);
+        row.find('.future-cost').val(after);
+        row.find('.subtotal-cost').val(showDigits(present - after, 2));
+    });
+}
+
+export function collectBenefitData(formData) {
+    let i = 0;
+    $('#table-benefit tbody tr').each(function () {
+        const $row = $(this);
+        if (intVal($row.find('.subtotal-cost').val()) <= 0) return;
+
+        const benefitId = $row.data('benefit-id') ?? $row.index();
+        formData.append(`benefit[${i}][BENEFIT]`, benefitId);
+        formData.append(
+            `benefit[${i}][BENEFIT_CURRENT]`,
+            intVal($row.find('.present-cost').val()) || 0,
+        );
+        formData.append(
+            `benefit[${i}][BENEFIT_AFTER]`,
+            intVal($row.find('.future-cost').val()) || 0,
+        );
+        i++;
     });
 }
 

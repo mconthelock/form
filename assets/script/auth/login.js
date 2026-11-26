@@ -7,6 +7,8 @@ import {
     setInfo,
     getApp,
     getAppDataById,
+    deleteGroup,
+    deleteMenu,
 } from '@amec/webasset/indexDB';
 import { getCookie, deleteCookie } from '@amec/webasset/jsCookie';
 import { decryptText } from '@amec/webasset/crypto';
@@ -14,7 +16,13 @@ import { directlogin, passwordLogin } from '@amec/webasset/api/auth';
 import { createCarousel } from '@amec/webasset/api/gpreport';
 import { showMessage, showErrorMessage } from '@amec/webasset/utils';
 
-import { sendSession, host, uri, clientIp } from '../utils';
+import {
+    sendSession,
+    host,
+    uri,
+    clientIp,
+    clearSidebarSnapshot,
+} from '../utils';
 import { getAppsList } from '../service/docinv';
 import { splashScreen } from './login-utils';
 import { showLoader } from '@amec/webasset/preloader';
@@ -233,6 +241,13 @@ $(document).on('click', '#close-camera', function (e) {
 async function successLogin(user) {
     const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
     const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
+    const appId = user.apps?.APP_ID ?? $('#appid').val();
+    const indexedDBID = `${appId}-${user.appuser.SEMPNO}`;
+    clearSidebarSnapshot();
+    await Promise.all([
+        deleteGroup(indexedDBID),
+        deleteMenu(indexedDBID),
+    ]).catch(() => {});
     if (user.apps.APP_ID == 1) {
         const appgroup = user.appgroup.GROUP_HOME || 'home';
         return `${process.env.APP_ENV}/${appgroup}/`;

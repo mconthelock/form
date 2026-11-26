@@ -8,7 +8,7 @@
     </div>
     <div class="flex-none flex items-center justify-center ">
         <div class="w-16 h-16 bg-[##f1c48b] rounded-full">
-            @include('svg.' . $id . '_icon')
+            @include('webform.svg.' . $id . '_icon')
         </div>
     </div>
 </a>

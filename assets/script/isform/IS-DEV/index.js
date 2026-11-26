@@ -9,9 +9,10 @@ import { showMessage, intVal, showDigits } from '@amec/webasset/utils';
 import { formHeader, formHeaderInfo, formApprovalBtn } from '../../service';
 import {
     getObjectiveMst,
-    getDeviceMst,
-    getPositionMst,
     getLaborcost,
+    renderBenefitTable,
+    fillBenefitTable,
+    collectBenefitData,
     totalBenefit,
     totalLabor,
     totalInvestment,
@@ -19,6 +20,21 @@ import {
     createFormIsDev,
     updateFormIsDev,
 } from './data.js';
+import {
+    initLaborTable,
+    addLaborRow,
+    removeLaborRow,
+    clearLaborTable,
+    collectLaborData,
+} from './labor.js';
+import {
+    initInvestmentTable,
+    addInvestmentRow,
+    removeInvestmentRow,
+    clearInvestmentTable,
+    collectInvestmentData,
+    loadDevices,
+} from './investment.js';
 select2();
 
 $(document).ready(async function () {
@@ -68,11 +84,13 @@ $(document).ready(async function () {
         onSubmit: handleSubmitForm,
     });
 
+    await renderBenefitTable({ readonly: false });
+
     if (mode == '2' || nrunno > 0) {
         await initEditForm();
     } else {
-        await addLaborRow();
-        await addInvestmentRow();
+        await initLaborTable({ readonly: false, data: [null] });
+        await initInvestmentTable({ readonly: false, data: [null] });
     }
 });
 
@@ -144,63 +162,6 @@ $(document).on('change', '.input-benefit', async function (e) {
 });
 
 // Labor Table
-async function addLaborRow(data = null) {
-    const positionMst = await getPositionMst();
-    let positionSelect = `<select class="select select-bordered select-sm w-full select-position">
-        <option value="">Select Position</option>
-    </select>`;
-    const positionMstFiltered = positionMst
-        .filter((pos) => intVal(pos.SPOSCODE) > 30 && intVal(pos.SPOSCODE) < 80)
-        .sort((a, b) => intVal(a.SPOSCODE) - intVal(b.SPOSCODE));
-    positionMstFiltered.forEach((position) => {
-        positionSelect = positionSelect.replace(
-            '</select>',
-            `<option value="${position.SPOSCODE}">${position.SPOSITION}</option></select>`,
-        );
-    });
-    const table = $('#table-labor tbody');
-    const newRow = $(
-        `<tr>
-            <td>${positionSelect}</td>
-            <td>
-                <input type="text" class="input-number labor-cost" readonly>
-            </td>
-            <td class="bg-primary-content">
-                <input type="text" class="input-number input-labor labor-present">
-            </td>
-            <td class="bg-primary-content">
-                <input type="text" class="input-number input-labor labor-future">
-            </td>
-            <td>
-                <input type="text" class="input-number labor-time" readonly>
-            </td>
-            <td>
-                <input type="text" class="input-number labor-total" readonly>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-sm btn-error remove-row-labor">X</button>
-            </td>
-        </tr>`,
-    );
-    table.append(newRow);
-
-    if (data) {
-        const pos = data.POSITION ?? '';
-        const cost = intVal(data.COST) || 0;
-        const present = intVal(data.HOURS_PRESENT) || 0;
-        const after = intVal(data.HOURS_AFTER) || 0;
-        const totalTime = present - after;
-        const totalLaborCost = totalTime * cost;
-
-        newRow.find('.select-position').val(pos);
-        newRow.find('.labor-cost').val(cost);
-        newRow.find('.labor-present').val(present);
-        newRow.find('.labor-future').val(after);
-        newRow.find('.labor-time').val(totalTime);
-        newRow.find('.labor-total').val(showDigits(totalLaborCost));
-    }
-}
-
 $(document).on('click', '#add-row-labor', async function (e) {
     e.preventDefault();
     await addLaborRow();
@@ -209,7 +170,7 @@ $(document).on('click', '#add-row-labor', async function (e) {
 $(document).on('click', '#not-improve-manpower', async function (e) {
     const isChecked = $(this).is(':checked');
     if (isChecked) {
-        $('#table-labor tbody tr').remove();
+        clearLaborTable();
         $('#add-row-labor').prop('disabled', true);
     } else {
         $('#add-row-labor').prop('disabled', false);
@@ -252,7 +213,7 @@ $(document).on('change', '.input-labor', async function (e) {
 
 $(document).on('click', '.remove-row-labor', async function (e) {
     e.preventDefault();
-    $(this).closest('tr').remove();
+    removeLaborRow($(this).closest('tr'));
     await totalLabor();
     await totalBenefit();
 });
@@ -262,47 +223,6 @@ $(document).on('change', '#req-roi-years', async function (e) {
 });
 
 // Investment Table
-async function addInvestmentRow(data = null) {
-    const deviceMst = await getDeviceMst();
-    let deviceSelect = `<select class="select select-bordered select-sm w-full select-device">
-        <option value="">Select Device</option>
-    </select>`;
-    deviceMst.forEach((device) => {
-        deviceSelect = deviceSelect.replace(
-            '</select>',
-            `<option value="${device.DNO}">${device.DEVICE}</option></select>`,
-        );
-    });
-    const table = $('#table-investment tbody');
-    const newRow = $(`
-        <tr>
-            <td>${deviceSelect}</td>
-            <td class="bg-primary-content"><input type="text" value="1" class="device-qty"></td>
-            <td><input type="text" class="device-cost" readonly></td>
-            <td><input type="text" class="device-total" readonly></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-error remove-row-investment">X</button></td>
-        </tr>
-    `);
-    table.append(newRow);
-
-    if (data) {
-        const deviceCode = data.DEVICE ?? data.DNO ?? '';
-        const qty = intVal(data.QTY) || 1;
-        const matchedDevice = deviceMst.find((d) => d.DNO == deviceCode);
-        const price =
-            intVal(
-                data.PRICE ??
-                    data.STANDARD_COST ??
-                    matchedDevice?.STANDARD_COST,
-            ) || 0;
-
-        newRow.find('.select-device').val(deviceCode);
-        newRow.find('.device-qty').val(qty);
-        newRow.find('.device-cost').val(showDigits(price));
-        newRow.find('.device-total').val(showDigits(qty * price));
-    }
-}
-
 $(document).on('click', '#add-row-investment', async function (e) {
     e.preventDefault();
     await addInvestmentRow();
@@ -311,7 +231,7 @@ $(document).on('click', '#add-row-investment', async function (e) {
 $(document).on('click', '#not-improve-investment', async function (e) {
     const isChecked = $(this).is(':checked');
     if (isChecked) {
-        $('#table-investment tbody tr').remove();
+        clearInvestmentTable();
         $('#add-row-investment').prop('disabled', true);
     } else {
         $('#add-row-investment').prop('disabled', false);
@@ -324,7 +244,7 @@ $(document).on('click', '#not-improve-investment', async function (e) {
 $(document).on('click change', '.select-device', async function (e) {
     const row = $(this).closest('tr');
     const deviceCode = $(this).val();
-    const deviceMst = await getDeviceMst();
+    const deviceMst = await loadDevices();
     const device = deviceMst.find((d) => d.DNO == deviceCode);
     if (!device) {
         return;
@@ -351,7 +271,7 @@ $(document).on('change', '.device-qty', async function (e) {
 
 $(document).on('click', '.remove-row-investment', async function (e) {
     e.preventDefault();
-    $(this).closest('tr').remove();
+    removeInvestmentRow($(this).closest('tr'));
     await totalInvestment();
     await totalBenefit();
 });
@@ -367,8 +287,8 @@ async function initEditForm() {
     });
 
     if (!data || !data[0]) {
-        await addLaborRow();
-        await addInvestmentRow();
+        await initLaborTable({ readonly: false, data: [null] });
+        await initInvestmentTable({ readonly: false, data: [null] });
         return;
     }
 
@@ -454,43 +374,22 @@ async function initEditForm() {
         .trigger('keyup');
 
     // Benefit Table
-    const benefits = res.benefit || res.benefits || [];
-    if (Array.isArray(benefits) && benefits.length > 0) {
-        const rows = $('#table-benefit tbody tr');
-        benefits.forEach((b) => {
-            const idx = intVal(b.BENEFIT_TYPE ?? b.BENEFIT);
-            const row = rows.eq(idx);
-            if (row.length && idx !== 3) {
-                const present = intVal(b.BENEFIT_CURRENT) || 0;
-                const after = intVal(b.BENEFIT_AFTER) || 0;
-                row.find('.present-cost').val(present);
-                row.find('.future-cost').val(after);
-                row.find('.subtotal-cost').val(showDigits(present - after, 2));
-            }
-        });
-    }
+    fillBenefitTable(res.benefit || res.benefits || []);
 
     // Labor Table
     const manhours = res.manhours || res.manhour || res.labor || [];
-    $('#table-labor tbody').empty();
-    if (Array.isArray(manhours) && manhours.length > 0) {
-        for (const m of manhours) {
-            await addLaborRow(m);
-        }
-    } else {
-        await addLaborRow();
-    }
+    await initLaborTable({
+        readonly: false,
+        data:
+            Array.isArray(manhours) && manhours.length > 0 ? manhours : [null],
+    });
 
     // Investment Table
     const invests = res.invest || res.investments || res.investment || [];
-    $('#table-investment tbody').empty();
-    if (Array.isArray(invests) && invests.length > 0) {
-        for (const inv of invests) {
-            await addInvestmentRow(inv);
-        }
-    } else {
-        await addInvestmentRow();
-    }
+    await initInvestmentTable({
+        readonly: false,
+        data: Array.isArray(invests) && invests.length > 0 ? invests : [null],
+    });
 
     await totalLabor();
     await totalInvestment();
@@ -634,7 +533,11 @@ async function formData() {
             const map = $(this).data('map');
             const val = $(this).val();
             if (map) {
-                if (map === 'SPEC_CONFIRM_PLAN' && !val) return;
+                if (
+                    (map === 'SPEC_CONFIRM_PLAN' || map === 'OBJECTIVE') &&
+                    !val
+                )
+                    return;
                 formData.append(map, val);
             }
         });
@@ -662,79 +565,12 @@ async function formData() {
     formData.append('REQ_ORG', org);
     formData.append('REQ_PIC', requestor);
     formData.append('REQ_DATE', dayjs().format('YYYY-MM-DD'));
-    if (intVal($('.total-benefit').val()) > 0) setBenefit(formData);
-    if (intVal($('.total-labor').val()) > 0) setLabor(formData);
+    if (intVal($('.total-benefit').val()) > 0) collectBenefitData(formData);
+    if (intVal($('.total-labor').val()) > 0) collectLaborData(formData);
     if (intVal($('#total-investment-cost').val()) > 0)
-        setInvestmentCost(formData);
+        collectInvestmentData(formData);
     if ($('.attachments').length > 0) setAttachments(formData);
     return formData;
-}
-
-function setBenefit(formData) {
-    const rows = $('#table-benefit').find('tbody tr');
-    let i = 0;
-    for (const row of rows) {
-        if (intVal($(row).find('.subtotal-cost').val()) > 0) {
-            formData.append(`benefit[${i}][BENEFIT_TYPE]`, $(row).index());
-            formData.append(
-                `benefit[${i}][BENEFIT_CURRENT]`,
-                intVal($(row).find('.present-cost').val()) || 0,
-            );
-            formData.append(
-                `benefit[${i}][BENEFIT_AFTER]`,
-                intVal($(row).find('.future-cost').val()) || 0,
-            );
-            i++;
-        }
-    }
-}
-
-function setLabor(formData) {
-    const rows = $('#table-labor').find('tbody tr');
-    let i = 0;
-    for (const row of rows) {
-        if (intVal($(row).find('.labor-total').val()) > 0) {
-            formData.append(
-                `manhours[${i}][POSITION]`,
-                $(row).find('td:eq(0) select').val(),
-            );
-            formData.append(
-                `manhours[${i}][COST]`,
-                intVal($(row).find('td:eq(1) input').val()) || 0,
-            );
-            formData.append(
-                `manhours[${i}][HOURS_PRESENT]`,
-                intVal($(row).find('td:eq(2) input').val()) || 0,
-            );
-            formData.append(
-                `manhours[${i}][HOURS_AFTER]`,
-                intVal($(row).find('td:eq(3) input').val()) || 0,
-            );
-            i++;
-        }
-    }
-}
-
-function setInvestmentCost(formData) {
-    const rows = $('#table-investment').find('tbody tr');
-    let i = 0;
-    for (const row of rows) {
-        if (intVal($(row).find('.device-total').val()) > 0) {
-            formData.append(
-                `invest[${i}][DEVICE]`,
-                $(row).find('td:eq(0) select').val(),
-            );
-            formData.append(
-                `invest[${i}][QTY]`,
-                intVal($(row).find('td:eq(1) input').val()) || 0,
-            );
-            formData.append(
-                `invest[${i}][PRICE]`,
-                intVal($(row).find('td:eq(2) input').val()) || 0,
-            );
-            i++;
-        }
-    }
 }
 
 function setAttachments(formData) {

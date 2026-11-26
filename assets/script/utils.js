@@ -2,7 +2,13 @@ import jsSHA from 'jssha';
 import { initAuthen, sessionTimeOut, clearAuth } from '@amec/webasset/authen';
 import { getConfig } from '@amec/webasset/config';
 import { decryptText } from '@amec/webasset/crypto';
-import { getMenu, getGroup, displayEmpInfo } from '@amec/webasset/indexDB';
+import {
+    getMenu,
+    getGroup,
+    deleteMenu,
+    deleteGroup,
+    displayEmpInfo,
+} from '@amec/webasset/indexDB';
 import { getCookie, setCookie, getTimeLeft } from '@amec/webasset/jsCookie';
 import { initNavbar } from '@amec/webasset/navbar';
 import { showbgLoader } from '@amec/webasset/preloader';
@@ -29,7 +35,7 @@ const saveSidebarSnapshot = () => {
     }
 };
 
-const clearSidebarSnapshot = () => {
+export const clearSidebarSnapshot = () => {
     try {
         sessionStorage.removeItem(SIDEBAR_CACHE_KEY);
     } catch {
@@ -37,10 +43,18 @@ const clearSidebarSnapshot = () => {
     }
 };
 
+const clearCachedAuth = async (id) => {
+    clearSidebarSnapshot();
+    if (!id) return;
+    await Promise.all([deleteGroup(id), deleteMenu(id)]).catch(() => {});
+};
+
 const initFromCache = async (opt) => {
     const { APP_NAME, APP_ID, TIMEOUT } = getConfig();
     const cookie = getCookie(APP_NAME);
     if (!cookie) {
+        const lastEmpno = localStorage.getItem('amecUserLogin');
+        await clearCachedAuth(lastEmpno ? `${APP_ID}-${lastEmpno}` : null);
         window.location.href = `${root}/form/authen/index/${APP_ID}`;
         return false;
     }
@@ -111,7 +125,11 @@ const initFromCache = async (opt) => {
     if (!window.__APP_SESSION_WATCHER__) {
         window.__APP_SESSION_WATCHER__ = setInterval(async () => {
             const ck = await getCookie(APP_NAME);
-            if (!ck) window.location.reload();
+            if (!ck) {
+                await clearCachedAuth(indexedDBID);
+                window.location.reload();
+                return;
+            }
             const timeLeft = await getTimeLeft(APP_NAME);
             if (timeLeft > 0 && timeLeft <= 0.5 * 60 * 1000) {
                 sessionTimeOut();

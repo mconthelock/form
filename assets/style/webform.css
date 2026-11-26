@@ -572,3 +572,149 @@ html.flow-dragging * {
 .webform-theme .flow-step-item[data-grabbed='true'] .flow-kbd-hint {
     display: inline-block;
 }
+
+/* ==========================================================================
+   Select2 Base-Size Variant (Opt-in via .webform-theme.text-base)
+   ========================================================================== */
+.webform-theme.text-base
+    .select2-container--default
+    .select2-selection--single {
+    height: 2.5rem !important;
+    font-size: 1rem !important;
+}
+
+.webform-theme.text-base
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__rendered {
+    font-size: 1rem !important;
+    line-height: 2.35rem !important;
+}
+
+/* ==========================================================================
+   Editable & View-Only Grid Table (Scoped to .webform-theme .table-edit)
+   ========================================================================== */
+.webform-theme .table-edit tbody tr th {
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+
+.webform-theme .table-edit tbody tr td {
+    padding: 0 !important;
+}
+
+.webform-theme .table-edit tbody tr td:not(:last-child),
+.webform-theme .table-edit tbody tr th {
+    border-right: 1px solid var(--color-gray-300);
+}
+
+.webform-theme .table-edit tbody tr td,
+.webform-theme .table-edit tbody tr th {
+    border-bottom: 1px solid var(--color-gray-300);
+}
+
+.webform-theme .table-edit tbody tr td input {
+    width: 100%;
+    height: 100%;
+    min-height: 42px;
+    padding: 10px;
+    border: none;
+    text-align: right;
+    font-size: 1.25em;
+    background: var(--color-white);
+}
+
+.webform-theme .table-edit tbody tr td input:hover:not(:read-only) {
+    cursor: pointer;
+}
+
+.webform-theme .table-edit tbody tr td input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.webform-theme .table-edit tbody tr td input:focus:not(:read-only) {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.webform-theme .table-edit tbody tr td input[readonly] {
+    background: var(--color-gray-200);
+}
+
+.webform-theme .table-edit tbody tr td.cell-text {
+    padding: 10px !important;
+    font-size: 0.95rem;
+    color: var(--color-gray-800);
+    background: var(--color-gray-50);
+}
+
+/* View-only table variant (Opt-in via .webform-theme.webform-view) */
+.webform-theme.webform-view .table-edit tbody tr td input {
+    font-size: 1.1em;
+    cursor: default;
+}
+
+.webform-theme.webform-view .table-edit tbody tr td input[readonly] {
+    background: var(--color-gray-50);
+    color: var(--color-gray-800);
+}
+
+/* DataTable + .table-edit compatibility (keeps grid borders & flush cell inputs) */
+.webform-theme div.dt-container table.dataTable.table-edit tbody > tr > td {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--color-gray-300) !important;
+}
+
+.webform-theme
+    div.dt-container
+    table.dataTable.table-edit
+    tbody
+    > tr
+    > td.cell-text,
+.webform-theme
+    div.dt-container
+    table.dataTable.table-edit
+    tbody
+    > tr
+    > td.dt-empty {
+    padding: 10px !important;
+}
+
+.webform-theme
+    div.dt-container
+    table.dataTable.table-edit
+    tbody
+    > tr
+    > td.dt-empty {
+    color: var(--color-gray-400);
+    text-align: center;
+}
+
+.webform-theme div.dt-container table.dataTable.table-edit tfoot > tr > th,
+.webform-theme div.dt-container table.dataTable.table-edit tfoot > tr > td {
+    background-color: transparent !important;
+}
+
+.webform-theme div.dt-container table.dataTable.table-edit tfoot input {
+    background: transparent;
+}
+
+/* Select2 flush inside .table-edit cells */
+.webform-theme .table-edit tbody tr td .select2-container {
+    width: 100% !important;
+    display: block;
+}
+
+.webform-theme
+    .table-edit
+    tbody
+    tr
+    td
+    .select2-container--default
+    .select2-selection--single {
+    height: 42px !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+}

@@ -9,7 +9,7 @@ class report extends MY_Controller {
     public function index(){
         $data['department'] = $this->formdept->setFormDept();
         $data['title'] = 'nav-report';
-        $this->views('report/index', $data);
+        $this->views('webform/report/index', $data);
     }
 
     public function detail($dept_id){
@@ -21,6 +21,6 @@ class report extends MY_Controller {
                 break;
             }
         }
-        $this->views('report/detail', $data);
+        $this->views('webform/report/detail', $data);
     }
 }

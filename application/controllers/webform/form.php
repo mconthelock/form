@@ -16,7 +16,7 @@ class form extends MY_Controller {
             6 => 'nav-form-finish'
         );
         $title = isset($status[$id]) ? $status[$id] : 'nav-form-waitapprove';
-        $this->views('form/index', array('id' => $id, 'title' => $title));
+        $this->views('webform/form/index', array('id' => $id, 'title' => $title));
     }
 
     public function list($id = 1){
@@ -25,7 +25,7 @@ class form extends MY_Controller {
 
     public function create(){
         $data = array('department' => $this->formdept->setFormDept(), 'title' => 'nav-form-create');
-        $this->views('form/create/index', $data);
+        $this->views('webform/form/create/index', $data);
     }
 
     public function createdetail($id){
@@ -35,7 +35,7 @@ class form extends MY_Controller {
         });
         $data['department'] = reset($selectedDept);
         $data['title'] = 'nav-form-create';
-        $this->views('form/create/createdetail', $data);
+        $this->views('webform/form/create/createdetail', $data);
     }
 
     private function isAllowedFormTarget($url){
@@ -74,7 +74,7 @@ class form extends MY_Controller {
         $code  = isset($_GET['code']) ? mb_substr(trim($_GET['code']), 0, 50) : '';
         $name  = isset($_GET['name']) ? mb_substr(trim($_GET['name']), 0, 200) : '';
 
-        $this->views('form/detail', array(
+        $this->views('webform/form/detail', array(
             'target' => $target,
             'title'  => $title,
             'code'   => $code,
